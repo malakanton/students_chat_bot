@@ -2,12 +2,31 @@ from aiogram.types import InlineKeyboardMarkup, \
                           InlineKeyboardButton, \
                           ReplyKeyboardMarkup, \
                           KeyboardButton
-from loader import week
+from loader import week, db
 from aiogram.utils.callback_data import CallbackData
+# from keyboards_buttons import *
 
 
+start_cb = CallbackData('start', 'group_id')
 file_cb = CallbackData('file', 'file_type', 'file_id')
 schedule_cb = CallbackData('schedule', 'week', 'day')
+sch_exists_cb = CallbackData('schedule_exists', 'update')
+
+
+def start_kb(groups):
+    keyboard = InlineKeyboardMarkup(
+        row_width=2,
+        resize_keyboard=True)
+    for group_id, group_name in groups.items():
+        keyboard.insert(
+            InlineKeyboardButton(
+                text=group_name,
+                callback_data=start_cb.new(
+                    group_id=group_id
+                )
+            )
+        )
+    return keyboard
 
 
 def kb(commands: list):
@@ -25,8 +44,7 @@ def kb(commands: list):
 def file_kb(file_id):
     ikb = InlineKeyboardMarkup(
         row_width=3,
-        resize_keyboard=True,
-        one_time_keyboard=True)
+        resize_keyboard=True)
     ikb.row(
         InlineKeyboardButton(
             text='Расписание',
@@ -46,10 +64,30 @@ def file_kb(file_id):
     return ikb
 
 
+def schedule_exists_kb():
+    ikb = InlineKeyboardMarkup(
+        row_width=2,
+        resize_keyboard=True)
+    ikb.row(
+        InlineKeyboardButton(
+            text='Обнови',
+            callback_data=sch_exists_cb.new(
+                update='yes'
+            )
+        ),
+        InlineKeyboardButton(
+            text='Не надо',
+            callback_data=sch_exists_cb.new(
+                update='no'
+            )
+        ),
+    )
+    return ikb
+
+
 def schedule_kb(today):
     ikb = InlineKeyboardMarkup(
-        row_width=3,
-        one_time_keyboard=True)
+        row_width=3)
     ikb.row(InlineKeyboardButton(
         text='Сегодня',
         callback_data=schedule_cb.new(

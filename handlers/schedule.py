@@ -18,14 +18,10 @@ async def schedule_commands(message: types.Message):
             reply_markup=schedule_kb(today)
         )
     await message.delete()
-    # print(week)
-    # await message.answer(text=week.mon.schedule)
-    # await message.delete()
 
 
 @dp.callback_query_handler(schedule_cb.filter())
 async def callback_schedule(call: types.CallbackQuery, callback_data: dict):
-    # await call.answer()
     day_id = int(callback_data['day'])
     day = week.get_day(day_id)
     print('day info', day)
@@ -50,9 +46,6 @@ async def callback_schedule(call: types.CallbackQuery, callback_data: dict):
             chat_id=call.message.chat.id)
 
 
-    # await bot.send_message(text=week.mon.schedule, chat_id=call.message.chat.id)
-
-
 def form_schedule_text(schedule: list) -> str:
     text = ''
     lessons_dict = {
@@ -70,3 +63,31 @@ def form_schedule_text(schedule: list) -> str:
         end_time = lesson.end.strftime('%H:%M')
         text += f'{start_time}-{end_time} **{lesson.subj}**, {lesson.teacher} ({lesson.loc})\n'
     return text
+
+
+# async def set_schedule(
+#         filename: str,
+#         new_week: models.Week
+# ):
+#     schedule, week_num = get_schedule(filename, GROUP)
+#     print(schedule)
+#     print(new_week.days)
+#     for day in new_week.days.values():
+#         for item in schedule:
+#             if (
+#                     day.name == item['day'] and
+#                     item['subj'] != ''
+#             ):
+#                 day.date = str(item['start'].date())
+#                 lesson = Lesson(
+#                     subj=item['subj'],
+#                     start=item['start'].to_pydatetime(),
+#                     end=item['end'].to_pydatetime(),
+#                     teacher=item['teacher'],
+#                     loc=item['loc']
+#                 )
+#                 day.schedule.append(lesson)
+#         if day.schedule:
+#             day.free = False
+#     print('week set:', new_week.__dict__)
+#     return new_week

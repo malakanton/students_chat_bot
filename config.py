@@ -7,3 +7,8 @@ TG_TOKEN = env.str('TG_TOKEN')
 ADMIN_ID = env.str('ADMIN_ID')
 PATH = './temp/'
 GROUP = 'ИСП11-123ВПоз'
+
+HOST = '127.0.0.1'
+USER = 'postgres'
+PG_PASS = env.str('PG_PASS')
+DB_NAME = 'students_bot_db'

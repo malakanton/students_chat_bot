@@ -4,14 +4,14 @@ from typing import List, Optional
 import datetime as dt
 
 
-ru_days = [
-    'Понедельник',
-    'Вторник',
-    'Среда',
-    'Черверг',
-    'Пятница',
-    'Суббота'
-]
+ru_days = {
+    'Понедельник': 1,
+    'Вторник': 2,
+    'Среда': 3,
+    'Черверг': 4,
+    'Пятница': 5,
+    'Суббота': 6
+}
 
 @dataclass
 class Today:
@@ -47,7 +47,7 @@ class Week:
     days: dict = Field(default_factory=lambda: dict())
 
     def __post_init__(self):
-        for i, day in zip(range(1, 7), ru_days):
+        for day, i in ru_days.items():
             self.days[i] = DayOfWeek(i, day)
 
     def get_all_active(self):
@@ -55,6 +55,4 @@ class Week:
 
     def get_day(self, day_id: int):
         return self.days.get(day_id, None)
-w = Week(num=1)
-print(w.__dict__)
-print(w.days[1])
+

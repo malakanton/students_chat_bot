@@ -1,5 +1,6 @@
 import datetime as dt
 from models import Today
+from aiogram import types
 
 
 def get_today():
@@ -12,3 +13,11 @@ def get_today():
         day_of_week=day_of_week
     )
     return today
+
+
+def chat_msg_ids(
+        call: types.CallbackQuery
+) -> tuple:
+    chat_id = call.message.chat.id
+    message_id = call.message.message_id
+    return chat_id, message_id

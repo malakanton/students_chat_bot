@@ -1,13 +1,13 @@
 from aiogram import types
 import bot_replies as br
-import loader
 import os
 import models
-from loader import dp
-from config import PATH, GROUP
-from keyboards.keyboards import file_kb, file_cb
-from lib.calendar_parser import get_schedule
-from models import Lesson
+from lib.misc import chat_msg_ids
+from loader import dp, db, bot
+from config import PATH
+import keyboards.keyboards as kb
+from lib.calendar_parser import get_schedule, filter_df
+from models import Lesson, ru_days
 
 
 @dp.message_handler(content_types=['document'])
@@ -15,33 +15,62 @@ async def document_processing(message: types.Message):
     file = message.document
     file_id = 1
     file_name = file['file_name']
+
     msg = br.FILE_ATTACHED.format(filename=file_name)
     await file.download(destination_file=PATH + file_name)
-    await message.reply(text=msg, parse_mode='html', reply_markup=file_kb(file_id))
+    await message.reply(text=msg, parse_mode='html', reply_markup=kb.file_kb(file_id))
 
 
-
-
-@dp.callback_query_handler(file_cb.filter(file_type='schedule'))
+@dp.callback_query_handler(kb.file_cb.filter(file_type='schedule'))
 async def callback_schedule(call: types.CallbackQuery, callback_data: dict):
-    call.answer()
-    file_id = callback_data['file_id']
+    chat_id, msg_id = chat_msg_ids(call)
+    await call.answer()
     latest_file_path = latest_file(PATH)
-    week = await set_schedule(latest_file_path, loader.week)
-    await loader.bot.edit_message_text(
-        chat_id=call.message.chat.id,
-        message_id=call.message.message_id,
-        text=br.FILE_SAVED.format(saved_to='Расписания'))
-    await call.answer(text="Расписание загружено", show_alert=True)
+    df, week_num, schedule_exists = await process_schedule_file(latest_file_path)
+    if schedule_exists:
+        await bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=msg_id,
+            reply_markup=kb.schedule_exists_kb(),
+            text=br.SHEDULE_EXISTS.format(
+                start=schedule_exists['start'],
+                end=schedule_exists['end']
+            )
+        )
+    else:
+        await bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=msg_id,
+            text=br.FILE_SAVED.format(saved_to='Расписания'))
+        await upload_schedule(df, week_num)
+        await call.answer(text="Расписание загружено", show_alert=True)
 
 
-@dp.callback_query_handler(file_cb.filter(file_type='study_file'))
+@dp.callback_query_handler(kb.sch_exists_cb.filter())
 async def callback_file(call: types.CallbackQuery, callback_data: dict):
-    cbd = call.data
+    chat_id, msg_id = chat_msg_ids(call)
+    await call.answer()
+    if callback_data['update'] == 'yes':
+        latest_file_path = latest_file(PATH)
+        df, week_num, _ = await process_schedule_file(latest_file_path)
+        db.erase_existing_schedule(week_num)
+        await upload_schedule(df, week_num)
+        await bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=msg_id,
+            text='Обновил расписание')
+    else:
+        await bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=msg_id,
+            text='Расписание оставил как было')
+
+
+@dp.callback_query_handler(kb.file_cb.filter(file_type='study_file'))
+async def callback_file(call: types.CallbackQuery, callback_data: dict):
     latest_file_path = latest_file(PATH)
     print('you are in study materials section')
-    print(cbd)
-    await call.answer()
+    await call.answer('not able to process study materials yet..', show_alert=True)
 
 
 def latest_file(path):
@@ -50,32 +79,66 @@ def latest_file(path):
     return max(paths, key=os.path.getctime)
 
 
-async def set_schedule(
-        filename: str,
-        new_week: models.Week
+async def process_schedule_file(filename:str):
+    df, week_num = get_schedule(filename)
+    weeks = db.get_weeks()
+    schedule_exists = None
+    if week_num in weeks:
+        schedule_exists = weeks.get(week_num)
+    return df, week_num, schedule_exists
+
+
+async def upload_schedule(df, week_num):
+    groups = db.get_groups()
+    for group_id, group_name in groups.items():
+        print(group_name)
+        try:
+            schedule = filter_df(df, group_name).to_dict(orient='records')
+        except:
+            print('error!!!')
+            break
+        print(schedule)
+        upload_group_schedule(schedule, week_num, group_id)
+
+
+def upload_group_schedule(
+        schedule: list,
+        week_num: int,
+        group_id: int
 ):
-    schedule = get_schedule(filename, GROUP)
-    print(schedule)
-    print(new_week.days)
-    for day in new_week.days.values():
-        for item in schedule:
-            if (
-                    day.name == item['day'] and
-                    item['subj'] != ''
-            ):
-                day.date = str(item['start'].date())
-                lesson = Lesson(
-                    subj=item['subj'],
-                    start=item['start'].to_pydatetime(),
-                    end=item['end'].to_pydatetime(),
-                    teacher=item['teacher'],
-                    loc=item['loc']
-                )
-                day.schedule.append(lesson)
-        if day.schedule:
-            day.free = False
-    print('week set:', new_week.__dict__)
-    return new_week
+    teachers = db.get_teachers()
+    subjects = db.get_subjects()
+    for lesson in schedule:
+        subj_code = lesson.get('subj_code', '')
+        subject = lesson.get('subj', '')
+        teacher = lesson.get('teacher', '')
+        if (
+                not subj_code or
+                not subject
+        ):
+            continue
+        if teacher not in teachers:
+            db.add_teacher(teacher)
+            print(f'New teacher added: {teacher}')
+            teachers = db.get_teachers()
+        if subj_code not in subjects:
+            db.add_subject(subj_code, subject)
+            print(f'New subject added: {subject}')
+            subjects = db.get_subjects()
+        start = str(lesson['start'].to_pydatetime().time())
+        end = str(lesson['end'].to_pydatetime().time())
+        date = str(lesson['start'].to_pydatetime().date())
+        db.add_lesson(
+            week_num=week_num,
+            day=ru_days.get(lesson['day'], 1),
+            date=date,
+            start=start,
+            end=end,
+            group_id=group_id,
+            subj_id=subjects.get(subj_code, 0),
+            teacher_id=teachers.get(teacher, 0),
+            loc=lesson.get('loc', '')
+        )
+        print('lesson added')
 
-
-# set_schedule('../temp/Очно_заочное_отделение_с_2_10_по_07_10.pdf', week)
+# process_schedule('../temp/Очно_заочное_отделение_с_9_10_по_14_10_копия.pdf')

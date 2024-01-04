@@ -109,12 +109,20 @@ def get_teacher(
     except:
         return ''
 
+def get_subj_code(
+        text: str
+) -> str:
+    code_pattern = r'^[А-Я]{1,5}\s?\d{0,2}\.\d{1,3}'
+    try:
+        return re.search(code_pattern, text).group(0)
+    except:
+        return ''
 
 def get_subj(
         text: str
 ) -> str:
     teacher_pattern = r'[А-Я]{1}[а-я]* [А-Я]\.[А-Я]\.'
-    code_pattern = r'[А-Я]{1,5}\.\d{1,3}'
+    code_pattern = r'[А-Я]{1,5}\s?\d{0,2}\.\d{1,3}'
     text = text.replace('\n', ' ')
     text = re.sub(teacher_pattern, '', text)
     text = re.sub(code_pattern, '', text)
@@ -147,17 +155,18 @@ def filter_df(
         'end'
     ]
     group_columns = [col for col in df.columns if group in col]
-    filtered_df = df[common_columns + group_columns]
+    filtered_df = df[common_columns + group_columns].copy()
     filtered_df.columns = common_columns + ['subj', 'loc']
     filtered_df['teacher'] = filtered_df.subj.map(get_teacher)
+    filtered_df['subj_code'] = filtered_df.subj.map(get_subj_code)
     filtered_df['subj'] = filtered_df.subj.map(get_subj)
     return filtered_df
 
 
 def get_schedule(
-        filename: str,
-        group: str
+        filename: str
 ) -> pd.DataFrame:
     df_raw, dates = plumb_pdf(filename)
     df = process_df(df_raw, dates)
-    return filter_df(df, group).to_dict(orient='records')
+    week_num = get_monday(dates).isocalendar()[1]
+    return df, week_num

@@ -1,7 +1,7 @@
 HELLO_STICKER = 'CAACAgUAAxkBAAEIS_5kHhHJbT-IIK0NMaSixWWNy8FMbQACPQQAAuLL0Vc8fzVOSO5JVC8E'
 
 DESCRIPTION = """
-I'm a useless telegram bot, i can do fuck all so far
+Из какой ты группы?
 """
 
 HELP_MSG = """
@@ -15,6 +15,12 @@ HELP_MSG = """
 SHEDULE = """
 Расписание
 """
+
+SHEDULE_EXISTS = """
+Расписание с {start} по {end} уже загружено.
+Обновить?
+"""
+
 
 SHEDULE_RESULTS = """
 **{day_of_week}** {date}
@@ -34,4 +40,8 @@ FILE_SAVED = """
 
 FREE_DAY = """
 Нет занятий!
+"""
+
+USER_REGISTRED = """
+Ты уже зарегистрирован в группе {group_name}
 """
