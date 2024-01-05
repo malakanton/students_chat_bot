@@ -2,27 +2,44 @@ from aiogram.types import InlineKeyboardMarkup, \
                           InlineKeyboardButton, \
                           ReplyKeyboardMarkup, \
                           KeyboardButton
-from loader import week, db
+from loader import week
 from aiogram.utils.callback_data import CallbackData
-# from keyboards_buttons import *
 
 
-start_cb = CallbackData('start', 'group_id')
-file_cb = CallbackData('file', 'file_type', 'file_id')
+start_cb = CallbackData('start', 'course', 'group_id')
+file_cb = CallbackData('file', 'file_type', 'file_id', 'update')
 schedule_cb = CallbackData('schedule', 'week', 'day')
-sch_exists_cb = CallbackData('schedule_exists', 'update')
 
 
-def start_kb(groups):
+def course_kb(courses):
     keyboard = InlineKeyboardMarkup(
         row_width=2,
         resize_keyboard=True)
-    for group_id, group_name in groups.items():
+    for course in courses:
         keyboard.insert(
             InlineKeyboardButton(
-                text=group_name,
+                text=course,
                 callback_data=start_cb.new(
-                    group_id=group_id
+                    course=course,
+                    group_id='None'
+                )
+            )
+        )
+    return keyboard
+
+
+def groups_kb(groups, course):
+    keyboard = InlineKeyboardMarkup(
+        row_width=2,
+        resize_keyboard=True)
+    groups = [group for group in groups if group['course'] == course]
+    for group in groups:
+        keyboard.insert(
+            InlineKeyboardButton(
+                text=group['name'],
+                callback_data=start_cb.new(
+                    course=course,
+                    group_id=group['id']
                 )
             )
         )
@@ -50,35 +67,49 @@ def file_kb(file_id):
             text='Расписание',
             callback_data=file_cb.new(
                 file_type='schedule',
-                file_id=file_id
+                file_id=file_id,
+                update='init'
             )
         ),
         InlineKeyboardButton(
-            text='Учебные материалы',
+            text='Полезный стафф',
             callback_data=file_cb.new(
-                file_type='study_file',
-                file_id=file_id
+                file_type='study',
+                file_id=file_id,
+                update='init'
             )
         ),
+        InlineKeyboardButton(
+            text='Не сохраняй',
+            callback_data=file_cb.new(
+                file_type='do_not_save',
+                file_id=file_id,
+                update='init'
+            )
+        )
     )
     return ikb
 
 
-def schedule_exists_kb():
+def schedule_exists_kb(file_id):
     ikb = InlineKeyboardMarkup(
         row_width=2,
         resize_keyboard=True)
     ikb.row(
         InlineKeyboardButton(
             text='Обнови',
-            callback_data=sch_exists_cb.new(
-                update='yes'
+            callback_data=file_cb.new(
+                file_type='schedule',
+                file_id=file_id,
+                update='update'
             )
         ),
         InlineKeyboardButton(
             text='Не надо',
-            callback_data=sch_exists_cb.new(
-                update='no'
+            callback_data=file_cb.new(
+                file_type='schedule',
+                file_id=file_id,
+                update='dont_update'
             )
         ),
     )

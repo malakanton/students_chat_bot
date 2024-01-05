@@ -103,20 +103,24 @@ def merge_dt(
 def get_teacher(
         text: str
 ) -> str:
+    text = text.replace('\n', ' ')
     pattern = r'[А-Я]{1}[а-я]* [А-Я]\.[А-Я]\.'
     try:
         return re.search(pattern, text).group(0)
     except:
         return ''
 
+
 def get_subj_code(
         text: str
 ) -> str:
+    text = text.replace('\n', ' ')
     code_pattern = r'^[А-Я]{1,5}\s?\d{0,2}\.\d{1,3}'
     try:
         return re.search(code_pattern, text).group(0)
     except:
         return ''
+
 
 def get_subj(
         text: str

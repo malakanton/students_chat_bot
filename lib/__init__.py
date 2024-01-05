@@ -1,2 +1,2 @@
-from . import calendar_parser
+from . import schedule_parser
 from . import misc

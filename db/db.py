@@ -1,4 +1,4 @@
-from lib.calendar_parser import get_schedule
+from lib.schedule_parser import get_schedule
 import psycopg2
 import datetime as dt
 
@@ -27,8 +27,25 @@ class DB:
     def get_groups(self):
         query = """select * from groups"""
         self.cur.execute(query)
-        groups = dict(self.cur.fetchall())
+        raw = self.cur.fetchall()
+        groups = []
+        for group in raw:
+            group_dct = {
+                'id': group[0],
+                'name': group[1],
+                'course': group[2],
+                'chat_id': group[3]
+            }
+            groups.append(group_dct)
         return groups
+
+    def update_group_chat(self, group_id: int, chat_id: int):
+        query = """update groups set chat_id = %s where id = %s 
+        returning name
+        """
+        self._execute_query(query, (chat_id, group_id))
+        group_name = self.cur.fetchone()[0]
+        return group_name
 
     def get_user_group(self, user_id):
         query = f"""
@@ -62,9 +79,9 @@ class DB:
         query = f"""insert into teachers (name) values(%s)"""
         self._execute_query(query, (name,))
 
-    def add_user(self, user_id: int, group_id: int, name: str, tg_login: str,  date: dt.datetime):
-        query = f"""insert into users (user_id, group_id, name, tg_login, added_at) values(%s, %s, %s, %s, %s)"""
-        self._execute_query(query, (user_id, group_id, name, tg_login, date))
+    def add_user(self, user_id: int, group_id: int, name: str, tg_login: str):
+        query = f"""insert into users (user_id, group_id, name, tg_login) values(%s, %s, %s, %s)"""
+        self._execute_query(query, (user_id, group_id, name, tg_login))
         return self.get_user_group(user_id)
 
     def get_weeks(self):
@@ -88,7 +105,7 @@ class DB:
                    teacher_id: int,
                    loc: str):
         query = f"""
-        insert into lessons (week_num, day, date, start, end, group_id, subj_id, teacher_id, loc)
+        insert into lessons (week_num, day, date, start, end_t, group_id, subj_id, teacher_id, loc)
         values(%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         self._execute_query(query, (week_num, day, date, start, end, group_id, subj_id, teacher_id, loc))
@@ -100,9 +117,53 @@ class DB:
         """
         self._execute_query(query, (week_num, ))
 
+    def add_file(self,
+                 file_name: str,
+                 uploaded_by: int,
+                 tg_file_id: str
+                 ):
+        query = """
+        insert into files (file_name, tg_file_id, uploaded_by)
+        values (%s, %s, %s)
+        returning id;
+        """
+        self.cur.execute(query, (file_name, tg_file_id, uploaded_by))
+        file_id = self.cur.fetchone()[0]
+        self.conn.commit()
+        return file_id
 
+    def update_file(self,
+                    file_id: int,
+                    file_type: str,
+                    subj_id: int = None) -> str:
+        if subj_id:
+            query = """
+            update files set file_type = %s, set subj_id = %s where id = %s
+            returning file_name, tg_file_id
+            """
+            self.cur.execute(query, (file_type, subj_id, file_id))
+        else:
+            query = """
+                    update files set file_type = %s where id = %s
+                    returning file_name, tg_file_id
+                    """
+            self.cur.execute(query, (file_type, file_id))
+        file_name, tg_file_id = self.cur.fetchone()
+        self.conn.commit()
+        return file_name, tg_file_id
+
+
+#
 # from config import HOST, USER, PG_PASS, DB_NAME
 # db = DB(host=HOST, user=USER, pg_pass=PG_PASS, db_name=DB_NAME)
+#
+# groups = db.get_groups()
+# print(groups)
+# for id, name in groups.items():
+#     query = """update groups set course=%s where id = %s"""
+#     course = int(name.split('-')[1][0])
+#     db._execute_query(query, (course, id))
+
 # query = """insert into groups (name) values (%s);"""
 # df, _ = get_schedule('../temp/Очно_заочное_отделение_с_2_10_по_07_10.pdf')
 # groups = list(set([col for col in df.columns if (col.startswith('ИСП') or col.startswith('СС')) and not col.endswith('loc')]))

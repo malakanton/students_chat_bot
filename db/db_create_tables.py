@@ -12,11 +12,27 @@ create table if not exists teachers (
 create_users_query = """
 create table if not exists users (
     user_id smallint primary key not null,
-    group_id integer unique not null,
+    group_id integer not null,
     name varchar(30),
     
     foreign key (group_id)
         references groups (id)
+)
+"""
+create_files_query = """
+create table if not exists files (
+	id serial primary key,
+	file_type varchar(10) not null,
+	file_name varchar(255) not null,
+	file_path varchar(255) not null,
+	subj_id smallint,
+	uploaded_at date not null,
+	uploaded_by bigint not null,
+	
+	foreign key (uploaded_by)
+		references users (user_id),
+	foreign key (subj_id)
+		references subjects (id)
 )
 """
 create_subjects_query = """
@@ -59,6 +75,7 @@ tables = [
     create_groups_query,
     create_subjects_query,
     create_users_query,
+    create_files_query,
     create_lessons_query
 ]
 

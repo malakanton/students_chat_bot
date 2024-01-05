@@ -1,58 +1,68 @@
-from aiogram import types
-import bot_replies as br
 import os
-import models
-from lib.misc import chat_msg_ids
-from loader import dp, db, bot
+from aiogram import types
 from config import PATH
+import bot_replies as br
+from loader import dp, db, bot
 import keyboards.keyboards as kb
-from lib.calendar_parser import get_schedule, filter_df
-from models import Lesson, ru_days
+from lib.misc import chat_msg_ids, validate_schedule_format
+from lib.schedule_uploader import process_schedule_file, upload_schedule
 
 
+# обработка прикрепленных документов
 @dp.message_handler(content_types=['document'])
 async def document_processing(message: types.Message):
     file = message.document
-    file_id = 1
-    file_name = file['file_name']
+    db_file_id = db.add_file(
+        file_name=file['file_name'],
+        uploaded_by=message.from_user.id,
+        tg_file_id=file['file_id']
+    )
+    print('file info uploaded:', db_file_id)
+    await message.reply(
+        text=br.FILE_ATTACHED.format(filename=file['file_name']),
+        reply_markup=kb.file_kb(db_file_id)
+    )
 
-    msg = br.FILE_ATTACHED.format(filename=file_name)
-    await file.download(destination_file=PATH + file_name)
-    await message.reply(text=msg, parse_mode='html', reply_markup=kb.file_kb(file_id))
 
-
+# если пользователь выбрал расписание
 @dp.callback_query_handler(kb.file_cb.filter(file_type='schedule'))
-async def callback_schedule(call: types.CallbackQuery, callback_data: dict):
+async def schedule_choice(call: types.CallbackQuery, callback_data: dict):
     chat_id, msg_id = chat_msg_ids(call)
+    action = callback_data['update']
+    file_name, tg_file_id = db.update_file(
+        file_id=callback_data['file_id'],
+        file_type=callback_data['file_type']
+    )
+    if not validate_schedule_format(file_name):
+        await call.answer('чет не похоже на расписание', show_alert=True)
+        return
     await call.answer()
-    latest_file_path = latest_file(PATH)
-    df, week_num, schedule_exists = await process_schedule_file(latest_file_path)
-    if schedule_exists:
-        await bot.edit_message_text(
-            chat_id=chat_id,
-            message_id=msg_id,
-            reply_markup=kb.schedule_exists_kb(),
-            text=br.SHEDULE_EXISTS.format(
-                start=schedule_exists['start'],
-                end=schedule_exists['end']
+    schedule_path = PATH + file_name
+    file = await bot.get_file(tg_file_id)
+    await bot.download_file(
+        file_path=file.file_path,
+        destination=schedule_path
+    )
+    df, week_num, schedule_exists = await process_schedule_file(schedule_path)
+    if action == 'init':
+        if schedule_exists:
+            await bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=msg_id,
+                reply_markup=kb.schedule_exists_kb(callback_data['file_id']),
+                text=br.SHEDULE_EXISTS.format(
+                    start=schedule_exists['start'],
+                    end=schedule_exists['end']
+                )
             )
-        )
-    else:
-        await bot.edit_message_text(
-            chat_id=chat_id,
-            message_id=msg_id,
-            text=br.FILE_SAVED.format(saved_to='Расписания'))
-        await upload_schedule(df, week_num)
-        await call.answer(text="Расписание загружено", show_alert=True)
-
-
-@dp.callback_query_handler(kb.sch_exists_cb.filter())
-async def callback_file(call: types.CallbackQuery, callback_data: dict):
-    chat_id, msg_id = chat_msg_ids(call)
-    await call.answer()
-    if callback_data['update'] == 'yes':
-        latest_file_path = latest_file(PATH)
-        df, week_num, _ = await process_schedule_file(latest_file_path)
+        else:
+            await bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=msg_id,
+                text=br.FILE_SAVED.format(saved_to='Расписания'))
+            await upload_schedule(df, week_num)
+            await call.answer(text="Расписание загружено", show_alert=True)
+    elif action == 'update':
         db.erase_existing_schedule(week_num)
         await upload_schedule(df, week_num)
         await bot.edit_message_text(
@@ -64,81 +74,36 @@ async def callback_file(call: types.CallbackQuery, callback_data: dict):
             chat_id=chat_id,
             message_id=msg_id,
             text='Расписание оставил как было')
+    os.remove(schedule_path)
 
 
-@dp.callback_query_handler(kb.file_cb.filter(file_type='study_file'))
-async def callback_file(call: types.CallbackQuery, callback_data: dict):
-    latest_file_path = latest_file(PATH)
-    print('you are in study materials section')
+
+# если пользователь выбрал учебные материалы
+@dp.callback_query_handler(kb.file_cb.filter(file_type='study'))
+async def study_file_choice(call: types.CallbackQuery, callback_data: dict):
+    # здесь надо добавить клавиатуру с выбором предмета
+    # список надо делать для группы пользователя из базы
+    #
+    chat_id, msg_id = chat_msg_ids(call)
     await call.answer('not able to process study materials yet..', show_alert=True)
+    file_name, tg_file_id = db.update_file(
+        file_id=callback_data['file_id'],
+        file_type=callback_data['file_type']
+    )
+    file = await bot.get_file(tg_file_id)
+    full_path = PATH + file_name
+    await bot.download_file(
+        file_path=file.file_path,
+        destination=full_path
+    )
+    print('you are in study materials section')
 
 
-def latest_file(path):
-    files = os.listdir(path)
-    paths = [os.path.join(path, basename) for basename in files]
-    return max(paths, key=os.path.getctime)
-
-
-async def process_schedule_file(filename:str):
-    df, week_num = get_schedule(filename)
-    weeks = db.get_weeks()
-    schedule_exists = None
-    if week_num in weeks:
-        schedule_exists = weeks.get(week_num)
-    return df, week_num, schedule_exists
-
-
-async def upload_schedule(df, week_num):
-    groups = db.get_groups()
-    for group_id, group_name in groups.items():
-        print(group_name)
-        try:
-            schedule = filter_df(df, group_name).to_dict(orient='records')
-        except:
-            print('error!!!')
-            break
-        print(schedule)
-        upload_group_schedule(schedule, week_num, group_id)
-
-
-def upload_group_schedule(
-        schedule: list,
-        week_num: int,
-        group_id: int
-):
-    teachers = db.get_teachers()
-    subjects = db.get_subjects()
-    for lesson in schedule:
-        subj_code = lesson.get('subj_code', '')
-        subject = lesson.get('subj', '')
-        teacher = lesson.get('teacher', '')
-        if (
-                not subj_code or
-                not subject
-        ):
-            continue
-        if teacher not in teachers:
-            db.add_teacher(teacher)
-            print(f'New teacher added: {teacher}')
-            teachers = db.get_teachers()
-        if subj_code not in subjects:
-            db.add_subject(subj_code, subject)
-            print(f'New subject added: {subject}')
-            subjects = db.get_subjects()
-        start = str(lesson['start'].to_pydatetime().time())
-        end = str(lesson['end'].to_pydatetime().time())
-        date = str(lesson['start'].to_pydatetime().date())
-        db.add_lesson(
-            week_num=week_num,
-            day=ru_days.get(lesson['day'], 1),
-            date=date,
-            start=start,
-            end=end,
-            group_id=group_id,
-            subj_id=subjects.get(subj_code, 0),
-            teacher_id=teachers.get(teacher, 0),
-            loc=lesson.get('loc', '')
-        )
-        print('lesson added')
-
-# process_schedule('../temp/Очно_заочное_отделение_с_9_10_по_14_10_копия.pdf')
+# если пользователь выбрал не сохранять
+@dp.callback_query_handler(kb.file_cb.filter(file_type='do_not_save'))
+async def dont_save_choice(call: types.CallbackQuery, callback_data: dict):
+    chat_id, msg_id = chat_msg_ids(call)
+    await call.answer('ok', show_alert=True)
+    await bot.delete_message(
+        chat_id=chat_id,
+        message_id=msg_id)

@@ -21,3 +21,15 @@ def chat_msg_ids(
     chat_id = call.message.chat.id
     message_id = call.message.message_id
     return chat_id, message_id
+
+
+def validate_schedule_format(
+        filename: str
+) -> bool:
+    if (
+        filename.endswith('.pdf') and
+        'очно_заочное_' in filename.lower()
+    ):
+        return True
+
+

@@ -1,8 +1,16 @@
 HELLO_STICKER = 'CAACAgUAAxkBAAEIS_5kHhHJbT-IIK0NMaSixWWNy8FMbQACPQQAAuLL0Vc8fzVOSO5JVC8E'
 
 DESCRIPTION = """
-Из какой ты группы?
+я бот 
+
+на каком курсе ты учишься? 
 """
+
+GROUP_CHOICE = """
+Укажи свою группу
+"""
+
+
 
 HELP_MSG = """
 <b>Bot Commands:</b>\n
