@@ -173,7 +173,7 @@ def filter_df(
 
 def get_schedule(
         filename: str
-) -> pd.DataFrame:
+) -> tuple[pd.DataFrame, int]:
     df_raw, dates = plumb_pdf(filename)
     df = process_df(df_raw, dates)
     week_num = get_monday(dates).isocalendar()[1]

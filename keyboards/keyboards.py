@@ -20,7 +20,7 @@ async def course_kb(courses):
 
 async def groups_kb(groups, course):
     kb_builder = InlineKeyboardBuilder()
-    buttons: list[InlineKeyboardButton] = []
+    buttons = []
     groups = [group for group in groups if group.course == course]
     for group in groups:
         buttons.append(

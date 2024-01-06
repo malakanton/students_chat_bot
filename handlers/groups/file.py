@@ -7,7 +7,7 @@ import bot_replies as br
 from loader import dp, db, bot
 import keyboards.keyboards as kb
 from keyboards.callbacks import FileCallback
-from lib.misc import chat_msg_ids, validate_schedule_format
+from lib.misc import chat_msg_ids, valid_schedule_format
 from lib.schedule_uploader import process_schedule_file, upload_schedule
 
 
@@ -37,7 +37,7 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
         file_type=callback_data.file_type
     )
     file = await bot.get_file(tg_file_id)
-    if not validate_schedule_format(file_name):
+    if not valid_schedule_format(file_name):
         await call.answer('чет не похоже на расписание', show_alert=True)
         logging.info(f'file {file_name} doesnt pass the schedule test')
         return
@@ -85,7 +85,6 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
             text='Расписание оставил как было')
         logging.info('schedule keep as it was')
     os.remove(schedule_path)
-
 
 
 # если пользователь выбрал учебные материалы

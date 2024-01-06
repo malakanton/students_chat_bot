@@ -23,7 +23,7 @@ def chat_msg_ids(
     return chat_id, message_id
 
 
-def validate_schedule_format(
+def valid_schedule_format(
         filename: str
 ) -> bool:
     if (
