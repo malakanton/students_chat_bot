@@ -1,137 +1,128 @@
-from aiogram.types import InlineKeyboardMarkup, \
-                          InlineKeyboardButton, \
-                          ReplyKeyboardMarkup, \
-                          KeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from loader import week
-from aiogram.utils.callback_data import CallbackData
+from keyboards.callbacks import FileCallback, StartCallback, ScheduleCallback
 
 
-start_cb = CallbackData('start', 'course', 'group_id')
-file_cb = CallbackData('file', 'file_type', 'file_id', 'update')
-schedule_cb = CallbackData('schedule', 'week', 'day')
-
-
-def course_kb(courses):
-    keyboard = InlineKeyboardMarkup(
-        row_width=2,
-        resize_keyboard=True)
+async def course_kb(courses):
+    buttons = []
     for course in courses:
-        keyboard.insert(
+        buttons.append(
             InlineKeyboardButton(
-                text=course,
-                callback_data=start_cb.new(
+                text=str(course),
+                callback_data=StartCallback(
                     course=course,
                     group_id='None'
-                )
-            )
+                ).pack())
         )
-    return keyboard
+    return InlineKeyboardMarkup(inline_keyboard=[buttons])
 
 
-def groups_kb(groups, course):
-    keyboard = InlineKeyboardMarkup(
-        row_width=2,
-        resize_keyboard=True)
-    groups = [group for group in groups if group['course'] == course]
+async def groups_kb(groups, course):
+    kb_builder = InlineKeyboardBuilder()
+    buttons: list[InlineKeyboardButton] = []
+    groups = [group for group in groups if group.course == course]
     for group in groups:
-        keyboard.insert(
+        buttons.append(
             InlineKeyboardButton(
-                text=group['name'],
-                callback_data=start_cb.new(
-                    course=course,
-                    group_id=group['id']
-                )
+                text=group.name,
+                callback_data=StartCallback(
+                    course=str(course),
+                    group_id=group.id
+                ).pack()
             )
         )
-    return keyboard
+    kb_builder.row(*buttons, width=2)
+    return kb_builder.as_markup()
 
 
-def kb(commands: list):
-    keyboard = ReplyKeyboardMarkup(
-        row_width=4,
-        resize_keyboard=True,
-        one_time_keyboard=True)
-    for command in commands:
-        keyboard.insert(
-            KeyboardButton(command)
-               )
-    return keyboard
+# def create_inline_kb(width: int,
+#                      *args: str,
+#                      **kwargs: str) -> InlineKeyboardMarkup:
+#     kb_builder = InlineKeyboardBuilder()
+#     buttons = []
+#     if args:
+#         for button in args:
+#             buttons.append(InlineKeyboardButton(
+#                 text=LEXICON[button] if button in LEXICON else button,
+#                 callback_data=button))
+#     if kwargs:
+#         for button, text in kwargs.items():
+#             buttons.append(InlineKeyboardButton(
+#                 text=text,
+#                 callback_data=button))
+#     kb_builder.row(*buttons, width=width)
+#     return kb_builder.as_markup()
 
 
-def file_kb(file_id):
-    ikb = InlineKeyboardMarkup(
-        row_width=3,
-        resize_keyboard=True)
-    ikb.row(
+async def file_kb(file_id):
+    buttons = [
         InlineKeyboardButton(
             text='Расписание',
-            callback_data=file_cb.new(
+            callback_data=FileCallback(
                 file_type='schedule',
                 file_id=file_id,
                 update='init'
-            )
+            ).pack()
         ),
         InlineKeyboardButton(
             text='Полезный стафф',
-            callback_data=file_cb.new(
+            callback_data=FileCallback(
                 file_type='study',
                 file_id=file_id,
                 update='init'
-            )
+            ).pack()
         ),
         InlineKeyboardButton(
             text='Не сохраняй',
-            callback_data=file_cb.new(
+            callback_data=FileCallback(
                 file_type='do_not_save',
                 file_id=file_id,
                 update='init'
-            )
+            ).pack()
         )
-    )
-    return ikb
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=[buttons])
 
 
-def schedule_exists_kb(file_id):
-    ikb = InlineKeyboardMarkup(
-        row_width=2,
-        resize_keyboard=True)
-    ikb.row(
+async def schedule_exists_kb(file_id):
+    buttons = [
         InlineKeyboardButton(
             text='Обнови',
-            callback_data=file_cb.new(
+            callback_data=FileCallback(
                 file_type='schedule',
                 file_id=file_id,
                 update='update'
-            )
+            ).pack()
         ),
         InlineKeyboardButton(
             text='Не надо',
-            callback_data=file_cb.new(
+            callback_data=FileCallback(
                 file_type='schedule',
                 file_id=file_id,
                 update='dont_update'
-            )
-        ),
-    )
-    return ikb
+            ).pack()
+        )
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=[buttons])
 
 
-def schedule_kb(today):
+async def schedule_kb(today):
     ikb = InlineKeyboardMarkup(
         row_width=3)
     ikb.row(InlineKeyboardButton(
         text='Сегодня',
-        callback_data=schedule_cb.new(
+        callback_data=ScheduleCallback(
             week=today.week,
             day=today.day_of_week
-        )
+        ).pack()
     ),
         InlineKeyboardButton(
             text='Вся неделя',
-            callback_data=schedule_cb.new(
+            callback_data=ScheduleCallback(
                 week=today.week,
                 day=0
-            )
+            ).pack()
         )
     )
     ikb.add()
@@ -139,10 +130,10 @@ def schedule_kb(today):
         print(i, day)
         button = InlineKeyboardButton(
                 text=day.name,
-                callback_data=schedule_cb.new(
+                callback_data=ScheduleCallback(
                     week=today.week,
                     day=day.id
-                )
+                ).pack()
         )
         if i == 0:
             ikb.add(button)

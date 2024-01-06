@@ -1,17 +1,19 @@
-from aiogram import types
-from aiogram.dispatcher.filters import Command
-import bot_replies as br
+import logging
+from aiogram.types import Message, CallbackQuery
 from loader import dp, bot, db
-from keyboards.keyboards import course_kb, start_cb, groups_kb
-import datetime as dt
+from aiogram.filters import Command, CommandStart
+import bot_replies as br
+from keyboards.callbacks import StartCallback
+from keyboards.keyboards import course_kb, groups_kb
 from lib.misc import chat_msg_ids
 
 
-@dp.message_handler(Command('start'))
-async def start(message: types.Message):
+@dp.message(CommandStart())
+async def start(message: Message):
+    logging.debug('start command!')
     chat_type = message.chat.type
     courses = [1, 2, 3]
-    markup = course_kb(courses)
+    markup = await course_kb(courses)
     hello_msg = br.DESCRIPTION
     if chat_type == 'private':
         user_id = message.from_user.id
@@ -26,14 +28,16 @@ async def start(message: types.Message):
             await message.answer(
                 text=f'Ты уже записан в группу {user_group[1]}'
             )
+            logging.info(f'user {user_id} is already registered')
     elif chat_type == 'group':
         chat_id = message.chat.id
         groups = db.get_groups()
         for group in groups:
-            if chat_id == group.get('chat_id', ''):
+            if chat_id == group.chat_id:
                 await message.answer(
-                    text=f'Чат закреплен за группой {group["name"]}'
+                    text=f'Чат закреплен за группой {group.name}'
                 )
+                logging.info(f'chat {chat_id} is already registered')
                 return
         await message.answer(
             text=hello_msg,
@@ -42,15 +46,15 @@ async def start(message: types.Message):
     await message.delete()
 
 
-@dp.callback_query_handler(start_cb.filter())
-async def callback_start(call: types.CallbackQuery, callback_data: dict):
+@dp.callback_query(StartCallback.filter())
+async def callback_start(call: CallbackQuery, callback_data: StartCallback):
     groups = db.get_groups()
+    chat_id, msg_id = chat_msg_ids(call)
     chat_type = call.message.chat.type
-    if callback_data['group_id'] == 'None':
-        markup = groups_kb(groups, int(callback_data['course']))
+    if callback_data.group_id == 'None':
+        markup = await groups_kb(groups, int(callback_data.course))
         await call.message.edit_text('Выбери группу', reply_markup=markup)
     else:
-        chat_id, msg_id = chat_msg_ids(call)
         await call.answer()
         if chat_type == 'private':
             user_id = call.message.chat.id
@@ -59,9 +63,9 @@ async def callback_start(call: types.CallbackQuery, callback_data: dict):
             if last_name:
                 user_name += ' ' + last_name
             tg_login = call.message.chat.username
-            group_id = callback_data['group_id']
+            group_id = callback_data.group_id
             user_group = db.add_user(user_id, group_id, user_name, tg_login)
-            print(f'New user added: {user_id} - {user_group[1]}')
+            logging.info(f'New user added: {user_id} - {user_group[1]}')
             msg = f'Добавил тебя в группу {user_group[1]}'
             await bot.edit_message_text(
                 chat_id=chat_id,
@@ -69,10 +73,9 @@ async def callback_start(call: types.CallbackQuery, callback_data: dict):
                 text=msg
             )
         elif chat_type == 'group':
-            group_id = callback_data['group_id']
-            chat_id = call.message.chat.id
+            group_id = callback_data.group_id
             group_name = db.update_group_chat(group_id, chat_id)
-            print(f'New group chat added: {chat_id} - {group_name}')
+            logging.info(f'New group chat added: {chat_id} - {group_name}')
             msg = f'Закрепил чат за группой {group_name}'
             await bot.edit_message_text(
                 chat_id=chat_id,

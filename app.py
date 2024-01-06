@@ -1,16 +1,26 @@
-from aiogram import executor
-import handlers
-import datetime
+from aiogram.types import BotCommand
+from aiogram import Bot
 from loader import dp, bot
 from config import ADMIN_ID
+import logging
 
 
-async def on_startup(_):
-    print('Bot is active.')
-    await bot.send_message(ADMIN_ID, f"Новый запуск: {str(datetime.datetime.now())}")
+async def set_menu(bot: Bot):
+    main_menu_commands = [
+        BotCommand(command='/help',
+                   description='про бота'),
+        BotCommand(command='/schedule',
+                   description='расписание'),
+        BotCommand(command='/materials',
+                   description='учебные материалы')
+    ]
+    await bot.set_my_commands(main_menu_commands)
 
 
 if __name__ == '__main__':
     from handlers import dp
-    executor.start_polling(dp, on_startup=on_startup)
+    logging.basicConfig(level=logging.INFO)
+    dp.startup.register(set_menu)
+    # executor.start_polling(dp, on_startup=on_startup)
+    dp.run_polling(bot)
 

@@ -1,6 +1,7 @@
 from lib.schedule_parser import get_schedule
 import psycopg2
 import datetime as dt
+from models import Group
 
 
 class DB:
@@ -27,16 +28,10 @@ class DB:
     def get_groups(self):
         query = """select * from groups"""
         self.cur.execute(query)
-        raw = self.cur.fetchall()
+        rows = self.cur.fetchall()
         groups = []
-        for group in raw:
-            group_dct = {
-                'id': group[0],
-                'name': group[1],
-                'course': group[2],
-                'chat_id': group[3]
-            }
-            groups.append(group_dct)
+        for row in rows:
+            groups.append(Group(*row))
         return groups
 
     def update_group_chat(self, group_id: int, chat_id: int):

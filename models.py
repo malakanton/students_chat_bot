@@ -13,6 +13,15 @@ ru_days = {
     'Суббота': 6
 }
 
+
+@dataclass
+class Group:
+    id: int
+    name: str
+    course: int
+    chat_id: Optional[int]
+
+
 @dataclass
 class Today:
     date: str

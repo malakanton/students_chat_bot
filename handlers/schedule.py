@@ -1,13 +1,14 @@
-from aiogram import types
-from aiogram.dispatcher.filters import Command
-from keyboards.keyboards import schedule_kb, schedule_cb
+from aiogram.types import Message, CallbackQuery
+from aiogram.filters import Command
+from keyboards.callbacks import ScheduleCallback
+from keyboards.keyboards import schedule_kb
 import bot_replies as br
 from loader import dp, week, bot
 from lib.misc import get_today
 
 
-@dp.message_handler(Command('schedule'))
-async def schedule_commands(message: types.Message):
+@dp.message(Command('schedule'))
+async def schedule_commands(message: Message):
     today = get_today()
     if not week.days:
         await message.answer(text=br.NO_SCHEDULE)
@@ -15,14 +16,14 @@ async def schedule_commands(message: types.Message):
         await message.answer(
             text=br.SHEDULE,
             parse_mode='html',
-            reply_markup=schedule_kb(today)
+            reply_markup=await schedule_kb(today)
         )
     await message.delete()
 
 
-@dp.callback_query_handler(schedule_cb.filter())
-async def callback_schedule(call: types.CallbackQuery, callback_data: dict):
-    day_id = int(callback_data['day'])
+@dp.callback_query(ScheduleCallback.filter())
+async def callback_schedule(call: CallbackQuery, callback_data: ScheduleCallback):
+    day_id = int(callback_data.day)
     day = week.get_day(day_id)
     print('day info', day)
     if not day:

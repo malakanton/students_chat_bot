@@ -1,5 +1,7 @@
 HELLO_STICKER = 'CAACAgUAAxkBAAEIS_5kHhHJbT-IIK0NMaSixWWNy8FMbQACPQQAAuLL0Vc8fzVOSO5JVC8E'
 
+SASHA_GREY = 'AgADHgMAAkKxOFc'
+
 DESCRIPTION = """
 я бот 
 
@@ -9,8 +11,6 @@ DESCRIPTION = """
 GROUP_CHOICE = """
 Укажи свою группу
 """
-
-
 
 HELP_MSG = """
 <b>Bot Commands:</b>\n

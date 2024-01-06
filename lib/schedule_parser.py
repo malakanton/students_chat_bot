@@ -138,10 +138,14 @@ def process_df(
         dates: list
 ) -> pd.DataFrame:
     df = df.copy()
-    if df.iloc[0][0] == 'НЕДЕЛИ':
+    if df.iloc[0, 0] == 'НЕДЕЛИ':
         df.drop(0, inplace=True)
+        df.reset_index(inplace=True, drop=True)
+    if not df.iloc[0, 0]:
+        df.drop(0, inplace=True)
+        df.reset_index(inplace=True, drop=True)
     df = process_columns(df)
-    df['day'] = df.day.map(days_of_week).fillna(method='ffill')
+    df['day'] = df.day.map(days_of_week).ffill()
     df['date'] = get_dates(list(df.day), dates)
     df['start'] = df[['date', 'hours']].apply(lambda x: merge_dt(x.date, x.hours), axis=1)
     df['end'] = df[['date', 'hours']].apply(lambda x: merge_dt(x.date, x.hours, start=False), axis=1)
