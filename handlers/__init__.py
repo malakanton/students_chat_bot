@@ -1,5 +1,5 @@
 from . import filters
-from .users import dp
-from .groups import dp
+from .users import *
+from .groups import *
 
 __all__ = ["dp"]

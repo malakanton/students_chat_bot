@@ -1,7 +1,6 @@
-from lib.schedule_parser import get_schedule
 import psycopg2
 import datetime as dt
-from models import Group
+from lib.models import Group, Week, Lesson
 
 
 class DB:
@@ -147,10 +146,57 @@ class DB:
         self.conn.commit()
         return file_name, tg_file_id
 
+    def get_schedule(self,
+                     user_id: int,
+                     week_num: int):
+        query = """
+        select 
+            l.day as day,
+            l.date as date,
+            s.name as subject,
+            l.start as start,
+            l.end_t as end,
+            t.name as teacher_name,
+            l.loc as loc
+        from lessons l
+            left join users u
+                on u.group_id = l.group_id
+            left join groups g
+                on g.id = l.group_id
+            left join teachers t
+                on t.id = l.teacher_id
+            left join subjects s
+                on s.id = l.subj_id
+        where u.user_id = %s
+        and week_num = %s
+        order by date
+        """
+        self.cur.execute(query, (user_id, week_num))
+        rows = self.cur.fetchall()
+        if not rows:
+            return None
+        week = Week(week_num)
+        for day in week.days:
+            for row in rows:
+                if row[0] == day.id:
+                    day.schedule.append(Lesson(*list(row)[2:]))
+                    day.free = False
+        return week
 
-#
+
+
+
+
+# #
 # from config import HOST, USER, PG_PASS, DB_NAME
 # db = DB(host=HOST, user=USER, pg_pass=PG_PASS, db_name=DB_NAME)
+#
+#
+# print((db.get_user_group(123) == None))
+# print(db.get_schedule(289484532, 23))
+
+
+
 #
 # groups = db.get_groups()
 # print(groups)

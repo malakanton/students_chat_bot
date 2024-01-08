@@ -1,20 +1,24 @@
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 from keyboards.callbacks import ScheduleCallback
-from keyboards.keyboards import schedule_kb
-import bot_replies as br
-from loader import dp, week, bot
+from keyboards.schedule import schedule_kb
+from lib import lexicon as lx
+from loader import dp, bot
 from lib.misc import get_today
+from handlers.filters import group_filter
+import logging
 
 
-@dp.message(Command('schedule'))
+@dp.message(Command('schedule'), group_filter)
 async def schedule_commands(message: Message):
+    logging.warning('schedule command in group chat')
+    return
     today = get_today()
     if not week.days:
-        await message.answer(text=br.NO_SCHEDULE)
+        await message.answer(text=lx.NO_SCHEDULE)
     else:
         await message.answer(
-            text=br.SHEDULE,
+            text=lx.SCHEDULE,
             parse_mode='html',
             reply_markup=await schedule_kb(today)
         )
@@ -28,16 +32,16 @@ async def callback_schedule(call: CallbackQuery, callback_data: ScheduleCallback
     print('day info', day)
     if not day:
         await call.answer(
-            text=br.NO_SCHEDULE,
+            text=lx.NO_SCHEDULE,
             show_alert=True)
     elif day.free:
         await call.answer(
-            text=br.FREE_DAY,
+            text=lx.FREE_DAY,
             show_alert=True)
     else:
         await call.answer()
         schedule = day.schedule
-        msg = br.SHEDULE_RESULTS.format(
+        msg = lx.SCHEDULE_RESULTS.format(
             day_of_week=day.name,
             date=day.date
         )

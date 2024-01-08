@@ -1,84 +1,71 @@
 import logging
+from lib import lexicon as lx
+from aiogram import F
 from aiogram.types import Message, CallbackQuery
-from loader import dp, bot, db
-from aiogram.filters import Command, CommandStart
-import bot_replies as br
+from aiogram.filters import CommandStart
+from loader import dp, bot, db, gr
+from lib.models import Groups
+from handlers.filters import group_filter, IsRegisteredGroup, cb_group_filter
 from keyboards.callbacks import StartCallback
-from keyboards.keyboards import course_kb, groups_kb
+from keyboards.start import course_kb, groups_kb
 from lib.misc import chat_msg_ids
 
 
-@dp.message(CommandStart())
+@dp.message(CommandStart(), group_filter)
 async def start(message: Message):
-    logging.debug('start command!')
-    chat_type = message.chat.type
-    courses = [1, 2, 3]
-    markup = await course_kb(courses)
-    hello_msg = br.DESCRIPTION
-    if chat_type == 'private':
-        user_id = message.from_user.id
-        user_group = db.get_user_group(user_id)
-        if not user_group:
-            hello_msg = f'Привет, <b>{message.from_user.first_name}</b>!\n' + hello_msg
+    logging.debug('start command in group chat!')
+    markup = await course_kb(gr.courses)
+    hello_msg = lx.HELLO
+    chat_id = message.chat.id
+    for group in gr.groups:
+        if chat_id == group.chat_id:
             await message.answer(
-                text=hello_msg,
-                reply_markup=markup
+                lx.CHAT_IS_LINKED.format(group.name)
             )
-        else:
-            await message.answer(
-                text=f'Ты уже записан в группу {user_group[1]}'
-            )
-            logging.info(f'user {user_id} is already registered')
-    elif chat_type == 'group':
-        chat_id = message.chat.id
-        groups = db.get_groups()
-        for group in groups:
-            if chat_id == group.chat_id:
-                await message.answer(
-                    text=f'Чат закреплен за группой {group.name}'
-                )
-                logging.info(f'chat {chat_id} is already registered')
-                return
-        await message.answer(
-            text=hello_msg,
-            reply_markup=markup
-        )
+            logging.info(f'chat {chat_id} is already registered')
+            return
+    await message.answer(
+        text=hello_msg,
+        reply_markup=markup
+    )
     await message.delete()
 
 
-@dp.callback_query(StartCallback.filter())
+@dp.callback_query(StartCallback.filter(), cb_group_filter)
 async def callback_start(call: CallbackQuery, callback_data: StartCallback):
-    groups = db.get_groups()
+    global gr
+    groups = gr.groups
     chat_id, msg_id = chat_msg_ids(call)
-    chat_type = call.message.chat.type
     if callback_data.group_id == 'None':
         markup = await groups_kb(groups, int(callback_data.course))
-        await call.message.edit_text('Выбери группу', reply_markup=markup)
+        await call.message.edit_text(lx.GROUP_CHOICE, reply_markup=markup)
     else:
-        await call.answer()
-        if chat_type == 'private':
-            user_id = call.message.chat.id
-            user_name = call.message.chat.first_name
-            last_name = call.message.chat.last_name
-            if last_name:
-                user_name += ' ' + last_name
-            tg_login = call.message.chat.username
-            group_id = callback_data.group_id
-            user_group = db.add_user(user_id, group_id, user_name, tg_login)
-            logging.info(f'New user added: {user_id} - {user_group[1]}')
-            msg = f'Добавил тебя в группу {user_group[1]}'
-            await bot.edit_message_text(
-                chat_id=chat_id,
-                message_id=msg_id,
-                text=msg
-            )
-        elif chat_type == 'group':
-            group_id = callback_data.group_id
-            group_name = db.update_group_chat(group_id, chat_id)
-            logging.info(f'New group chat added: {chat_id} - {group_name}')
-            msg = f'Закрепил чат за группой {group_name}'
-            await bot.edit_message_text(
-                chat_id=chat_id,
-                message_id=msg_id,
-                text=msg
-            )
+        group_id = int(callback_data.group_id)
+        if await unauthorized_chat(call, groups, group_id):
+            await bot.leave_chat(chat_id)
+            return
+        group_name = db.update_group_chat(group_id, chat_id)
+        logging.info(f'New group chat added: {chat_id} - {group_name}')
+        gr = Groups(db.get_groups())
+        await call.message.edit_text(lx.GROUP_LINKED.format(group_name))
+
+
+@dp.message(group_filter,
+            ~F.text.startswith('/start'),
+            ~IsRegisteredGroup(gr.chats))
+async def leave_if_unauthorised(message: Message):
+    logging.warning('unauthorized group!!!')
+    await bot.leave_chat(message.chat.id)
+
+
+async def unauthorized_chat(call, groups, chosen_group_id) -> bool:
+    print('choosen group id: ', chosen_group_id)
+    for group in groups:
+        if (
+                group.id == chosen_group_id and
+                group.chat_id
+        ):
+            logging.warning(
+                f'trying to attach a bot to a wrong chat: {call.message.chat.id}. The group {group.name} have a chat ({group.chat_id}) already')
+            await call.answer(lx.GROUP_CHAT_VIOLATION, show_alert=True)
+            return True

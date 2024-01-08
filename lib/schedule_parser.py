@@ -24,6 +24,7 @@ def plumb_pdf(
     dates = re.findall(r'\d+\.\d+\.\sпо\s\d+\.\d+', text)[0].split('. по ')
 
     df = pd.DataFrame(table[1:], columns=table[0])
+    print(df.head())
     return df, dates
 
 
@@ -34,6 +35,13 @@ def get_monday(
         dt.datetime.now().year,
         int(dates[0].split('.')[1]),
         int(dates[0].split('.')[0]))
+
+def process_empty_cols(columns):
+    if not columns[0]:
+        columns[0] = 'day'
+    if not columns[1]:
+        columns[1] = 'hours'
+    return columns
 
 
 def process_columns(
@@ -46,6 +54,7 @@ def process_columns(
         'ГРУППА': 'lesson_num',
     }, axis=1)
     columns = list(df.columns).copy()
+    columns = process_empty_cols(columns)
     for i, col in enumerate(columns):
         if not col:
             columns[i] = f'empty_{i}'
@@ -144,7 +153,12 @@ def process_df(
     if not df.iloc[0, 0]:
         df.drop(0, inplace=True)
         df.reset_index(inplace=True, drop=True)
+    if not df.iloc[0, 0]:
+        df.drop(0, inplace=True)
+        df.reset_index(inplace=True, drop=True)
     df = process_columns(df)
+    print(df.columns)
+    print(df.head())
     df['day'] = df.day.map(days_of_week).ffill()
     df['date'] = get_dates(list(df.day), dates)
     df['start'] = df[['date', 'hours']].apply(lambda x: merge_dt(x.date, x.hours), axis=1)
@@ -165,6 +179,7 @@ def filter_df(
     group_columns = [col for col in df.columns if group in col]
     filtered_df = df[common_columns + group_columns].copy()
     filtered_df.columns = common_columns + ['subj', 'loc']
+    filtered_df.fillna('', inplace=True)
     filtered_df['teacher'] = filtered_df.subj.map(get_teacher)
     filtered_df['subj_code'] = filtered_df.subj.map(get_subj_code)
     filtered_df['subj'] = filtered_df.subj.map(get_subj)
@@ -173,7 +188,7 @@ def filter_df(
 
 def get_schedule(
         filename: str
-) -> tuple[pd.DataFrame, int]:
+) -> pd.DataFrame:
     df_raw, dates = plumb_pdf(filename)
     df = process_df(df_raw, dates)
     week_num = get_monday(dates).isocalendar()[1]

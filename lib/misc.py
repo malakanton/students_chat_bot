@@ -1,14 +1,18 @@
 import datetime as dt
-from models import Today
+from lib.models import Today
 from aiogram import types
 
+test_users_dates = {}
 
-def get_today():
+
+def get_today(set_date: dt.datetime=None):
     today = dt.datetime.now()
+    if set_date:
+        today = set_date
     current_week = today.isocalendar()[1]
     day_of_week = today.weekday() + 1
     today = Today(
-        date=str(today.date()),
+        date=today.date(),
         week=current_week,
         day_of_week=day_of_week
     )
@@ -32,4 +36,12 @@ def valid_schedule_format(
     ):
         return True
 
+
+def prep_markdown(
+        text: str
+) -> str:
+    MARKDOWN = '.()-!'
+    for ch in MARKDOWN:
+        text = text.replace(ch, '\\' + ch)
+    return text
 

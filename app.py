@@ -1,26 +1,22 @@
-from aiogram.types import BotCommand
-from aiogram import Bot
 from loader import dp, bot
-from config import ADMIN_ID
+import asyncio
+from main_menu import set_menu
 import logging
+from config import PATH, ADMIN_IDS
 
-
-async def set_menu(bot: Bot):
-    main_menu_commands = [
-        BotCommand(command='/help',
-                   description='про бота'),
-        BotCommand(command='/schedule',
-                   description='расписание'),
-        BotCommand(command='/materials',
-                   description='учебные материалы')
-    ]
-    await bot.set_my_commands(main_menu_commands)
+async def main():
+    from handlers import dp
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(filename)s:%(lineno)d #%(levelname)-8s '
+               '[%(asctime)s] - %(name)s - %(message)s')
+    await set_menu(bot)
+    await bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot)
 
 
 if __name__ == '__main__':
-    from handlers import dp
-    logging.basicConfig(level=logging.INFO)
-    dp.startup.register(set_menu)
-    # executor.start_polling(dp, on_startup=on_startup)
-    dp.run_polling(bot)
+    asyncio.run(main())
+
+
 

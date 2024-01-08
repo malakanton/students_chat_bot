@@ -5,6 +5,7 @@ env.read_env()
 
 TG_TOKEN = env.str('TG_TOKEN')
 ADMIN_ID = env.str('ADMIN_ID')
+ADMIN_IDS = env.list('ADMIN_IDS')
 PATH = './temp/'
 GROUP = 'ИСП11-123ВПоз'
 

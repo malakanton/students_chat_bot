@@ -14,4 +14,4 @@ class FileCallback(CallbackData, prefix='file'):
 
 class ScheduleCallback(CallbackData, prefix='schedule'):
     week: int
-    day: int
+    command: str

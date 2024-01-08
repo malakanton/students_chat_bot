@@ -11,9 +11,11 @@ create table if not exists teachers (
 """
 create_users_query = """
 create table if not exists users (
-    user_id smallint primary key not null,
+    user_id smallint primary key,
     group_id integer not null,
-    name varchar(30),
+    name varchar(30) not null,
+    tg_login varchar(30) not null,
+    user_type varchar(30),
     
     foreign key (group_id)
         references groups (id)
@@ -21,18 +23,19 @@ create table if not exists users (
 """
 create_files_query = """
 create table if not exists files (
-	id serial primary key,
-	file_type varchar(10) not null,
-	file_name varchar(255) not null,
-	file_path varchar(255) not null,
-	subj_id smallint,
-	uploaded_at date not null,
-	uploaded_by bigint not null,
-	
-	foreign key (uploaded_by)
-		references users (user_id),
-	foreign key (subj_id)
-		references subjects (id)
+    id serial primary key,
+    file_type varchar(10) not null,
+    file_name varchar(255) not null,
+    file_path varchar(255) not null,
+    subj_id smallint,
+    uploaded_at date not null,
+    uploaded_by bigint not null,
+    tg_file_id varchar(255)
+    
+    foreign key (uploaded_by)
+        references users (user_id),
+    foreign key (subj_id)
+        references subjects (id)
 )
 """
 create_subjects_query = """
@@ -40,13 +43,15 @@ create table if not exists subjects (
     id serial primary key not null,
     code varchar(10) unique not null,
     name varchar(50) not null,
-    comment varchar(20)
+    comment varchar(255)
 )
 """
 create_groups_query = """
 create table if not exists groups (
     id serial primary key not null,
-    name varchar(10) not null
+    name varchar(30) not null,
+    course smallint not null,
+    chat_id bigint
 )
 """
 create_lessons_query = """

@@ -1,15 +1,12 @@
-import logging
-
 from loader import db
 from lib.schedule_parser import get_schedule, filter_df
-from models import ru_days
+from lib.dicts import ru_days
 import logging
 
 
 async def process_schedule_file(filename: str):
     try:
         df, week_num = get_schedule(filename)
-        print(df.iloc[0])
     except:
         logging.error(f'didnt manage to get schedule from {filename}!!!')
         return None, None, None
@@ -22,16 +19,21 @@ async def process_schedule_file(filename: str):
 
 async def upload_schedule(df, week_num):
     groups = db.get_groups()
+    not_uploaded_groups = []
     for group in groups:
-        try:
-            schedule = filter_df(df, group.name).to_dict(orient='records')
-        except:
-            print('error!!!')
-            break
-        upload_group_schedule(schedule, week_num, group.id)
+        if group.name in df.columns:
+            try:
+                schedule = filter_df(df, group.name).to_dict(orient='records')
+            except:
+                logging.warning(f'error!!! while filtering group {group.name}')
+                print(f'error!!! while filtering {group.name}')
+                break
+            await upload_group_schedule(schedule, week_num, group.id)
+        else:
+            not_uploaded_groups.append(group)
 
 
-def upload_group_schedule(
+async def upload_group_schedule(
         schedule: list,
         week_num: int,
         group_id: int
