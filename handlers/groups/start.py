@@ -35,7 +35,6 @@ async def start(message: Message):
     )
 
 
-
 @dp.callback_query(StartCallback.filter(),
                    cb_group_filter,
                    StartCallback.filter(F.confirm == 'None'))
@@ -53,7 +52,6 @@ async def group_choice(call: CallbackQuery, callback_data: StartCallback):
         await call.message.edit_text(msg,
                                      reply_markup=markup,
                                      parse_mode='MarkdownV2')
-
 
 
 @dp.callback_query(StartCallback.filter(), cb_group_filter)

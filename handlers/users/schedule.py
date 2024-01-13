@@ -1,17 +1,17 @@
-from aiogram.types import Message, CallbackQuery
-from aiogram.filters import Command
+import asyncio
 from aiogram import F
-from lib.models import DayOfWeek, Week
-from lib.dicts import lessons_dict, MONTHS
-from keyboards.callbacks import ScheduleCallback
-from keyboards.schedule import schedule_kb
-from keyboards.buttons import ScheduleButt
-from handlers.filters import UserFilter, UnRegisteredUser
 from lib import lexicon as lx
 from loader import dp, db, users
+from aiogram.filters import Command
+from lib.models import DayOfWeek, Week
+from config import SCHEDULE_KB_TIMEOUT
+from handlers.filters import UserFilter
+from lib.dicts import lessons_dict, MONTHS
+from keyboards.schedule import schedule_kb
+from keyboards.buttons import ScheduleButt
+from aiogram.types import Message, CallbackQuery
+from keyboards.callbacks import ScheduleCallback
 from lib.misc import get_today, chat_msg_ids, prep_markdown, test_users_dates
-import logging
-import asyncio
 
 
 @dp.message(Command('schedule'), UserFilter())
@@ -69,7 +69,7 @@ async def week_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
 
 # если выбрал смену недели
 @dp.callback_query(ScheduleCallback.filter(F.command.in_({ScheduleButt.BACK.name,
-                                                         ScheduleButt.FORW.name})))
+                                                          ScheduleButt.FORW.name})))
 async def change_week(call: CallbackQuery, callback_data: ScheduleCallback):
     user_id, msg_id = chat_msg_ids(call)
     if callback_data.command == ScheduleButt.BACK.name:
@@ -129,5 +129,5 @@ async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
 
 
 async def hide_keyboard(call: CallbackQuery):
-    await asyncio.sleep(15*60)
+    await asyncio.sleep(SCHEDULE_KB_TIMEOUT)
     await call.message.edit_reply_markup(reply_markup=None)

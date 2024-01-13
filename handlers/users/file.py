@@ -1,7 +1,7 @@
 import os
 import logging
 from aiogram.types import Message, CallbackQuery
-from config import PATH, ADMIN_IDS
+from config import PATH
 from aiogram import F
 from lib import lexicon as lx
 from loader import dp, db, bot, users

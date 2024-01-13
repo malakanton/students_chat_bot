@@ -2,6 +2,7 @@ from aiogram.filters import BaseFilter
 from aiogram.types import Message
 from aiogram import F
 from loader import db
+import datetime
 
 
 cb_user_filter = F.message.chat.type == 'private'
@@ -21,6 +22,18 @@ class UserFilter(BaseFilter):
             )
         else:
             return message.chat.type == 'private'
+
+
+class SupportFilter(BaseFilter):
+    async def __call__(self, message: Message):
+        if '#support' in message.text:
+            date = message.date + datetime.timedelta(hours=3)
+            return {
+                'text': message.text,
+                'user_id': message.from_user.id,
+                'user_name': message.from_user.username,
+                'date': date.strftime('%Y-%m-%d %H:%M')
+            }
 
 
 class IsRegisteredGroup(BaseFilter):
