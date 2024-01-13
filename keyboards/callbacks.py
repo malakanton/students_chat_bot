@@ -4,6 +4,7 @@ from aiogram.filters.callback_data import CallbackData
 class StartCallback(CallbackData, prefix='start'):
     course: int
     group_id: str
+    confirm: str
 
 
 class FileCallback(CallbackData, prefix='file'):
@@ -15,3 +16,10 @@ class FileCallback(CallbackData, prefix='file'):
 class ScheduleCallback(CallbackData, prefix='schedule'):
     week: int
     command: str
+
+
+class LibCallback(CallbackData, prefix='lib'):
+    file_id: int
+    subject_id: int
+    type: str
+    confirm: str

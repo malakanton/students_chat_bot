@@ -1,14 +1,14 @@
 from loader import dp, db, bot
 from aiogram.types import Message
 from aiogram import F
-from handlers.filters import user_filter
+from handlers.filters import UserFilter
 import logging
 from lib.misc import test_users_dates
 import re
 import datetime as dt
 
 
-@dp.message(user_filter,
+@dp.message(UserFilter,
             F.content_type == 'text',
             F.text.lower().startswith('today'))
 async def set_date(message: Message):

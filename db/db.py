@@ -24,8 +24,10 @@ class DB:
         self.cur.execute(query, values)
         self.conn.commit()
 
-    def get_groups(self):
+    def get_groups(self, test=False):
         query = """select * from groups"""
+        if not test:
+            query = """select * from groups where name != 'test'"""
         self.cur.execute(query)
         rows = self.cur.fetchall()
         groups = []
@@ -34,10 +36,12 @@ class DB:
         return groups
 
     def update_group_chat(self, group_id: int, chat_id: int):
-        query = """update groups set chat_id = %s where id = %s 
-        returning name
+        query = """
+        update users set user_type = 'regular' where group_id = %s;
+        update groups set chat_id = %s where id = %s
+        returning name 
         """
-        self._execute_query(query, (chat_id, group_id))
+        self._execute_query(query, (group_id, chat_id, group_id))
         group_name = self.cur.fetchone()[0]
         return group_name
 
@@ -73,9 +77,13 @@ class DB:
         query = f"""insert into teachers (name) values(%s)"""
         self._execute_query(query, (name,))
 
-    def add_user(self, user_id: int, group_id: int, name: str, tg_login: str):
-        query = f"""insert into users (user_id, group_id, name, tg_login) values(%s, %s, %s, %s)"""
-        self._execute_query(query, (user_id, group_id, name, tg_login))
+    def add_user(self, user_id: int, group_id: int, name: str, tg_login: str, type: str = None):
+        if type:
+            query = f"""insert into users (user_id, group_id, name, tg_login, user_type) values(%s, %s, %s, %s, %s)"""
+            self._execute_query(query, (user_id, group_id, name, tg_login, type))
+        else:
+            query = f"""insert into users (user_id, group_id, name, tg_login) values(%s, %s, %s, %s)"""
+            self._execute_query(query, (user_id, group_id, name, tg_login))
         return self.get_user_group(user_id)
 
     def get_weeks(self):
@@ -132,7 +140,10 @@ class DB:
                     subj_id: int = None) -> str:
         if subj_id:
             query = """
-            update files set file_type = %s, set subj_id = %s where id = %s
+            update files 
+            set file_type = %s, 
+            subj_id = %s 
+            where id = %s
             returning file_name, tg_file_id
             """
             self.cur.execute(query, (file_type, subj_id, file_id))
@@ -183,14 +194,41 @@ class DB:
                     day.free = False
         return week
 
+    def get_users_ids(self, user_type='unreg'):
+        if isinstance(user_type, list):
+            query = """select user_id from users where user_type in %s"""
+            user_type = tuple(user_type)
+        elif isinstance(user_type, str):
+            if user_type == 'all':
+                query = """select user_id from users"""
+            else:
+                query = """select user_id from users where user_type= %s"""
+        self.cur.execute(query, (user_type,))
+        ids = [id[0] for id in self.cur.fetchall()]
+        return set(ids)
+
+    def get_users_subjects(self, user_id: int):
+        query = """
+        select 
+            s.name,
+            s.id 
+        from lessons l
+            left join subjects s
+                on l.subj_id = s.id
+        where group_id = (select group_id from users where user_id = %s)
+        """
+        self.cur.execute(query, (user_id,))
+        return dict(self.cur.fetchall())
 
 
-
-
-# #
 # from config import HOST, USER, PG_PASS, DB_NAME
 # db = DB(host=HOST, user=USER, pg_pass=PG_PASS, db_name=DB_NAME)
 #
+# # print(db.get_users_subjects(401939802))
+# subj_inv = {v: k for k, v in db.get_users_subjects(401939802).items()}
+# print(subj_inv)
+
+# print(db.get_users_ids('regular'))
 #
 # print((db.get_user_group(123) == None))
 # print(db.get_schedule(289484532, 23))

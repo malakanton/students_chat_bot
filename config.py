@@ -8,6 +8,7 @@ ADMIN_ID = env.str('ADMIN_ID')
 ADMIN_IDS = env.list('ADMIN_IDS')
 PATH = './temp/'
 GROUP = 'ИСП11-123ВПоз'
+UNAUTHORIZED_GROUP_TIMOUT = 60
 
 HOST = '127.0.0.1'
 USER = 'postgres'

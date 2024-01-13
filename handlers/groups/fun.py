@@ -1,11 +1,11 @@
 from loader import dp, db, bot
 from aiogram.types import Message
-from handlers.filters import group_filter
+from handlers.filters import GroupFilter
 from aiogram import F
 import logging
 
 
-@dp.message(group_filter,
+@dp.message(GroupFilter,
             F.content_type != 'document')
 async def fun_handler(message: Message):
     # print(message.chat.id)

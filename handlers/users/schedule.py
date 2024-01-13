@@ -6,18 +6,18 @@ from lib.dicts import lessons_dict, MONTHS
 from keyboards.callbacks import ScheduleCallback
 from keyboards.schedule import schedule_kb
 from keyboards.buttons import ScheduleButt
-from handlers.filters import user_filter
+from handlers.filters import UserFilter, UnRegisteredUser
 from lib import lexicon as lx
-from loader import dp, db
+from loader import dp, db, users
 from lib.misc import get_today, chat_msg_ids, prep_markdown, test_users_dates
 import logging
+import asyncio
 
 
-@dp.message(Command('schedule'), user_filter)
+@dp.message(Command('schedule'), UserFilter())
 async def schedule_commands(message: Message):
     user_id = message.from_user.id
     today = get_today(test_users_dates.get(user_id, None))
-    print(today)
     week_num = today.week
     day_of_week = today.day_of_week
     week = db.get_schedule(user_id, week_num)
@@ -49,6 +49,7 @@ async def day_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
         reply_markup=await schedule_kb(week, day_num),
         parse_mode='MarkdownV2'
     )
+    await hide_keyboard(call)
 
 
 # если выбрал всю неделю
@@ -63,6 +64,7 @@ async def week_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
         reply_markup=await schedule_kb(week, 0),
         parse_mode='MarkdownV2'
     )
+    await hide_keyboard(call)
 
 
 # если выбрал смену недели
@@ -74,10 +76,12 @@ async def change_week(call: CallbackQuery, callback_data: ScheduleCallback):
         week = db.get_schedule(user_id, callback_data.week - 1)
         if not week:
             await call.answer(lx.NO_PREV_SCHEDULE, show_alert=True)
+            return
     elif callback_data.command == ScheduleButt.FORW.name:
         week = db.get_schedule(user_id, callback_data.week + 1)
         if not week:
             await call.answer(lx.NO_NEXT_SCHEDULE, show_alert=True)
+            return
     else:
         await call.answer()
         week = db.get_schedule(user_id, callback_data.week)
@@ -87,6 +91,7 @@ async def change_week(call: CallbackQuery, callback_data: ScheduleCallback):
         reply_markup=await schedule_kb(week, 0),
         parse_mode='MarkdownV2'
     )
+    await hide_keyboard(call)
 
 
 async def form_week_schedule_text(week: Week):
@@ -121,3 +126,8 @@ async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
     if single:
         text = prep_markdown(text)
     return text
+
+
+async def hide_keyboard(call: CallbackQuery):
+    await asyncio.sleep(15*60)
+    await call.message.edit_reply_markup(reply_markup=None)

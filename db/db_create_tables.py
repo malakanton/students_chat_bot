@@ -15,10 +15,10 @@ create table if not exists users (
     group_id integer not null,
     name varchar(30) not null,
     tg_login varchar(30) not null,
-    user_type varchar(30),
+    user_type varchar(10) default 'unreg',
     
     foreign key (group_id)
-        references groups (id)
+        references groups (id) ON DELETE CASCADE
 )
 """
 create_files_query = """
@@ -33,9 +33,9 @@ create table if not exists files (
     tg_file_id varchar(255)
     
     foreign key (uploaded_by)
-        references users (user_id),
+        references users (user_id) ON DELETE CASCADE,
     foreign key (subj_id)
-        references subjects (id)
+        references subjects (id) ON DELETE CASCADE
 )
 """
 create_subjects_query = """
@@ -67,11 +67,11 @@ create table if not exists lessons (
     loc varchar(10),
     
     foreign key (group_id)
-        references groups (id),
+        references groups (id) ON DELETE CASCADE,
     foreign key (subj_id)
-        references subjects (id),
+        references subjects (id) ON DELETE CASCADE,
     foreign key (teacher_id)
-        references teachers (id)
+        references teachers (id) ON DELETE CASCADE
 )
 """
 

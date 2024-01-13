@@ -1,14 +1,13 @@
-from aiogram.types import BotCommand
+from aiogram.types import BotCommand, BotCommandScopeAllPrivateChats
 from aiogram import Bot
+from lib.lexicon import MAIN_MENU
 
 
 async def set_menu(bot: Bot):
-    main_menu_commands = [
-        BotCommand(command='/help',
-                   description='❔ про бота'),
-        BotCommand(command='/schedule',
-                   description='📅 посмотреть расписание'),
-        BotCommand(command='/library',
-                   description='📚 учебные материалы')
-    ]
-    await bot.set_my_commands(main_menu_commands)
+    main_menu = []
+    for command, description in MAIN_MENU.items():
+        main_menu.append(
+            BotCommand(command=command,
+                       description=description),
+        )
+    await bot.set_my_commands(main_menu)

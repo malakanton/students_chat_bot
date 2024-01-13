@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from keyboards.callbacks import StartCallback
-from keyboards.buttons import COURSES
+from keyboards.buttons import COURSES, Confirm
 
 
 async def course_kb(courses):
@@ -12,7 +12,8 @@ async def course_kb(courses):
                 text=COURSES[course],
                 callback_data=StartCallback(
                     course=course,
-                    group_id='None'
+                    group_id='None',
+                    confirm='None'
                 ).pack())
         )
     return InlineKeyboardMarkup(inline_keyboard=[buttons])
@@ -28,9 +29,24 @@ async def groups_kb(groups, course):
                 text=group.name,
                 callback_data=StartCallback(
                     course=course,
-                    group_id=str(group.id)
+                    group_id=str(group.id),
+                    confirm='None'
                 ).pack()
             )
         )
     kb_builder.row(*buttons, width=2)
+    return kb_builder.as_markup()
+
+
+async def confirm_kb(course, group):
+    kb_builder = InlineKeyboardBuilder()
+    buttons = [
+        InlineKeyboardButton(
+            text=button.value,
+            callback_data=StartCallback(
+                course=course,
+                group_id=str(group.id),
+                confirm=button.name).pack())
+        for button in Confirm]
+    kb_builder.row(*(buttons), width=2)
     return kb_builder.as_markup()

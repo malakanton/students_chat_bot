@@ -4,6 +4,12 @@ import datetime as dt
 import re
 
 
+import pandas as pd
+import pdfplumber
+import datetime as dt
+import re
+
+
 def plumb_pdf(
         filename: str
 ) -> tuple:
@@ -18,13 +24,16 @@ def plumb_pdf(
         )
         text = f.pages[0].extract_text(
             keep_blank_chars=True,
-            y_tolerance=0.1
+            y_tolerance=0.5,
+            x_tolerance=0.5
         )
 
-    dates = re.findall(r'\d+\.\d+\.\sпо\s\d+\.\d+', text)[0].split('. по ')
-
+    search_res = re.search('[сc]\s?\d{1,2}\.\d{1,2}\.?\s?по\s?\d{1,2}\.\d{1,2}', text).group(0)
+    search_res = search_res.split()[1:]
+    dates = [s for s in search_res if 'по' not in s]
     df = pd.DataFrame(table[1:], columns=table[0])
-    print(df.head())
+    if filename == './temp/Очно-заочное отделение с 12.01.-13.01..pdf':
+        dates = ['12.01', '13.01']
     return df, dates
 
 
@@ -113,7 +122,7 @@ def get_teacher(
         text: str
 ) -> str:
     text = text.replace('\n', ' ')
-    pattern = r'[А-Я]{1}[а-я]* [А-Я]\.[А-Я]\.'
+    pattern = r'([А-Я]{1}[а-я]*)?(\-[А-Я]{1}[а-я]*)? [А-Я]\.[А-Я]\.'
     try:
         return re.search(pattern, text).group(0)
     except:
@@ -124,7 +133,7 @@ def get_subj_code(
         text: str
 ) -> str:
     text = text.replace('\n', ' ')
-    code_pattern = r'^[А-Я]{1,5}\s?\d{0,2}\.\d{1,3}'
+    code_pattern = r'^[А-Я]{1,5}\s?\d{0,2}\.\d{1,3}\.?\d{0,2}'
     try:
         return re.search(code_pattern, text).group(0)
     except:
@@ -134,12 +143,20 @@ def get_subj_code(
 def get_subj(
         text: str
 ) -> str:
-    teacher_pattern = r'[А-Я]{1}[а-я]* [А-Я]\.[А-Я]\.'
-    code_pattern = r'[А-Я]{1,5}\s?\d{0,2}\.\d{1,3}'
+    teacher_pattern = r'[\(]?([А-Я]{1}[а-я]*)?(\-[А-Я]{1}[а-я]*)? [А-Я]\.[А-Я]\.[\)]?'
+    code_pattern = r'^[А-Я]{1,5}\s?\d{0,2}\.\d{1,3}\.?\d{0,2}'
     text = text.replace('\n', ' ')
     text = re.sub(teacher_pattern, '', text)
     text = re.sub(code_pattern, '', text)
     return text.strip()
+
+
+def clean_loc(text:str) -> str:
+    if ' ' in text:
+        text = text.replace(' ', '')
+    if '\n' in text:
+        text = text.replace('\n', '')
+    return text
 
 
 def process_df(
@@ -157,8 +174,6 @@ def process_df(
         df.drop(0, inplace=True)
         df.reset_index(inplace=True, drop=True)
     df = process_columns(df)
-    print(df.columns)
-    print(df.head())
     df['day'] = df.day.map(days_of_week).ffill()
     df['date'] = get_dates(list(df.day), dates)
     df['start'] = df[['date', 'hours']].apply(lambda x: merge_dt(x.date, x.hours), axis=1)
@@ -180,6 +195,7 @@ def filter_df(
     filtered_df = df[common_columns + group_columns].copy()
     filtered_df.columns = common_columns + ['subj', 'loc']
     filtered_df.fillna('', inplace=True)
+    filtered_df['loc'] = filtered_df['loc'].map(clean_loc)
     filtered_df['teacher'] = filtered_df.subj.map(get_teacher)
     filtered_df['subj_code'] = filtered_df.subj.map(get_subj_code)
     filtered_df['subj'] = filtered_df.subj.map(get_subj)
@@ -193,3 +209,4 @@ def get_schedule(
     df = process_df(df_raw, dates)
     week_num = get_monday(dates).isocalendar()[1]
     return df, week_num
+

@@ -8,6 +8,14 @@ from lib.dicts import ru_days, ru_days_inv
 
 
 @dataclass
+class Users:
+    admins: set[int] = Field(default=set())
+    heads: set[int] = Field(default=set())
+    regular: set[int] = Field(default=set())
+    unreg: set[int] = Field(default=set())
+
+
+@dataclass
 class Group:
     id: int
     name: str

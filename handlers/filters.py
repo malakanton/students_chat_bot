@@ -4,10 +4,23 @@ from aiogram import F
 from loader import db
 
 
-user_filter = F.chat.type == 'private'
 cb_user_filter = F.message.chat.type == 'private'
-group_filter = F.chat.type.in_({'group', 'supergroup'})
-cb_group_filter = F.message.type.in_({'group', 'supergroup'})
+GroupFilter = F.chat.type.in_({'group', 'supergroup'})
+cb_group_filter = F.message.chat.type.in_({'group', 'supergroup'})
+
+
+class UserFilter(BaseFilter):
+    def __init__(self, users_ids: set[int] = None) -> None:
+        self.users_ids = users_ids
+
+    async def __call__(self, message: Message):
+        if isinstance(self.users_ids, set):
+            return (
+                    message.chat.type == 'private' and
+                    message.from_user.id in self.users_ids
+            )
+        else:
+            return message.chat.type == 'private'
 
 
 class IsRegisteredGroup(BaseFilter):
@@ -24,6 +37,7 @@ class IsAdmin(BaseFilter):
 
     async def __call__(self, message: Message) -> bool:
         return message.from_user.id in self.admin_ids
+
 
 class UnRegisteredUser(BaseFilter):
     def __init__(self) -> None:

@@ -30,11 +30,9 @@ def chat_msg_ids(
 def valid_schedule_format(
         filename: str
 ) -> bool:
-    if (
-        filename.endswith('.pdf') and
-        'очно_заочное_' in filename.lower()
-    ):
-        return True
+    import re
+    return re.match(r'^[Оо]чно[-_]заочное.отделение.{1,3}[0-9].*\.pdf$', filename)
+
 
 
 def prep_markdown(

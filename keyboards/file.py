@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from keyboards.callbacks import FileCallback
-from keyboards.buttons import FileButt, SchdUpdButt
+from keyboards.callbacks import FileCallback, LibCallback
+from keyboards.buttons import FileButt, SchdUpdButt, FileTypeButt
 
 
 async def file_kb(file_id, schedule=True):
@@ -56,3 +56,6 @@ async def schedule_exists_kb(file_id):
         )
     ]
     return InlineKeyboardMarkup(inline_keyboard=[buttons])
+
+
+

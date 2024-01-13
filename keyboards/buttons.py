@@ -8,6 +8,11 @@ COURSES = {
 }
 
 
+class Confirm(Enum):
+    OK = '✅Да!'
+    CANCEL = '❌Заново'
+
+
 class FileButt(Enum):
     CANCEL = 'Не сохраняй'
     STUDY = 'Полезный стафф'
@@ -17,6 +22,14 @@ class FileButt(Enum):
 class SchdUpdButt(Enum):
     UPDATE = 'Обнови'
     KEEP = 'Не обновляй'
+
+
+class FileTypeButt(Enum):
+    LECTURE = 'Лекцию'
+    BLANK = 'Шаблон'
+    TASK = 'Задание'
+    HOMEWORK = 'Домашку'
+    ADDITIONAL = 'Доп материалы'
 
 
 class CancelButt(Enum):
@@ -31,3 +44,5 @@ class ScheduleButt(Enum):
 
 
 codes = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ']
+
+
