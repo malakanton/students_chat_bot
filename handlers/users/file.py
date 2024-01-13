@@ -1,15 +1,15 @@
 import os
 import logging
-from aiogram.types import Message, CallbackQuery
 from config import PATH
 from aiogram import F
 from lib import lexicon as lx
 from loader import dp, db, bot, users
 from handlers.filters import UserFilter
+from aiogram.types import Message, CallbackQuery
 from keyboards.file import schedule_exists_kb, file_kb
 from keyboards.callbacks import FileCallback, LibCallback
-from keyboards.library import lib_type_kb, subjects_kb, confirm_subj_kb
 from lib.misc import chat_msg_ids, valid_schedule_format
+from keyboards.library import lib_type_kb, subjects_kb, confirm_subj_kb
 from lib.schedule_uploader import process_schedule_file, upload_schedule
 from keyboards.buttons import FileButt, SchdUpdButt, Confirm, FileTypeButt
 

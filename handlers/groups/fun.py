@@ -1,8 +1,8 @@
+import logging
+from aiogram import F
 from loader import dp, db, bot
 from aiogram.types import Message
 from handlers.filters import GroupFilter
-from aiogram import F
-import logging
 
 
 @dp.message(GroupFilter,

@@ -1,9 +1,9 @@
-from aiogram.types import Message
-from aiogram.filters import Command
-from lib import lexicon as lx
 from loader import dp
-from handlers.filters import UserFilter, UnRegisteredUser
+from lib import lexicon as lx
+from aiogram.types import Message
 from lib.misc import prep_markdown
+from aiogram.filters import Command
+from handlers.filters import UserFilter
 
 
 @dp.message(Command('help'), UserFilter())
