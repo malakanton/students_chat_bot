@@ -17,7 +17,10 @@ services:
       - 5000
     depends_on:
       - db
+    networks:
+      - my_network
   db:
+    container_name: pg_db_container
     image: postgres:16-alpine
     volumes:
       - ./pg_db:/var/lib/postgresql/data/
@@ -26,13 +29,24 @@ services:
       - POSTGRES_PASSWORD=Ma!azD9e
       - POSTGRES_DB=students_bot_db
     ports:
-      - "127.0.0.1:5433:5432"
+      - "5433:5432"
+    networks:
+      - my_network
   pgadmin:
+    container_name: pg_admin_container
     image: dpage/pgadmin4
     depends_on:
       - db
     environment:
       - PGADMIN_DEFAULT_EMAIL=malakanton@yandex.ru
       - PGADMIN_DEFAULT_PASSWORD=isp123vpoz
-      - PGADMIN_LISTEN_ADDRESS=0.0.0.0
-      - PGADMIN_LISTEN_PORT=5555
+#      - PGADMIN_CONFIG_SERVER_MODE="False"
+#      - PGADMIN_LISTEN_ADDRESS=0.0.0.0
+#      - PGADMIN_LISTEN_PORT=5050
+    ports:
+      - "5050:80"
+    networks:
+      - my_network
+networks:
+  my_network:
+    driver: bridge

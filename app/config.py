@@ -12,8 +12,8 @@ GROUP = 'ИСП11-123ВПоз'
 UNAUTHORIZED_GROUP_TIMOUT = 60
 SCHEDULE_KB_TIMEOUT = 15 * 60
 
-HOST = '127.0.0.1'
-# HOST = 'localhost'
+HOST = 'pg_db_container'
+PORT = '5432'
 USER = 'postgres'
 PG_PASS = env.str('PG_PASS')
 DB_NAME = 'students_bot_db'

@@ -10,13 +10,15 @@ class DB:
             host: str,
             db_name: str,
             user: str,
-            pg_pass: str
+            pg_pass: str,
+            port: str
     ):
         self.conn = psycopg2.connect(
             host=host,
             database=db_name,
             user=user,
-            password=pg_pass
+            password=pg_pass,
+            port=port
         )
         self.cur = self.conn.cursor()
 
