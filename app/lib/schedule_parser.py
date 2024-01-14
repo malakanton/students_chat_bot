@@ -2,6 +2,7 @@ import pandas as pd
 import pdfplumber
 import datetime as dt
 import re
+import logging
 
 
 def plumb_pdf(
@@ -22,7 +23,7 @@ def plumb_pdf(
             x_tolerance=0.5
         )
 
-    search_res = re.search('[сc]\s?\d{1,2}\.\d{1,2}\.?\s?по\s?\d{1,2}\.\d{1,2}', text).group(0)
+    search_res = re.search('[сc]\s?\d{1,2}\.\d{1,2}\.?\s?(по|-)\s?\d{1,2}\.\d{1,2}', text).group(0)
     search_res = search_res.split()[1:]
     dates = [s for s in search_res if 'по' not in s]
     df = pd.DataFrame(table[1:], columns=table[0])
@@ -127,7 +128,7 @@ def get_subj_code(
         text: str
 ) -> str:
     text = text.replace('\n', ' ')
-    code_pattern = r'^[А-Я]{1,5}\s?\d{0,2}\.\d{1,3}\.?\d{0,2}'
+    code_pattern = r'^[А-Я]{1,5}\s?\d{0,2}\.?\d{1,3}\.?\d{0,2}'
     try:
         return re.search(code_pattern, text).group(0)
     except:
@@ -138,7 +139,7 @@ def get_subj(
         text: str
 ) -> str:
     teacher_pattern = r'[\(]?([А-Я]{1}[а-я]*)?(\-[А-Я]{1}[а-я]*)? [А-Я]\.[А-Я]\.[\)]?'
-    code_pattern = r'^[А-Я]{1,5}\s?\d{0,2}\.\d{1,3}\.?\d{0,2}'
+    code_pattern = r'^[А-Я]{1,5}\s?\d{0,2}\.?\d{1,3}\.?\d{0,2}'
     text = text.replace('\n', ' ')
     text = re.sub(teacher_pattern, '', text)
     text = re.sub(code_pattern, '', text)
@@ -199,8 +200,12 @@ def filter_df(
 def get_schedule(
         filename: str
 ) -> pd.DataFrame:
+    logging.info('start schedule parsing')
     df_raw, dates = plumb_pdf(filename)
+    logging.info(f"schedule dates: {dates}")
+    logging.info(str(df_raw.head()))
     df = process_df(df_raw, dates)
+    logging.info(f'processed df: {df.head()}')
     week_num = get_monday(dates).isocalendar()[1]
     return df, week_num
 

@@ -47,6 +47,8 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
         logging.info(f'file {file_name} doesnt pass the schedule test')
         return
     schedule_path = PATH + file_name
+    logging.info(str(os.listdir(PATH)))
+    logging.info(f'schedule file path: {schedule_path}')
     await bot.download_file(
         file_path=file.file_path,
         destination=schedule_path

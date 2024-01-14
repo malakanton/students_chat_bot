@@ -17,7 +17,7 @@ from keyboards.buttons import FileButt, SchdUpdButt, Confirm, FileTypeButt
 # обработка прикрепленных документов
 # в групповых чатах прикреплять документы могут все пользователи
 @dp.message(F.content_type == 'document',
-            GroupFilter())
+            GroupFilter)
 async def document_processing(message: Message):
     logging.info(f'document uploaded in group {message.chat.id}')
     file = message.document
