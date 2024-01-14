@@ -2,11 +2,10 @@ from loader import dp, bot
 import asyncio
 from main_menu import set_menu
 import logging
-# from handlers import dp
 
 
 async def main():
-    from app.handlers import dp
+    from handlers import dp
     logging.basicConfig(
         level=logging.INFO,
         format='%(filename)s:%(lineno)d #%(levelname)-8s '

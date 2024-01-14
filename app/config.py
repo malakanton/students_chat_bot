@@ -13,6 +13,7 @@ UNAUTHORIZED_GROUP_TIMOUT = 60
 SCHEDULE_KB_TIMEOUT = 15 * 60
 
 HOST = '127.0.0.1'
+# HOST = 'localhost'
 USER = 'postgres'
 PG_PASS = env.str('PG_PASS')
 DB_NAME = 'students_bot_db'

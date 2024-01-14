@@ -1,4 +1,4 @@
-from app.loader import db
+from ...loader import db
 
 create_teachers_query = """
 create table if not exists teachers (
@@ -90,4 +90,4 @@ def create_tables(tables:list):
         db._execute_query(table_query)
 
 
-create_tables(tables)
+# create_tables(tables)

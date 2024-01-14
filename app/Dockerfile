@@ -1,8 +1,10 @@
 FROM python:3.10
 
-WORKDIR /app
+WORKDIR /app/
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY /requirements.txt /app
+RUN pip install --upgrade pip &&  python -m pip install -r requirements.txt
 
-CMD ["python", "app.py"]
+COPY . /app
+
+CMD ["python", "/app/bot.py"]

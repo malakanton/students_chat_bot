@@ -1,6 +1,6 @@
 import psycopg2
 import datetime as dt
-from app.lib.models import Group, Week, Lesson
+from lib.models import Group, Week, Lesson
 
 
 class DB:

@@ -1,7 +1,7 @@
-from app.loader import dp
+from loader import dp
 from aiogram.types import Message
 from aiogram import F
-from app.handlers.filters import UserFilter
+from handlers.filters import UserFilter
 
 
 @dp.message(UserFilter(),

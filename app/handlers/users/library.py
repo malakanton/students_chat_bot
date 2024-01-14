@@ -1,9 +1,9 @@
-from app.loader import dp, users
+from loader import dp, users
 from aiogram.types import Message
-from app import lib as lx
-from app.handlers.filters import UserFilter
+from lib import lexicon as lx
+from handlers.filters import UserFilter
 from aiogram.filters import Command
-from app.lib.misc import prep_markdown
+from lib.misc import prep_markdown
 
 
 @dp.message(Command('library'),

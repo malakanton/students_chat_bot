@@ -1,7 +1,7 @@
 from aiogram.filters import BaseFilter
 from aiogram.types import Message
 from aiogram import F
-from app.loader import db
+from loader import db
 import datetime
 
 

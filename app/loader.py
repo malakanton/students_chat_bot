@@ -1,5 +1,5 @@
 from aiogram import Bot, Dispatcher
-from app.lib.models import Groups, Users
+from lib.models import Groups, Users
 from db.db import DB
 from config import HOST, USER, PG_PASS, DB_NAME, TG_TOKEN
 
@@ -15,5 +15,4 @@ users = Users(
     regular=db.get_users_ids('regular'),
     unreg=db.get_users_ids('unreg')
 )
-print(users)
 

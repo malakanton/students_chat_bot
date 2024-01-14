@@ -1,15 +1,15 @@
 import logging
 from aiogram import F
-from app.lib import lexicon as lx
-from app.lib.models import Groups
-from app.lib.misc import prep_markdown
-from app.loader import dp, db, gr, users
-from app.keyboards.buttons import Confirm
+from lib import lexicon as lx
+from lib.models import Groups
+from lib.misc import prep_markdown
+from loader import dp, db, gr, users
+from keyboards.buttons import Confirm
 from aiogram.filters import CommandStart
-from app.keyboards.callbacks import StartCallback
+from keyboards.callbacks import StartCallback
 from aiogram.types import Message, CallbackQuery
-from app.keyboards.start import course_kb, groups_kb, confirm_kb
-from app.handlers.filters import UserFilter, cb_user_filter, UnRegisteredUser
+from keyboards.start import course_kb, groups_kb, confirm_kb
+from handlers.filters import UserFilter, cb_user_filter, UnRegisteredUser
 
 
 @dp.message(CommandStart(),

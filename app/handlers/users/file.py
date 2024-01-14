@@ -1,17 +1,17 @@
 import os
 import logging
-from app.config import PATH
+from config import PATH
 from aiogram import F
-from app.lib import lexicon as lx
-from app.loader import dp, db, bot, users
-from app.handlers.filters import UserFilter
+from lib import lexicon as lx
+from loader import dp, db, bot, users
+from handlers.filters import UserFilter
 from aiogram.types import Message, CallbackQuery
-from app.keyboards.file import schedule_exists_kb, file_kb
-from app.keyboards.callbacks import FileCallback, LibCallback
-from app.lib.misc import chat_msg_ids, valid_schedule_format
-from app.keyboards.library import lib_type_kb, subjects_kb, confirm_subj_kb
-from app.lib.schedule_uploader import process_schedule_file, upload_schedule
-from app.keyboards.buttons import FileButt, SchdUpdButt, Confirm, FileTypeButt
+from keyboards.file import schedule_exists_kb, file_kb
+from keyboards.callbacks import FileCallback, LibCallback
+from lib.misc import chat_msg_ids, valid_schedule_format
+from keyboards.library import lib_type_kb, subjects_kb, confirm_subj_kb
+from lib.schedule_uploader import process_schedule_file, upload_schedule
+from keyboards.buttons import FileButt, SchdUpdButt, Confirm, FileTypeButt
 
 
 # обработка прикрепленных документов

@@ -3,8 +3,9 @@ from pydantic.dataclasses import dataclass
 from typing import List, Optional, Set
 import datetime as dt
 
-from app.keyboards.buttons import codes
-from app.lib.dicts import ru_days, ru_days_inv
+
+from keyboards.buttons import codes
+from lib.dicts import ru_days, ru_days_inv
 
 
 @dataclass

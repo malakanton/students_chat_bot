@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from app.keyboards.callbacks import StartCallback
-from app.keyboards.buttons import COURSES, Confirm
+from keyboards.callbacks import StartCallback
+from keyboards.buttons import COURSES, Confirm
 
 
 async def course_kb(courses):

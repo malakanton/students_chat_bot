@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from app.keyboards.callbacks import ScheduleCallback
-from app.keyboards.buttons import ScheduleButt
+from keyboards.callbacks import ScheduleCallback
+from keyboards.buttons import ScheduleButt
 
 
 async def schedule_kb(week, curr_day):

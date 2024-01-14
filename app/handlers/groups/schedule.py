@@ -1,8 +1,8 @@
 from aiogram.types import Message
 from aiogram.filters import Command
-from app.lib import lexicon as lx
-from app.loader import dp
-from app.handlers.filters import GroupFilter
+from lib import lexicon as lx
+from loader import dp
+from handlers.filters import GroupFilter
 import logging
 
 

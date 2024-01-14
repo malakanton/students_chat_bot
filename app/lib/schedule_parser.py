@@ -4,12 +4,6 @@ import datetime as dt
 import re
 
 
-import pandas as pd
-import pdfplumber
-import datetime as dt
-import re
-
-
 def plumb_pdf(
         filename: str
 ) -> tuple:

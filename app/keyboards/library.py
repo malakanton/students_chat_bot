@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardButton
-from app.keyboards.callbacks import LibCallback
+from keyboards.callbacks import LibCallback
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from app.keyboards.buttons import FileTypeButt, Confirm
+from keyboards.buttons import FileTypeButt, Confirm
 
 
 async def subjects_kb(subjects: dict, file_id):

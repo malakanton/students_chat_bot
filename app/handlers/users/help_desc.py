@@ -1,9 +1,9 @@
-from app.loader import dp
-from app.lib import lexicon as lx
+from loader import dp
+from lib import lexicon as lx
 from aiogram.types import Message
-from app.lib.misc import prep_markdown
+from lib.misc import prep_markdown
 from aiogram.filters import Command
-from app.handlers.filters import UserFilter
+from handlers.filters import UserFilter
 
 
 @dp.message(Command('help'), UserFilter())

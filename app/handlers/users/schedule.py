@@ -1,17 +1,17 @@
 import asyncio
 from aiogram import F
-from app.lib import lexicon as lx
-from app.loader import dp, db
+from lib import lexicon as lx
+from loader import dp, db
 from aiogram.filters import Command
-from app.lib.models import DayOfWeek, Week
-from app.config import SCHEDULE_KB_TIMEOUT
-from app.handlers.filters import UserFilter
-from app.lib.dicts import lessons_dict, MONTHS
-from app.keyboards.schedule import schedule_kb
-from app.keyboards.buttons import ScheduleButt
+from lib.models import DayOfWeek, Week
+from config import SCHEDULE_KB_TIMEOUT
+from handlers.filters import UserFilter
+from lib.dicts import lessons_dict, MONTHS
+from keyboards.schedule import schedule_kb
+from keyboards.buttons import ScheduleButt
 from aiogram.types import Message, CallbackQuery
-from app.keyboards.callbacks import ScheduleCallback
-from app.lib.misc import get_today, chat_msg_ids, prep_markdown, test_users_dates
+from keyboards.callbacks import ScheduleCallback
+from lib.misc import get_today, chat_msg_ids, prep_markdown, test_users_dates
 
 
 @dp.message(Command('schedule'), UserFilter())

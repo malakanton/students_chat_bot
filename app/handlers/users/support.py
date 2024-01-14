@@ -1,9 +1,9 @@
 import logging
-from app.lib import lexicon as lx
+from lib import lexicon as lx
 from aiogram.types import Message
-from app.handlers.filters import UserFilter, SupportFilter
-from app.loader import dp, db, bot
-from app.config import ADMIN_CHAT
+from handlers.filters import UserFilter, SupportFilter
+from loader import dp, db, bot
+from config import ADMIN_CHAT
 
 
 @dp.message(UserFilter(), SupportFilter())

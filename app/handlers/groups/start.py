@@ -1,17 +1,17 @@
 import logging
-from app.lib import lexicon as lx
+from lib import lexicon as lx
 from aiogram import F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart
-from app.loader import dp, bot, db, gr
-from app.lib.models import Groups
-from app.handlers.filters import GroupFilter, IsRegisteredGroup, cb_group_filter
-from app.keyboards.callbacks import StartCallback
-from app.keyboards.buttons import Confirm
-from app.keyboards.start import course_kb, groups_kb, confirm_kb
-from app.lib.misc import chat_msg_ids, prep_markdown
+from loader import dp, bot, db, gr
+from lib.models import Groups
+from handlers.filters import GroupFilter, IsRegisteredGroup, cb_group_filter
+from keyboards.callbacks import StartCallback
+from keyboards.buttons import Confirm
+from keyboards.start import course_kb, groups_kb, confirm_kb
+from lib.misc import chat_msg_ids, prep_markdown
 import asyncio
-from app.config import UNAUTHORIZED_GROUP_TIMOUT
+from config import UNAUTHORIZED_GROUP_TIMOUT
 
 
 @dp.message(CommandStart(), GroupFilter)

@@ -1,6 +1,6 @@
-from app.loader import db
-from app.lib.schedule_parser import get_schedule, filter_df
-from app.lib.dicts import ru_days
+from loader import db
+from lib.schedule_parser import get_schedule, filter_df
+from lib.dicts import ru_days
 import logging
 
 

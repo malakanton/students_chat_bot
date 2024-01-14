@@ -1,5 +1,5 @@
 import datetime as dt
-from app.lib.models import Today
+from .models import Today
 from aiogram import types
 
 test_users_dates = {}
