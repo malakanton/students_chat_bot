@@ -27,12 +27,12 @@ async def document_processing(message: Message):
         tg_file_id=file.file_id,
     )
     logging.info(f'file info uploaded: {db_file_id}')
-    sch, uid = True, message.from_user.id
+    sch, uid = False, message.from_user.id
     if (
-            uid not in users.heads or
-            uid not in users.admins
+            uid in users.heads or
+            uid in users.admins
     ):
-        sch = False
+        sch = True
     await message.reply(
         text=lx.FILE_ATTACHED.format(file.file_name),
         reply_markup=await file_kb(db_file_id, sch)

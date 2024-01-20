@@ -38,7 +38,7 @@ services:
     depends_on:
       - db
     environment:
-      - PGADMIN_DEFAULT_EMAIL=malakanton@yandex.ru
+      - PGADMIN_DEFAULT_EMAIL=admin@yandex.ru
       - PGADMIN_DEFAULT_PASSWORD=isp123vpoz
 #      - PGADMIN_CONFIG_SERVER_MODE="False"
 #      - PGADMIN_LISTEN_ADDRESS=0.0.0.0

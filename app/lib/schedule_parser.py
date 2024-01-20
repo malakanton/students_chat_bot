@@ -23,9 +23,12 @@ def plumb_pdf(
             x_tolerance=0.5
         )
 
-    search_res = re.search('[сc]\s?\d{1,2}\.\d{1,2}\.?\s?(по|-)\s?\d{1,2}\.\d{1,2}', text).group(0)
-    search_res = search_res.split()[1:]
-    dates = [s for s in search_res if 'по' not in s]
+    dates = re.findall(r'\d{2}(?:_|\.|\s)\d{2}', filename)
+    dates = [date.replace('_', '.') for date in dates]
+    if len(dates) != 2:
+        search_res = re.search('[сc]\s?\d{1,2}\.\d{1,2}\.?\s?(по|-)\s?\d{1,2}\.\d{1,2}', text).group(0)
+        search_res = search_res.split()[1:]
+        dates = [s for s in search_res if 'по' not in s and '-' not in s]
     df = pd.DataFrame(table[1:], columns=table[0])
     if filename == './temp/Очно-заочное отделение с 12.01.-13.01..pdf':
         dates = ['12.01', '13.01']
