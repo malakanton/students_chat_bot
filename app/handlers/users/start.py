@@ -30,7 +30,7 @@ async def start(message: Message):
     else:
         await message.answer(
             text=prep_markdown(lx.YOURE_REGISTERED.format(user_group[1])),
-            parse_mode = 'MarkdownV2'
+            parse_mode='MarkdownV2'
         )
         logging.info(f'user {user_id} is already registered')
     await message.delete()

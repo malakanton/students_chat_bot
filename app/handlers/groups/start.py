@@ -66,6 +66,7 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
             await bot.leave_chat(chat_id)
             return
         group_name = db.update_group_chat(group_id, chat_id)
+        #TODO add users update status
         logging.info(f'New group chat added: {chat_id} - {group_name}')
         global gr
         gr = Groups(db.get_groups())
