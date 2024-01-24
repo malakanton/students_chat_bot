@@ -23,6 +23,7 @@ async def groups_kb(groups, course):
     kb_builder = InlineKeyboardBuilder()
     buttons = []
     groups = [group for group in groups if group.course == course]
+    groups = sorted(groups, key=lambda x: x.name)
     for group in groups:
         buttons.append(
             InlineKeyboardButton(

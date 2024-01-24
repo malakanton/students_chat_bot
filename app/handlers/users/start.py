@@ -21,7 +21,7 @@ async def start(message: Message):
     user_id = message.from_user.id
     user_group = db.get_user_group(user_id)
     if not user_group:
-        hello_msg = lx.HELLO.format(message.from_user.first_name) + lx.COURSE_CHOICE
+        hello_msg = prep_markdown(lx.HELLO.format(message.from_user.first_name) + lx.COURSE_CHOICE)
         await message.answer(
             text=hello_msg,
             reply_markup=await course_kb(gr.courses),
@@ -29,7 +29,8 @@ async def start(message: Message):
         )
     else:
         await message.answer(
-            text=lx.YOURE_REGISTERED.format(user_group[1])
+            text=prep_markdown(lx.YOURE_REGISTERED.format(user_group[1])),
+            parse_mode = 'MarkdownV2'
         )
         logging.info(f'user {user_id} is already registered')
     await message.delete()
@@ -88,4 +89,7 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
 # фильтр для незарегистрированных пользователей
 @dp.message(UserFilter(), UnRegisteredUser())
 async def unregistered_user(message: Message):
-    await message.answer(lx.NOT_REGISTERED, parse_mode='MarkdownV2')
+    await message.answer(
+        prep_markdown(lx.NOT_REGISTERED),
+        parse_mode='MarkdownV2'
+    )

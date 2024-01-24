@@ -12,6 +12,9 @@ GROUP = 'ИСП11-123ВПоз'
 UNAUTHORIZED_GROUP_TIMOUT = 60
 SCHEDULE_KB_TIMEOUT = 15 * 60
 
+
+# HOST = '51.250.109.13'
+# PORT = '5433'
 HOST = 'pg_db_container'
 PORT = '5432'
 USER = 'postgres'

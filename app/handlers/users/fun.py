@@ -2,6 +2,8 @@ from loader import dp
 from aiogram.types import Message
 from aiogram import F
 from handlers.filters import UserFilter
+from lib import lexicon as lx
+from lib.misc import prep_markdown
 
 
 @dp.message(UserFilter(),
@@ -10,4 +12,5 @@ from handlers.filters import UserFilter
 async def set_date(message: Message):
     text = message.text
     user_id = message.from_user.id
-    await message.answer('test')
+    answer = prep_markdown(lx.TEXT_REPLY)
+    await message.answer(answer)

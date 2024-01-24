@@ -94,7 +94,8 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
 
 
 # если пользователь выбрал учебные материалы, даем выбрать предмет
-@dp.callback_query(FileCallback.filter(F.file_type == FileButt.STUDY.name))
+@dp.callback_query(FileCallback.filter(F.file_type == FileButt.STUDY.name),
+                   cb_group_filter)
 async def subj_choice(call: CallbackQuery, callback_data: FileCallback):
     await call.answer()
     users_subjects = db.get_users_subjects(call.from_user.id)
@@ -108,7 +109,8 @@ async def subj_choice(call: CallbackQuery, callback_data: FileCallback):
 
 
 # выбор типа материала и сохранение
-@dp.callback_query(LibCallback.filter(F.type == 'None'))
+@dp.callback_query(LibCallback.filter(F.type == 'None'),
+                   cb_group_filter)
 async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
     await call.answer()
     markup = await lib_type_kb(callback_data.subject_id, callback_data.file_id)
@@ -117,8 +119,10 @@ async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
         reply_markup=markup
     )
 
+
 # выбор типа материала и сохранение
-@dp.callback_query(LibCallback.filter(F.confirm == 'None'))
+@dp.callback_query(LibCallback.filter(F.confirm == 'None'),
+                   cb_group_filter)
 async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
     await call.answer()
     markup = await confirm_subj_kb(callback_data.file_id,
@@ -133,7 +137,9 @@ async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
         reply_markup=markup
     )
 
-@dp.callback_query(LibCallback.filter(F.confirm != 'None'))
+
+@dp.callback_query(LibCallback.filter(F.confirm != 'None'),
+                   cb_group_filter)
 async def confirm_subj(call: CallbackQuery, callback_data: LibCallback):
     await call.answer()
     if callback_data.confirm == Confirm.OK.name:
@@ -155,14 +161,15 @@ async def confirm_subj(call: CallbackQuery, callback_data: LibCallback):
                 uid not in users.admins
         ):
             sch = False
-        await call.message.reply(
+        await call.message.edit_text(
             text=lx.FILE_ATTACHED.format(''),
             reply_markup=await file_kb(callback_data.file_id, sch)
         )
 
 
 # если пользователь выбрал не сохранять
-@dp.callback_query(FileCallback.filter(F.file_type == FileButt.CANCEL.name))
+@dp.callback_query(FileCallback.filter(F.file_type == FileButt.CANCEL.name),
+                   cb_group_filter)
 async def dont_save_choice(call: CallbackQuery, callback_data: FileCallback):
     chat_id, msg_id = chat_msg_ids(call)
     await call.answer('ok', show_alert=True)

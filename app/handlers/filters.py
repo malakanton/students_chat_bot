@@ -26,14 +26,16 @@ class UserFilter(BaseFilter):
 
 class SupportFilter(BaseFilter):
     async def __call__(self, message: Message):
-        if '#support' in message.text:
-            date = message.date + datetime.timedelta(hours=3)
-            return {
-                'text': message.text,
-                'user_id': message.from_user.id,
-                'user_name': message.from_user.username,
-                'date': date.strftime('%Y-%m-%d %H:%M')
-            }
+        if message.text:
+            if '#support' in message.text:
+                date = message.date + datetime.timedelta(hours=3)
+                return {
+                    'text': message.text,
+                    'user_id': message.from_user.id,
+                    'user_name': message.from_user.username,
+                    'date': date.strftime('%Y-%m-%d %H:%M')
+                }
+
 
 
 class IsRegisteredGroup(BaseFilter):

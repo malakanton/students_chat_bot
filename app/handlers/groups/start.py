@@ -24,7 +24,7 @@ async def start(message: Message):
     for group in gr_list.groups:
         if chat_id == group.chat_id:
             await message.answer(
-                lx.CHAT_IS_LINKED.format(group.name)
+                prep_markdown(lx.CHAT_IS_LINKED.format(group.name))
             )
             logging.info(f'chat {chat_id} is already registered')
             await message.delete()
@@ -44,7 +44,7 @@ async def group_choice(call: CallbackQuery, callback_data: StartCallback):
     await call.answer()
     if callback_data.group_id == 'None':
         markup = await groups_kb(gr_list.groups, int(callback_data.course))
-        await call.message.edit_text(lx.GROUP_CHOICE, reply_markup=markup)
+        await call.message.edit_text(prep_markdown(lx.GROUP_CHOICE), reply_markup=markup)
     else:
         group = gr_list.groups[int(callback_data.group_id)-1]
         markup = await confirm_kb(group.course, group)
