@@ -38,9 +38,10 @@ async def support_reply(message: Message):
     except IndexError:
         await message.answer('укажи айдишник пользователя')
         return
-    text = text.replace('#reply_support', '').replace(user_id_to_forward, '')
+    text = text.replace('#reply_support', '').replace(user_id_to_forward, '').strip()
+    text = prep_markdown(text)
     await bot.send_message(
         chat_id=int(user_id_to_forward),
-        text=prep_markdown(text)
+        text=text
     )
-    await message.reply(f'пользователю {user_id_to_forward} отпралено сообщение:\n\n{text}')
+    await message.reply(f'пользователю {user_id_to_forward} отпралено сообщение:\n{text}')
