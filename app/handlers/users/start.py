@@ -74,7 +74,8 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
             user_group = db.add_user(user_id, group_id, user_name, tg_login)
             users.unreg.add(user_id)
         logging.info(f'New user added: {user_id} - {user_group[1]}')
-        txt = prep_markdown(lx.ADDED_TO_GROUP.format(user_group[1]))
+        txt = prep_markdown(lx.ADDED_TO_GROUP.format(user_name, user_group[1]) +
+                            lx.DESCRIPTION)
         await call.message.edit_text(text=txt,
                                      parse_mode='MarkdownV2')
         print(users)
