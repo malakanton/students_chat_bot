@@ -103,7 +103,7 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
 async def subj_choice(call: CallbackQuery, callback_data: FileCallback):
     await call.answer()
     logging.info(f'Study file upload by chosen')
-    users_subjects = db.get_users_subjects(call.from_user.id)
+    users_subjects = db.get_group_subjects(call.message.chat.id)
     print(users_subjects)
     markup = await subjects_kb(users_subjects, callback_data.file_id)
     await call.message.edit_text(
@@ -133,7 +133,7 @@ async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
     markup = await confirm_subj_kb(callback_data.file_id,
                                    callback_data.subject_id,
                                    callback_data.type)
-    subj_inv = {v: k for k, v in db.get_group_subjects(call.chat.id).items()}
+    subj_inv = {v: k for k, v in db.get_group_subjects(call.message.chat.id).items()}
     subj_name = subj_inv[callback_data.subject_id]
     subj_type = FileTypeButt._member_map_[callback_data.type].value
     msg = prep_markdown(lx.CONFIRM_SUBJECT.format(subj_type.lower(), subj_name))
@@ -154,7 +154,7 @@ async def confirm_subj(call: CallbackQuery, callback_data: LibCallback):
             subj_id=callback_data.subject_id
         )
         logging.info('file raw updated in db')
-        subj_inv = {v: k for k, v in db.get_users_subjects(call.from_user.id).items()}
+        subj_inv = {v: k for k, v in db.get_group_subjects(call.message.chat.id).items()}
         subj_name = subj_inv[callback_data.subject_id]
         subj_type = FileTypeButt._member_map_[callback_data.type].value
         await call.message.edit_text(
