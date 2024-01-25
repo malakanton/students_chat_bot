@@ -222,6 +222,19 @@ class DB:
         self.cur.execute(query, (user_id,))
         return dict(self.cur.fetchall())
 
+    def get_group_subjects(self, group_chat_id: int):
+        query = """
+        select 
+            distinct
+            s.name,
+            s.id 
+        from lessons l
+            left join subjects s
+                on l.subj_id = s.id
+        where group_id = (select id from groups where chat_id = %s)
+        """
+        self.cur.execute(query, (group_chat_id,))
+        return dict(self.cur.fetchall())
 
 # from config import HOST, USER, PG_PASS, DB_NAME
 # db = DB(host=HOST, user=USER, pg_pass=PG_PASS, db_name=DB_NAME)
