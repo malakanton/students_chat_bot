@@ -22,7 +22,7 @@ async def schedule_commands(message: Message):
     day_of_week = today.day_of_week
     week = db.get_schedule(user_id, week_num)
     if not week:
-        await message.answer(lx.NO_SCHEDULE)
+        await message.answer(prep_markdown(lx.NO_SCHEDULE))
     else:
         if day_of_week == 7:
             text = await form_week_schedule_text(week)
@@ -44,7 +44,7 @@ async def day_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     day_num = int(callback_data.command)
     text = await form_day_schedule_text(week.get_day(day_num))
     await call.message.edit_text(
-        text=text,
+        text=prep_markdown(text),
         reply_markup=await schedule_kb(week, day_num)
     )
     await hide_keyboard(call)
