@@ -103,7 +103,6 @@ async def subj_choice(call: CallbackQuery, callback_data: FileCallback):
     await call.answer()
     logging.info(f'Study file upload by chosen')
     users_subjects = db.get_group_subjects(call.message.chat.id)
-    print(users_subjects)
     markup = await subjects_kb(users_subjects, callback_data.file_id)
     await call.message.edit_text(
         text=lx.CHOOSE_SUBJ,

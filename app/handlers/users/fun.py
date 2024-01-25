@@ -6,9 +6,12 @@ from lib import lexicon as lx
 from lib.misc import prep_markdown
 
 
-@dp.message(UserFilter(),
-            F.content_type == 'text',
-            ~F.contains('/'))
+@dp.message(
+            ~F.text.startswith('/'),
+            ~F.text.startswith('#'),
+            UserFilter(),
+            F.content_type == 'text'
+            )
 async def set_date(message: Message):
     text = message.text
     user_id = message.from_user.id
