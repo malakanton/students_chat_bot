@@ -35,8 +35,7 @@ async def document_processing(message: Message):
         sch = True
     await message.reply(
         text=prep_markdown(lx.FILE_ATTACHED.format(file.file_name)),
-        reply_markup=await file_kb(db_file_id, sch),
-        parse_mode='MarkdownV2'
+        reply_markup=await file_kb(db_file_id, sch)
     )
 
 
@@ -158,8 +157,8 @@ async def confirm_subj(call: CallbackQuery, callback_data: LibCallback):
         subj_name = subj_inv[callback_data.subject_id]
         subj_type = FileTypeButt._member_map_[callback_data.type].value
         await call.message.edit_text(
-            prep_markdown(lx.CONFIRM_SUBJECT_OK.format(subj_type, subj_name)
-        ))
+            prep_markdown(lx.CONFIRM_SUBJECT_OK.format(subj_type.lower(), subj_name))
+        )
     else:
         sch, uid = True, call.from_user.id
         if (

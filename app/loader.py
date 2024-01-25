@@ -4,9 +4,18 @@ from db.db import DB
 from config import HOST, USER, PG_PASS, DB_NAME, TG_TOKEN, PORT
 
 
-bot = Bot(token=TG_TOKEN)
+bot = Bot(
+    token=TG_TOKEN,
+    parse_mode='MarkdownV2'
+)
 dp = Dispatcher()
-db = DB(host=HOST, user=USER, pg_pass=PG_PASS, db_name=DB_NAME, port=PORT)
+db = DB(
+    host=HOST,
+    user=USER,
+    pg_pass=PG_PASS,
+    db_name=DB_NAME,
+    port=PORT
+)
 gr = Groups(db.get_groups())
 
 users = Users(

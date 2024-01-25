@@ -24,13 +24,11 @@ async def start(message: Message):
         hello_msg = prep_markdown(lx.HELLO.format(message.from_user.first_name) + lx.COURSE_CHOICE)
         await message.answer(
             text=hello_msg,
-            reply_markup=await course_kb(gr.courses),
-            parse_mode='MarkdownV2'
+            reply_markup=await course_kb(gr.courses)
         )
     else:
         await message.answer(
-            text=prep_markdown(lx.YOURE_REGISTERED.format(user_group[1])),
-            parse_mode='MarkdownV2'
+            text=prep_markdown(lx.YOURE_REGISTERED.format(user_group[1]))
         )
         logging.info(f'user {user_id} is already registered')
     await message.delete()
@@ -50,8 +48,7 @@ async def callback_start(call: CallbackQuery, callback_data: StartCallback):
         markup = await confirm_kb(group.course, group)
         msg = prep_markdown(lx.GROUP_CONFIRM.format(group.name))
         await call.message.edit_text(msg,
-                                     reply_markup=markup,
-                                     parse_mode='MarkdownV2')
+                                     reply_markup=markup)
 
 
 @dp.callback_query(StartCallback.filter(F.confirm != 'None'),
@@ -76,14 +73,12 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
         logging.info(f'New user added: {user_id} - {user_group[1]}')
         txt = prep_markdown(lx.ADDED_TO_GROUP.format(user_name, user_group[1]) +
                             lx.DESCRIPTION)
-        await call.message.edit_text(text=txt,
-                                     parse_mode='MarkdownV2')
+        await call.message.edit_text(text=txt)
         print(users)
     else:
         await call.message.edit_text(
             text=lx.COURSE_CHOICE,
-            reply_markup=await course_kb(gr.courses),
-            parse_mode='MarkdownV2'
+            reply_markup=await course_kb(gr.courses)
         )
 
 
@@ -91,6 +86,5 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
 @dp.message(UserFilter(), UnRegisteredUser())
 async def unregistered_user(message: Message):
     await message.answer(
-        prep_markdown(lx.NOT_REGISTERED),
-        parse_mode='MarkdownV2'
+        prep_markdown(lx.NOT_REGISTERED)
     )

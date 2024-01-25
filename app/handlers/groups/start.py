@@ -50,8 +50,7 @@ async def group_choice(call: CallbackQuery, callback_data: StartCallback):
         markup = await confirm_kb(group.course, group)
         msg = prep_markdown(lx.GROUP_CONFIRM.format(group.name))
         await call.message.edit_text(msg,
-                                     reply_markup=markup,
-                                     parse_mode='MarkdownV2')
+                                     reply_markup=markup)
 
 
 @dp.callback_query(StartCallback.filter(), cb_group_filter)
@@ -74,8 +73,7 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
     else:
         await call.message.edit_text(
             text=lx.COURSE_CHOICE,
-            reply_markup=await course_kb(gr_list.courses),
-            parse_mode='MarkdownV2'
+            reply_markup=await course_kb(gr_list.courses)
         )
 
 

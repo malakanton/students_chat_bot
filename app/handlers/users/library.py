@@ -14,4 +14,4 @@ async def library(message: Message):
         msg = prep_markdown(lx.USER_GROUP_NOT_REGISTER)
     else:
         msg = prep_markdown(lx.NO_LIBRARY_YET)
-    await message.answer(msg, parse_mode='MarkdownV2')
+    await message.answer(msg)

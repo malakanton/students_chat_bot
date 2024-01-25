@@ -30,8 +30,7 @@ async def schedule_commands(message: Message):
             text = lx.SCHEDULE + await form_day_schedule_text(week.get_day(day_of_week))
         await message.answer(
             text=text,
-            reply_markup=await schedule_kb(week, day_of_week),
-            parse_mode='MarkdownV2'
+            reply_markup=await schedule_kb(week, day_of_week)
         )
     await message.delete()
 
@@ -46,8 +45,7 @@ async def day_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     text = await form_day_schedule_text(week.get_day(day_num))
     await call.message.edit_text(
         text=text,
-        reply_markup=await schedule_kb(week, day_num),
-        parse_mode='MarkdownV2'
+        reply_markup=await schedule_kb(week, day_num)
     )
     await hide_keyboard(call)
 
@@ -61,8 +59,7 @@ async def week_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     text = await form_week_schedule_text(week)
     await call.message.edit_text(
         text=text,
-        reply_markup=await schedule_kb(week, 0),
-        parse_mode='MarkdownV2'
+        reply_markup=await schedule_kb(week, 0)
     )
     await hide_keyboard(call)
 
@@ -88,8 +85,7 @@ async def change_week(call: CallbackQuery, callback_data: ScheduleCallback):
     text = await form_week_schedule_text(week)
     await call.message.edit_text(
         text=text,
-        reply_markup=await schedule_kb(week, 0),
-        parse_mode='MarkdownV2'
+        reply_markup=await schedule_kb(week, 0)
     )
     await hide_keyboard(call)
 
