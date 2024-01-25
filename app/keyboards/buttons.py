@@ -10,18 +10,18 @@ COURSES = {
 
 class Confirm(Enum):
     OK = '✅Да!'
-    CANCEL = '❌Заново'
+    CANCEL = '❌Назад'
 
 
 class FileButt(Enum):
-    CANCEL = 'Не сохраняй'
-    STUDY = 'Полезный стафф'
+    CANCEL = '❌Не сохраняй'
+    STUDY = '📗Сохрани'
     SCHEDULE = 'Расписание'
 
 
 class SchdUpdButt(Enum):
-    UPDATE = 'Обнови'
-    KEEP = 'Не обновляй'
+    UPDATE = '✅Обнови'
+    KEEP = '❌Не обновляй'
 
 
 class FileTypeButt(Enum):
@@ -33,8 +33,8 @@ class FileTypeButt(Enum):
 
 
 class CancelButt(Enum):
-    CANCEL = 'Отмена'
-    BACK = 'Назад'
+    CANCEL = '❌Отмена'
+    BACK = '⬅Назад'
 
 
 class ScheduleButt(Enum):
