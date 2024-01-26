@@ -40,7 +40,7 @@ REPLY_SUPPORT = """
 
 FORWARD_SUPPORT = """
 {date}
-Обращение от @{username} ({user_id}), группа {group_name}:
+Обращение от {first_name} @{username} ({user_id}), группа {group_name}:
 
 {text}    
     """

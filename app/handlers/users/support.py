@@ -13,6 +13,7 @@ from config import ADMIN_CHAT
 async def support_message(message: Message,
                           user_id: int,
                           text: str,
+                          first_name: str,
                           user_name: str,
                           date: str):
     logging.info('support tag triggered')
@@ -22,6 +23,7 @@ async def support_message(message: Message,
     msg = lx.FORWARD_SUPPORT.format(
         date=date,
         user_id=user_id,
+        first_name=first_name,
         username=user_name,
         group_name=user_group[1],
         text=text

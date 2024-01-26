@@ -1,4 +1,6 @@
 import asyncio
+import logging
+
 from aiogram import F
 from lib import lexicon as lx
 from loader import dp, db
@@ -16,6 +18,7 @@ from lib.misc import get_today, chat_msg_ids, prep_markdown, test_users_dates
 
 @dp.message(Command('schedule'), UserFilter())
 async def schedule_commands(message: Message):
+    logging.info('Schedule command in a private chat')
     user_id = message.from_user.id
     today = get_today(test_users_dates.get(user_id, None))
     week_num = today.week
@@ -127,3 +130,4 @@ async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
 async def hide_keyboard(call: CallbackQuery):
     await asyncio.sleep(SCHEDULE_KB_TIMEOUT)
     await call.message.edit_reply_markup(text='😴', reply_markup=None)
+    logging.info('hide schedule kb')

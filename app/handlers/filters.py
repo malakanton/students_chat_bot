@@ -33,6 +33,7 @@ class SupportFilter(BaseFilter):
                 return {
                     'text': message.text,
                     'user_id': message.from_user.id,
+                    'first_name': message.from_user.first_name,
                     'user_name': message.from_user.username,
                     'date': date.strftime('%Y-%m-%d %H:%M')
                 }
