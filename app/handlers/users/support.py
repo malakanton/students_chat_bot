@@ -20,6 +20,8 @@ async def support_message(message: Message,
     user_group = db.get_user_group(user_id)
     if not user_group:
         user_group = (None, 'unregistered')
+    if not user_name:
+        user_name = ''
     msg = lx.FORWARD_SUPPORT.format(
         date=date,
         user_id=user_id,
