@@ -7,7 +7,6 @@ import datetime
 
 async def main():
     from handlers import dp
-    print("System time in Python app:", datetime.datetime.now())
     logging.basicConfig(
         level=logging.INFO,
         format='%(filename)s:%(lineno)d #%(levelname)-8s '
