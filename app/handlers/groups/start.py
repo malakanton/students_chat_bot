@@ -80,7 +80,7 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
 @dp.message(GroupFilter,
             F.text,
             ~F.text.startswith('/start'),
-            ~IsRegisteredGroup(gr.chats|set(ADMIN_CHAT)))
+            ~IsRegisteredGroup(gr.chats))
 async def leave_if_unauthorised(message: Message):
     await asyncio.sleep(UNAUTHORIZED_GROUP_TIMOUT)
     if message.chat.id not in gr.chats:
