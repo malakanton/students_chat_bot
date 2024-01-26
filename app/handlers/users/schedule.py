@@ -1,6 +1,5 @@
 import asyncio
 import logging
-
 from aiogram import F
 from lib import lexicon as lx
 from loader import dp, db
@@ -33,7 +32,8 @@ async def schedule_commands(message: Message):
             text = lx.SCHEDULE + await form_day_schedule_text(week.get_day(day_of_week))
         await message.answer(
             text=text,
-            reply_markup=await schedule_kb(week, day_of_week)
+            reply_markup=await schedule_kb(week, day_of_week),
+            disable_web_page_preview=True
         )
     await message.delete()
 
@@ -48,7 +48,8 @@ async def day_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     text = await form_day_schedule_text(week.get_day(day_num))
     await call.message.edit_text(
         text=text,
-        reply_markup=await schedule_kb(week, day_num)
+        reply_markup=await schedule_kb(week, day_num),
+        disable_web_page_preview=True
     )
     await hide_keyboard(call)
 
@@ -62,7 +63,8 @@ async def week_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     text = await form_week_schedule_text(week)
     await call.message.edit_text(
         text=text,
-        reply_markup=await schedule_kb(week, 0)
+        reply_markup=await schedule_kb(week, 0),
+        disable_web_page_preview=True
     )
     await hide_keyboard(call)
 
@@ -88,7 +90,8 @@ async def change_week(call: CallbackQuery, callback_data: ScheduleCallback):
     text = await form_week_schedule_text(week)
     await call.message.edit_text(
         text=text,
-        reply_markup=await schedule_kb(week, 0)
+        reply_markup=await schedule_kb(week, 0),
+        disable_web_page_preview=True
     )
     await hide_keyboard(call)
 
@@ -104,7 +107,9 @@ async def form_week_schedule_text(week: Week):
     days = week.get_all_active()
     for day in days:
         text += await form_day_schedule_text(day, single=False)
-    return prep_markdown(text)
+    text = prep_markdown(text)
+    text = text.replace('<LINK>\\', '')
+    return text
 
 
 async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
@@ -121,9 +126,14 @@ async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
         for lesson in sorted(day.schedule, key=lambda lesson: lesson.start):
             start_time = lesson.start.strftime('%H:%M')
             end_time = lesson.end.strftime('%H:%M')
-            text += f'*{start_time}*-*{end_time}* **{lesson.subj}**, {lesson.teacher} ({lesson.loc})\n'
+            text += f'*{start_time}*-*{end_time}* **{lesson.subj}**, {lesson.teacher} '
+            if lesson.link:
+                text += f'☎️[LINK]<LINK>({lesson.link}<LINK>)\n'
+            else:
+                text += f'({lesson.loc})\n'
     if single:
         text = prep_markdown(text)
+    text = text.replace('<LINK>\\', '')
     return text
 
 

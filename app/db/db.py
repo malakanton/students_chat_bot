@@ -170,7 +170,8 @@ class DB:
             l.start as start,
             l.end_t as end,
             t.name as teacher_name,
-            l.loc as loc
+            l.loc as loc,
+            l.link
         from lessons l
             left join users u
                 on u.group_id = l.group_id
@@ -252,6 +253,16 @@ class DB:
         """
         self.cur.execute(query, (user_id, date))
         return self.cur.fetchall()
+
+    def update_link(self, date, time, subj_id, link):
+        query = """
+        update lessons
+        set link = %s
+        where date = %s and
+        start = %s and
+        subj_id = %s;
+        """
+        self._execute_query(query, (link, date, time, subj_id))
 
 # from config import HOST, USER, PG_PASS, DB_NAME
 # db = DB(host=HOST, user=USER, pg_pass=PG_PASS, db_name=DB_NAME)

@@ -15,9 +15,7 @@ from handlers.filters import UserFilter, cb_user_filter, UnRegisteredUser
 @dp.message(CommandStart(),
             UserFilter())
 async def start(message: Message):
-    logging.info(f'groups: {gr.groups}')
-    logging.info(f'courses: {gr.courses}')
-    logging.debug('start command in private chat')
+    logging.info('start command in private chat')
     user_id = message.from_user.id
     user_group = db.get_user_group(user_id)
     if not user_group:

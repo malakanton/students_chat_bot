@@ -14,7 +14,7 @@ async def link_kb(lessons: list, msg_id:int):
             callback_data=LessonLinkCallback(
                 msg_id=msg_id,
                 date=str(date),
-                time=str(time),
+                time=str(time).replace(':', '$'),
                 subj_id=subj_id
             ).pack()) for date, time, subj_id, subj_name in lessons
     ]

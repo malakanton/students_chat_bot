@@ -55,6 +55,7 @@ class Lesson:
     end: dt.time
     teacher: str
     loc: str
+    link: Optional[str] = Field(default=None)
 
 
 @dataclass
