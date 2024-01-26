@@ -3,6 +3,7 @@ from aiogram.types import Message
 from aiogram import F
 from loader import db
 import datetime
+import re
 
 
 cb_user_filter = F.message.chat.type == 'private'
@@ -60,3 +61,15 @@ class UnRegisteredUser(BaseFilter):
 
     async def __call__(self, message: Message) -> bool:
         return db.get_user_group(message.from_user.id) == None
+
+
+class LessonLinkFilter(BaseFilter):
+    def __init__(self) -> None:
+        self.pattern = re.compile(r'https?://(?:telemost.*\b|\w+\.zoom\.us.*\b|meet\.google\.com)\b')
+
+    async def __call__(self, message: Message) -> bool:
+        search_result = re.findall(self.pattern, message.text)
+        if search_result:
+            return {
+                'link': search_result[0]
+            }

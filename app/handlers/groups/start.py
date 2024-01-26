@@ -69,7 +69,7 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
         logging.info(f'New group chat added: {chat_id} - {group_name}')
         global gr
         gr = Groups(db.get_groups())
-        await call.message.edit_text(lx.GROUP_LINKED.format(group_name))
+        await call.message.edit_text(prep_markdown(lx.GROUP_LINKED.format(group_name)))
     else:
         await call.message.edit_text(
             text=lx.COURSE_CHOICE,

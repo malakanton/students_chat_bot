@@ -23,3 +23,9 @@ class LibCallback(CallbackData, prefix='lib'):
     subject_id: int
     type: str
     confirm: str
+
+class LessonLinkCallback(CallbackData, prefix='link'):
+    msg_id: int
+    date: str
+    time: str
+    subj_id: int

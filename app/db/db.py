@@ -236,6 +236,23 @@ class DB:
         self.cur.execute(query, (group_chat_id,))
         return dict(self.cur.fetchall())
 
+    def get_future_two_days(self, user_id, date):
+        query = """
+        select 
+            l.date,
+            l.start,
+            s.id,
+            s.name
+        from lessons l
+            left join subjects s
+                on l.subj_id = s.id
+        where group_id = (select group_id from users where user_id = %s)
+        and date >= %s
+        limit 4
+        """
+        self.cur.execute(query, (user_id, date))
+        return self.cur.fetchall()
+
 # from config import HOST, USER, PG_PASS, DB_NAME
 # db = DB(host=HOST, user=USER, pg_pass=PG_PASS, db_name=DB_NAME)
 #
