@@ -98,7 +98,7 @@ KEEP_SCHEDULE = """ОК, просто считаем старое расписа
 
 ####################### ПОКАЗ РАСПИСАНИЯ #######################
 
-SCHEDULE_NOT_AVAILABLE = """Расписание доступно только в [личных чатах](https://t.me/@KonstantinSergeevichBot)"""
+SCHEDULE_NOT_AVAILABLE = """Расписание доступно только в [личных чатах](https://t.me/@KoteMTUCIbot)"""
 
 SCHEDULE = """Расписание на сегодня\n"""
 
