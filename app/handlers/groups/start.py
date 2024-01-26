@@ -11,7 +11,7 @@ from keyboards.buttons import Confirm
 from keyboards.start import course_kb, groups_kb, confirm_kb
 from lib.misc import chat_msg_ids, prep_markdown
 import asyncio
-from config import UNAUTHORIZED_GROUP_TIMOUT
+from config import UNAUTHORIZED_GROUP_TIMOUT, ADMIN_CHAT
 
 
 @dp.message(CommandStart(), GroupFilter)
@@ -80,7 +80,7 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
 @dp.message(GroupFilter,
             F.text,
             ~F.text.startswith('/start'),
-            ~IsRegisteredGroup(gr.chats))
+            ~IsRegisteredGroup(gr.chats|ADMIN_CHAT))
 async def leave_if_unauthorised(message: Message):
     await asyncio.sleep(UNAUTHORIZED_GROUP_TIMOUT)
     if message.chat.id not in gr.chats:
