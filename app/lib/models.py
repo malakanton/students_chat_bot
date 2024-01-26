@@ -33,7 +33,7 @@ class Groups:
 
     def __post_init__(self):
         self.groups = sorted(self.groups, key=lambda group: group.id)
-        self.chats = set([group.chat_id for group in self.groups if group.chat_id])|set(int(ADMIN_CHAT))
+        self.chats = set([group.chat_id for group in self.groups if group.chat_id])|set([int(ADMIN_CHAT)])
         self.courses = sorted(list(set([group.course for group in self.groups])))
 
 
