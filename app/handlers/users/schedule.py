@@ -44,7 +44,7 @@ async def day_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     day_num = int(callback_data.command)
     text = await form_day_schedule_text(week.get_day(day_num))
     await call.message.edit_text(
-        text=prep_markdown(text),
+        text=text,
         reply_markup=await schedule_kb(week, day_num)
     )
     await hide_keyboard(call)
