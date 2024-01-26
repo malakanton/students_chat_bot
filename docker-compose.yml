@@ -9,7 +9,6 @@ services:
       - ./app/.env
     environment:
       - TZ=${TZ}
-      - DATABASE_URL=postgresql://postgres:Ma!azD9e@db:5432/students_bot_db
     volumes:
       - ./app:/app
     expose:
@@ -23,9 +22,11 @@ services:
     image: postgres:16-alpine
     volumes:
       - ./pg_db:/var/lib/postgresql/data/
+    env_file:
+      - ./app/.env
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=Ma!azD9e
+      - POSTGRES_PASSWORD=${PG_PASS}
       - POSTGRES_DB=students_bot_db
     ports:
       - "5433:5432"
