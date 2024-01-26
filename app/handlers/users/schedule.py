@@ -129,5 +129,5 @@ async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
 
 async def hide_keyboard(call: CallbackQuery):
     await asyncio.sleep(SCHEDULE_KB_TIMEOUT)
-    await call.message.edit_reply_markup(text='😴', reply_markup=None)
+    await call.message.edit_text(text='😴', reply_markup=None)
     logging.info('hide schedule kb')
