@@ -1,6 +1,8 @@
+import sys
 import datetime as dt
 from .models import Today
 from aiogram import types
+from config import HOST, HOST_LOCAL, PORT, PORT_LOCAL
 
 test_users_dates = {}
 
@@ -42,3 +44,8 @@ def prep_markdown(
         text = text.replace(ch, '\\' + ch)
     return text
 
+
+def get_host_port():
+    if sys.platform == 'darwin':
+        return HOST_LOCAL, PORT_LOCAL
+    return HOST, PORT

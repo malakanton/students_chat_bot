@@ -2,7 +2,7 @@ from loader import dp, bot
 import asyncio
 from main_menu import set_menu
 import logging
-import datetime
+import os
 
 
 async def main():
