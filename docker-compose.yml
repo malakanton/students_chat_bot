@@ -41,7 +41,7 @@ services:
       - db
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@yandex.ru
-      - PGADMIN_DEFAULT_PASSWORD=${PG_ADMIN_PASS}
+      - PGADMIN_DEFAULT_PASSWORD=isp123vpoz
 #      - PGADMIN_CONFIG_SERVER_MODE="False"
 #      - PGADMIN_LISTEN_ADDRESS=0.0.0.0
 #      - PGADMIN_LISTEN_PORT=5050
