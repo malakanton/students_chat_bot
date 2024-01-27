@@ -42,6 +42,7 @@ def prep_markdown(
     MARKDOWN = '.()-!#='
     for ch in MARKDOWN:
         text = text.replace(ch, '\\' + ch)
+    text = text.replace('<LINK>\\', '')
     return text
 
 

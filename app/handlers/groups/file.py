@@ -74,7 +74,11 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
                 )
             )
         else:
-            await call.message.edit_text(lx.FILE_SAVED.format('Расписания'))
+            await call.message.edit_text(
+                prep_markdown(
+                    lx.FILE_SAVED.format('Расписания')
+                )
+            )
             not_uploaded = await upload_schedule(df, week_num)
             if not_uploaded:
                 logging.warning(f'didnt manage to find groups {not_uploaded}')

@@ -133,7 +133,6 @@ async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
                 text += f'({lesson.loc})\n'
     if single:
         text = prep_markdown(text)
-    text = text.replace('<LINK>\\', '')
     return text
 
 
