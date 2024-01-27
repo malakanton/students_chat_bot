@@ -264,10 +264,39 @@ class DB:
         """
         self._execute_query(query, (link, date, time, subj_id))
 
-# from config import HOST, USER, PG_PASS, DB_NAME
-# db = DB(host=HOST, user=USER, pg_pass=PG_PASS, db_name=DB_NAME)
+    def get_users_lessons_notif(self, date, time):
+        query = """
+        select 
+            u.user_id,
+            s.name as subject,
+            l.start as start,
+            l.end_t as end,
+            t.name as teacher_name,
+            l.loc as loc,
+            l.link
+        from lessons l
+            left join users u
+                on u.group_id = l.group_id
+            left join subjects s
+                on l.subj_id = s.id
+            left join teachers t
+                on t.id = l.teacher_id
+        where 
+            date = %s
+            and start = %s
+            and u.notifications = 1
+        """
+        self.cur.execute(query, (date, time))
+        res = self.cur.fetchall()
+        users_to_notify = {}
+        for row in res:
+            users_to_notify[row[0]] = Lesson(*row[1:])
+        return users_to_notify
+
+# from config import HOST_LOCAL, USER, PG_PASS, DB_NAME, PORT_LOCAL
+# db = DB(host=HOST_LOCAL, user=USER, pg_pass=PG_PASS, db_name=DB_NAME, port=PORT_LOCAL)
 #
-# # print(db.get_users_subjects(401939802))
+# print(db.get_users_lessons_notif('2024-01-26', '17:00'))
 # subj_inv = {v: k for k, v in db.get_users_subjects(401939802).items()}
 # print(subj_inv)
 
