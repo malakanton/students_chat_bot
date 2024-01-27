@@ -21,7 +21,7 @@ db = DB(
     port=port
 )
 gr = Groups(db.get_groups())
-scheduler = AsyncIOScheduler(timezone=TZ)
+scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
 users = Users(
     admins=db.get_users_ids('admin'),
     heads=db.get_users_ids('head'),
