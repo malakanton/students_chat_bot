@@ -2,7 +2,7 @@ import asyncio
 import logging
 from main_menu import set_menu
 from config import LESSONS_TIMINGS
-from loader import dp, bot, scheduler
+from loader import dp, bot, #scheduler
 # from lib.notifications import add_scheduled_jobs
 
 
