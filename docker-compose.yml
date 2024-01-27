@@ -8,7 +8,7 @@ services:
     env_file:
       - ./app/.env
     environment:
-      - TZ=${TZ}
+      - TZ=Europe/Moscow
     volumes:
       - ./app:/app
     expose:
