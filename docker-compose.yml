@@ -7,8 +7,6 @@ services:
     command: python bot.py
     env_file:
       - ./app/.env
-    environment:
-      - TZ=${TZ}
     volumes:
       - ./app:/app
     expose:
