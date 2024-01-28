@@ -2,6 +2,7 @@ import logging
 from loader import dp, db
 from lib import lexicon as lx
 from aiogram.types import Message, CallbackQuery
+from config import NOTIFICATIONS_ADVANCE
 from lib.misc import prep_markdown
 from aiogram.filters import Command
 from handlers.filters import UserFilter
@@ -15,7 +16,7 @@ async def set_notifications(message: Message):
     flag = db.check_notification_flag(message.from_user.id)[0]
     flag_wording = lx.NOTIF_FLAG[flag]
     txt = prep_markdown(
-        lx.NOTIFICATION_SETTING.format(flag_wording)
+        lx.NOTIFICATION_SETTING.format(flag_wording, NOTIFICATIONS_ADVANCE)
     )
     await message.answer(
         text=txt,
@@ -34,6 +35,6 @@ async def change_week(call: CallbackQuery, callback_data: Notifications):
     db.set_notifications_flag(user_id, flag)
     logging.info(f'notifications flag set for user {user_id}')
     txt = prep_markdown(
-        lx.NOTIFICATION_SETTING.format(lx.NOTIF_FLAG[flag])
+        lx.NOTIFICATION_SETTING.format(lx.NOTIF_FLAG[flag], NOTIFICATIONS_ADVANCE)
     )
     await call.message.edit_text(text=txt, reply_markup=None)
