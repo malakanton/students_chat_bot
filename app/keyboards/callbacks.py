@@ -29,3 +29,7 @@ class LessonLinkCallback(CallbackData, prefix='link'):
     date: str
     time: str
     subj_id: int
+
+
+class Notifications(CallbackData, prefix='notif'):
+    flag: str

@@ -293,6 +293,18 @@ class DB:
             users_to_notify[row[0]] = Lesson(*row[1:])
         return users_to_notify
 
+    def check_notification_flag(self, user_id: int):
+        query = """select notifications from users where user_id = %s"""
+        self.cur.execute(query, (user_id, ))
+        return self.cur.fetchone()
+
+    def set_notifications_flag(self, user_id: int, flag: int):
+        query = """
+        update users set notifications = %s where user_id = %s
+        """
+        self._execute_query(query, (flag, user_id))
+
+
 # from config import HOST_LOCAL, USER, PG_PASS, DB_NAME, PORT_LOCAL
 # db = DB(host=HOST_LOCAL, user=USER, pg_pass=PG_PASS, db_name=DB_NAME, port=PORT_LOCAL)
 #

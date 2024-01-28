@@ -43,6 +43,11 @@ class ScheduleButt(Enum):
     FORW = '➡️'
 
 
+class SwitchNotif(Enum):
+    ON = '📳'
+    OFF = '📴'
+
+
 codes = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ']
 
 
