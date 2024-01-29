@@ -107,12 +107,13 @@ class DB:
                    group_id: int,
                    subj_id: int,
                    teacher_id: int,
-                   loc: str):
+                   loc: str,
+                   link: str = None):
         query = f"""
-        insert into lessons (week_num, day, date, start, end_t, group_id, subj_id, teacher_id, loc)
-        values(%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        insert into lessons (week_num, day, date, start, end_t, group_id, subj_id, teacher_id, loc, link)
+        values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        self._execute_query(query, (week_num, day, date, start, end, group_id, subj_id, teacher_id, loc))
+        self._execute_query(query, (week_num, day, date, start, end, group_id, subj_id, teacher_id, loc, link))
 
     def erase_existing_schedule(self, week_num):
         query = f"""

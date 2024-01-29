@@ -1,6 +1,6 @@
 from loader import db
 from lib.schedule_parser import get_schedule, filter_df
-from lib.dicts import ru_days
+from lib.dicts import ru_days, PERMANENT_LINKS
 import logging
 
 
@@ -59,6 +59,7 @@ async def upload_group_schedule(
         start = str(lesson['start'].to_pydatetime().time())
         end = str(lesson['end'].to_pydatetime().time())
         date = str(lesson['start'].to_pydatetime().date())
+        teacher_id = teachers.get(teacher, 0)
         db.add_lesson(
             week_num=week_num,
             day=ru_days.get(lesson['day'], 1),
@@ -67,6 +68,7 @@ async def upload_group_schedule(
             end=end,
             group_id=group_id,
             subj_id=subjects.get(subj_code, 0),
-            teacher_id=teachers.get(teacher, 0),
-            loc=lesson.get('loc', '')
+            teacher_id=teacher_id,
+            loc=lesson.get('loc', ''),
+            link=PERMANENT_LINKS.get(teacher_id, None)
         )
