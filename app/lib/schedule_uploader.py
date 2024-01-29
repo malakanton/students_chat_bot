@@ -26,7 +26,6 @@ async def upload_schedule(df, week_num):
                 schedule = filter_df(df, group.name).to_dict(orient='records')
             except:
                 logging.warning(f'error!!! while filtering group {group.name}')
-                print(f'error!!! while filtering {group.name}')
                 break
             await upload_group_schedule(schedule, week_num, group.id)
         else:
@@ -51,11 +50,11 @@ async def upload_group_schedule(
             continue
         if teacher not in teachers:
             db.add_teacher(teacher)
-            print(f'New teacher added: {teacher}')
+            logging.info(f'New teacher added: {teacher}')
             teachers = db.get_teachers()
         if subj_code not in subjects:
             db.add_subject(subj_code, subject)
-            print(f'New subject added: {subject}')
+            logging.info(f'New subject added: {subject}')
             subjects = db.get_subjects()
         start = str(lesson['start'].to_pydatetime().time())
         end = str(lesson['end'].to_pydatetime().time())

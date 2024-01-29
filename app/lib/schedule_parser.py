@@ -30,8 +30,6 @@ def plumb_pdf(
         search_res = search_res.split()[1:]
         dates = [s for s in search_res if 'по' not in s and '-' not in s]
     df = pd.DataFrame(table[1:], columns=table[0])
-    if filename == './temp/Очно-заочное отделение с 12.01.-13.01..pdf':
-        dates = ['12.01', '13.01']
     return df, dates
 
 
@@ -41,7 +39,9 @@ def get_monday(
     return dt.datetime(
         dt.datetime.now().year,
         int(dates[0].split('.')[1]),
-        int(dates[0].split('.')[0]))
+        int(dates[0].split('.')[0])
+    )
+
 
 def process_empty_cols(columns):
     if not columns[0]:
@@ -211,4 +211,3 @@ def get_schedule(
     logging.info(f'processed df: {df.head()}')
     week_num = get_monday(dates).isocalendar()[1]
     return df, week_num
-
