@@ -15,7 +15,6 @@ async def link_detected(message: Message, link: str):
     today = get_today()
     msg_id = message.message_id
     lessons = db.get_future_two_days(message.from_user.id, str(today.date))
-    print(lessons)
     print(link)
     markup = await link_kb(lessons, msg_id)
     await message.reply(
@@ -36,7 +35,6 @@ async def update_lesson_link(call: CallbackQuery, callback_data: LessonLinkCallb
         except IndexError:
             return
         print('LINK: ', link)
-        print(callback_data)
         date = callback_data.date
         time = callback_data.time.replace('$', ':')
         subj_id = callback_data.subj_id

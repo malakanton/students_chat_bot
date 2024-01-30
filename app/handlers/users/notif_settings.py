@@ -16,15 +16,18 @@ from keyboards.callbacks import Notifications
 @dp.message(Command('notifications'), UserFilter())
 async def set_notifications(message: Message):
     logging.info('notifications command')
-    flag = db.check_notification_flag(message.from_user.id)[0]
-    flag_wording = lx.NOTIF_FLAG[flag]
-    txt = prep_markdown(
-        lx.NOTIFICATION_SETTING.format(flag_wording, NOTIFICATIONS_ADVANCE)
-    )
-    await message.answer(
-        text=txt,
-        reply_markup=await notif_kb()
-    )
+    try:
+        flag = db.check_notification_flag(message.from_user.id)[0]
+        flag_wording = lx.NOTIF_FLAG[flag]
+        txt = prep_markdown(
+            lx.NOTIFICATION_SETTING.format(flag_wording, NOTIFICATIONS_ADVANCE)
+        )
+        await message.answer(
+            text=txt,
+            reply_markup=await notif_kb()
+        )
+    except IndexError:
+        logging.warning('No user noifications info in database')
     await message.delete()
 
 
