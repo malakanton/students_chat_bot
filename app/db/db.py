@@ -308,31 +308,3 @@ class DB:
 
 # from config import HOST_LOCAL, USER, PG_PASS, DB_NAME, PORT_LOCAL
 # db = DB(host=HOST_LOCAL, user=USER, pg_pass=PG_PASS, db_name=DB_NAME, port=PORT_LOCAL)
-#
-# print(db.get_users_lessons_notif('2024-01-26', '17:00'))
-# subj_inv = {v: k for k, v in db.get_users_subjects(401939802).items()}
-# print(subj_inv)
-
-# print(db.get_users_ids('regular'))
-#
-# print((db.get_user_group(123) == None))
-# print(db.get_schedule(289484532, 23))
-
-
-
-#
-# groups = db.get_groups()
-# print(groups)
-# for id, name in groups.items():
-#     query = """update groups set course=%s where id = %s"""
-#     course = int(name.split('-')[1][0])
-#     db._execute_query(query, (course, id))
-
-# query = """insert into groups (name) values (%s);"""
-# df, _ = get_schedule('../temp/Очно_заочное_отделение_с_2_10_по_07_10.pdf')
-# groups = list(set([col for col in df.columns if (col.startswith('ИСП') or col.startswith('СС')) and not col.endswith('loc')]))
-# print(groups)
-# for group in sorted(groups):
-#     print(query.format(group=group))
-#     db._execute_query(query, (group,))
-

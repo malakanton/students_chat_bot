@@ -21,7 +21,6 @@ from keyboards.buttons import FileButt, SchdUpdButt, Confirm, FileTypeButt
             UserFilter(users.admins | users.heads))
 async def document_processing(message: Message):
     logging.info(f'document uploaded in private chat {message.chat.id}')
-    print(message.message_id)
     file = message.document
     db_file_id = db.add_file(
         file_name=file.file_name,
@@ -40,18 +39,16 @@ async def document_processing(message: Message):
                    cb_user_filter)
 async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
     action = callback_data.update
-    print(call.message.message_id)
     file_name, tg_file_id = db.update_file(
         file_id=callback_data.file_id,
         file_type=callback_data.file_type
     )
-    file = await bot.get_file(tg_file_id)
     if not valid_schedule_format(file_name):
         await call.answer(lx.NOT_SCHEDULE_FORMAT, show_alert=True)
         logging.info(f'file {file_name} doesnt pass the schedule test')
         return
+    file = await bot.get_file(tg_file_id)
     schedule_path = PATH + file_name
-    logging.info(str(os.listdir(PATH)))
     logging.info(f'schedule file path: {schedule_path}')
     await bot.download_file(
         file_path=file.file_path,
@@ -91,9 +88,7 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
                    cb_user_filter)
 async def subj_choice(call: CallbackQuery, callback_data: FileCallback):
     await call.answer()
-    print(call.message.message_id)
     users_subjects = db.get_users_subjects(call.from_user.id)
-    print(users_subjects)
     markup = await subjects_kb(users_subjects, callback_data.file_id)
     await call.message.edit_text(
         text=prep_markdown(lx.CHOOSE_SUBJ),

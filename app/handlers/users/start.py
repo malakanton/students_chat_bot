@@ -17,9 +17,12 @@ from handlers.filters import UserFilter, cb_user_filter, UnRegisteredUser
 async def start(message: Message):
     logging.info('start command in private chat')
     user_id = message.from_user.id
+    name = message.from_user.first_name
     user_group = db.get_user_group(user_id)
     if not user_group:
-        hello_msg = prep_markdown(lx.HELLO.format(message.from_user.first_name) + lx.COURSE_CHOICE)
+        hello_msg = prep_markdown(
+            lx.HELLO.format(name) + lx.COURSE_CHOICE
+        )
         await message.answer(
             text=hello_msg,
             reply_markup=await course_kb(gr.courses)
@@ -55,19 +58,20 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
     await call.answer()
     gr = Groups(db.get_groups())
     if callback_data.confirm == Confirm.OK.name:
-        user_id = call.message.chat.id
-        user_name = call.message.chat.first_name
-        last_name = call.message.chat.last_name
-        if last_name:
-            user_name += ' ' + last_name
-        tg_login = call.message.chat.username
+        user_id, user_name, tg_login = get_user_details(call)
         group_id = callback_data.group_id
         if gr.groups[int(group_id)-1].chat_id:
-            user_group = db.add_user(user_id, group_id, user_name, tg_login, 'regular')
+            user_type = 'regular'
             users.regular.add(user_id)
         else:
-            user_group = db.add_user(user_id, group_id, user_name, tg_login)
+            user_type = None
             users.unreg.add(user_id)
+        user_group = db.add_user(user_id,
+                                 group_id,
+                                 user_name,
+                                 tg_login,
+                                 user_type
+                                 )
         logging.info(f'New user added: {user_id} - {user_group[1]}')
         txt = prep_markdown(lx.ADDED_TO_GROUP.format(user_name, user_group[1]) +
                             lx.DESCRIPTION)
@@ -86,3 +90,13 @@ async def unregistered_user(message: Message):
     await message.answer(
         prep_markdown(lx.NOT_REGISTERED)
     )
+
+
+def get_user_details(call: CallbackQuery) -> tuple:
+    user_id = call.message.chat.id
+    user_name = call.message.chat.first_name
+    last_name = call.message.chat.last_name
+    if last_name:
+        user_name += ' ' + last_name
+    tg_login = call.message.chat.username
+    return user_id, user_name, tg_login
