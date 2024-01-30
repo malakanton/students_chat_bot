@@ -2,7 +2,7 @@ import asyncio
 import logging
 from aiogram import F
 from lib import lexicon as lx
-from loader import dp, db
+from loader import dp, db, bot
 from aiogram.filters import Command
 from lib.models import DayOfWeek, Week
 from config import SCHEDULE_KB_TIMEOUT
@@ -35,7 +35,9 @@ async def schedule_commands(message: Message):
             reply_markup=await schedule_kb(week, day_of_week),
             disable_web_page_preview=True
         )
+    await hide_keyboard(message.chat.id, message.message_id)
     await message.delete()
+
 
 
 # если выбрал день
@@ -51,7 +53,6 @@ async def day_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
         reply_markup=await schedule_kb(week, day_num),
         disable_web_page_preview=True
     )
-    await hide_keyboard(call)
 
 
 # если выбрал всю неделю
@@ -66,7 +67,6 @@ async def week_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
         reply_markup=await schedule_kb(week, 0),
         disable_web_page_preview=True
     )
-    await hide_keyboard(call)
 
 
 # если выбрал смену недели
@@ -93,7 +93,6 @@ async def change_week(call: CallbackQuery, callback_data: ScheduleCallback):
         reply_markup=await schedule_kb(week, 0),
         disable_web_page_preview=True
     )
-    await hide_keyboard(call)
 
 
 async def form_week_schedule_text(week: Week):
@@ -136,7 +135,7 @@ async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
     return text
 
 
-async def hide_keyboard(call: CallbackQuery):
+async def hide_keyboard(chat_id, message_id):
     await asyncio.sleep(SCHEDULE_KB_TIMEOUT)
-    await call.message.edit_text(text='😴', reply_markup=None)
+    await bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id+1 ,reply_markup=None)
     logging.info('hide schedule kb')
