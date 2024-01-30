@@ -35,9 +35,9 @@ async def schedule_commands(message: Message):
             reply_markup=await schedule_kb(week, day_of_week),
             disable_web_page_preview=True
         )
-    await hide_keyboard(message.chat.id, message.message_id)
+    chat_id, msg_id = message.chat.id, message.message_id
     await message.delete()
-
+    await hide_keyboard(chat_id, msg_id)
 
 
 # если выбрал день
