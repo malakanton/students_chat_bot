@@ -25,6 +25,7 @@ async def set_notifications(message: Message):
         text=txt,
         reply_markup=await notif_kb()
     )
+    await message.delete()
 
 
 @dp.callback_query(Notifications.filter())
