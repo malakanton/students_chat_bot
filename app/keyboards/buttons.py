@@ -44,8 +44,8 @@ class ScheduleButt(Enum):
 
 
 class SwitchNotif(Enum):
-    ON = '📳'
-    OFF = '📴'
+    ON = '🟩ON'
+    OFF = '🟥OFF'
 
 
 codes = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ']
