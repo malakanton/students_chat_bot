@@ -126,7 +126,7 @@ async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
             start_time = lesson.start.strftime('%H:%M')
             end_time = lesson.end.strftime('%H:%M')
             text += f'*{start_time}*-*{end_time}* **{lesson.subj}**, {lesson.teacher} '
-            if lesson.link:
+            if lesson.link and day.id != 6:
                 text += f'📺️[LINK]<LINK>({lesson.link}<LINK>)\n'
             else:
                 text += f'({lesson.loc})\n'
