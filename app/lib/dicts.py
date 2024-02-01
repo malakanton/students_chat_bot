@@ -1,4 +1,14 @@
-ru_days = {
+from enum import Enum
+
+
+class NotificationsAdvance(Enum):
+    FIVE = 5
+    TEN = 10
+    FIFTEEN = 15
+    THIRTY = 30
+
+
+RU_DAYS = {
     'Понедельник': 1,
     'Вторник': 2,
     'Среда': 3,
@@ -6,7 +16,7 @@ ru_days = {
     'Пятница': 5,
     'Суббота': 6
 }
-lessons_dict = {
+LESSONS_DICT = {
         1: 'Одна пара:',
         2: 'Две пары:',
         3: 'Три пары:',
@@ -30,7 +40,7 @@ MONTHS = {
     12: 'декабря',
 
 }
-ru_days_inv = {v: k for k, v in ru_days.items()}
+RU_DAYS_INV = {v: k for k, v in RU_DAYS.items()}
 
 PERMANENT_LINKS = {
     3: 'https://t.me/c/1917581433/75',

@@ -265,7 +265,7 @@ class DB:
         """
         self._execute_query(query, (link, date, time, subj_id))
 
-    def get_users_lessons_notif(self, date, time):
+    def get_users_lessons_notif(self, date: str, time: str, advance: int):
         query = """
         select 
             u.user_id,
@@ -285,9 +285,9 @@ class DB:
         where 
             date = %s
             and start = %s
-            and u.notifications = 1
+            and u.notifications = %s
         """
-        self.cur.execute(query, (date, time))
+        self.cur.execute(query, (date, time, advance))
         res = self.cur.fetchall()
         users_to_notify = {}
         for row in res:
@@ -308,3 +308,5 @@ class DB:
 
 # from config import HOST_LOCAL, USER, PG_PASS, DB_NAME, PORT_LOCAL
 # db = DB(host=HOST_LOCAL, user=USER, pg_pass=PG_PASS, db_name=DB_NAME, port=PORT_LOCAL)
+
+# print(db.get_users_lessons_notif('2024-02-01', '18:40', 1))

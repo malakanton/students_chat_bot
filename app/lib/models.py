@@ -6,7 +6,7 @@ from config import ADMIN_CHAT
 
 
 from keyboards.buttons import codes
-from lib.dicts import ru_days, ru_days_inv
+from lib.dicts import RU_DAYS, RU_DAYS_INV
 
 
 @dataclass
@@ -45,7 +45,7 @@ class Today:
     name: str = Field(default='')
 
     def __post_init__(self):
-        self.name = ru_days_inv.get(self.day_of_week, 'Воскресенье')
+        self.name = RU_DAYS_INV.get(self.day_of_week, 'Воскресенье')
 
 
 @dataclass
@@ -74,7 +74,7 @@ class Week:
     days: list = Field(default_factory=lambda: list())
 
     def __post_init__(self):
-        for day, i in ru_days.items():
+        for day, i in RU_DAYS.items():
             date = dt.date.fromisocalendar(dt.datetime.now().year, self.num, i)
             code = codes[i - 1]
             self.days.append(DayOfWeek(i, day, code, date))

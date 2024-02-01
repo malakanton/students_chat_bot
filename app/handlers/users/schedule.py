@@ -7,7 +7,7 @@ from aiogram.filters import Command
 from lib.models import DayOfWeek, Week
 from config import SCHEDULE_KB_TIMEOUT
 from handlers.filters import UserFilter
-from lib.dicts import lessons_dict, MONTHS
+from lib.dicts import LESSONS_DICT, MONTHS
 from keyboards.schedule import schedule_kb
 from keyboards.buttons import ScheduleButt
 from aiogram.types import Message, CallbackQuery
@@ -121,7 +121,7 @@ async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
     else:
         lessons_num = len(day.schedule)
         if single:
-            text += lessons_dict[lessons_num] + '\n\n'
+            text += LESSONS_DICT[lessons_num] + '\n\n'
         for lesson in sorted(day.schedule, key=lambda lesson: lesson.start):
             start_time = lesson.start.strftime('%H:%M')
             end_time = lesson.end.strftime('%H:%M')
