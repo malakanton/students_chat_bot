@@ -22,12 +22,12 @@ def plumb_pdf(
             y_tolerance=0.5,
             x_tolerance=0.5
         )
-    dates = get_dates(filename, text)
+    dates = get_schedule_dates(filename, text)
     df = pd.DataFrame(table[1:], columns=table[0])
     return df, dates
 
 
-def get_dates(
+def get_schedule_dates(
         filename: str,
         text: str
 ) -> tuple:
