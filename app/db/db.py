@@ -69,6 +69,7 @@ class DB:
     def add_subject(self, code, name):
         query = f"""insert into subjects (code, name) values(%s, %s)"""
         self._execute_query(query, (code, name))
+        return self.get_subjects()
 
     def get_teachers(self):
         query = """select name, id from teachers"""
@@ -78,6 +79,7 @@ class DB:
     def add_teacher(self, name):
         query = f"""insert into teachers (name) values(%s)"""
         self._execute_query(query, (name,))
+        return self.get_teachers()
 
     def add_user(self, user_id: int, group_id: int, name: str, tg_login: str, type: str = None):
         if type:

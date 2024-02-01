@@ -49,23 +49,18 @@ async def upload_group_schedule(
         ):
             continue
         if teacher not in teachers:
-            db.add_teacher(teacher)
+            teachers = db.add_teacher(teacher)
             logging.info(f'New teacher added: {teacher}')
-            teachers = db.get_teachers()
         if subj_code not in subjects:
-            db.add_subject(subj_code, subject)
+            subjects = db.add_subject(subj_code, subject)
             logging.info(f'New subject added: {subject}')
-            subjects = db.get_subjects()
-        start = str(lesson['start'].to_pydatetime().time())
-        end = str(lesson['end'].to_pydatetime().time())
-        date = str(lesson['start'].to_pydatetime().date())
         teacher_id = teachers.get(teacher, 0)
         db.add_lesson(
             week_num=week_num,
             day=RU_DAYS.get(lesson['day'], 1),
-            date=date,
-            start=start,
-            end=end,
+            date=str(lesson['start'].to_pydatetime().date()),
+            start=str(lesson['start'].to_pydatetime().time()),
+            end=str(lesson['end'].to_pydatetime().time()),
             group_id=group_id,
             subj_id=subjects.get(subj_code, 0),
             teacher_id=teacher_id,

@@ -6,6 +6,7 @@ from config import NOTIFICATIONS_ADVANCE
 from lib.dicts import NotificationsAdvance
 import lib.lexicon as lx
 from lib.misc import prep_markdown
+from lib.models import Lesson
 
 
 def cron_trigger(time: str, advance: int) -> tuple:
@@ -32,16 +33,20 @@ async def notify_users(time: str, advance: int):
     date = dt.datetime.now().date()
     users_to_notify = db.get_users_lessons_notif(date, time, advance)
     for user, lesson in users_to_notify.items():
-        await notify_user(user, lesson)
+        await notify_user(user, lesson, advance)
     logging.info(f'users notified: {len(users_to_notify)}')
 
 
-async def notify_user(user_id, lesson):
+async def notify_user(
+        user_id: int,
+        lesson: Lesson,
+        advance: int
+) -> None:
     link = lx.NO_LINK_YET
     if lesson.link:
         link = f'[{lx.LINK_PHRASE}]<LINK>({lesson.link}<LINK>)'
     text = lx.NOTIF.format(
-        minutes=NOTIFICATIONS_ADVANCE,
+        minutes=advance,
         subject=lesson.subj,
         teacher=lesson.teacher,
         start=lesson.start.strftime('%H:%M'),

@@ -22,19 +22,26 @@ def plumb_pdf(
             y_tolerance=0.5,
             x_tolerance=0.5
         )
+    dates = get_dates(filename, text)
+    df = pd.DataFrame(table[1:], columns=table[0])
+    return df, dates
 
+
+def get_dates(
+        filename: str,
+        text: str
+) -> tuple:
     dates = re.findall(r'\d{2}(?:_|\.|\s)\d{2}', filename)
     dates = [date.replace('_', '.') for date in dates]
     if len(dates) != 2:
         search_res = re.search('[сc]\s?\d{1,2}\.\d{1,2}\.?\s?(по|-)\s?\d{1,2}\.\d{1,2}', text).group(0)
         search_res = search_res.split()[1:]
         dates = [s for s in search_res if 'по' not in s and '-' not in s]
-    df = pd.DataFrame(table[1:], columns=table[0])
-    return df, dates
+    return tuple(dates)
 
 
 def get_monday(
-        dates: list
+        dates: tuple
 ) -> dt.datetime:
     return dt.datetime(
         dt.datetime.now().year,
@@ -83,15 +90,14 @@ def days_of_week(
         return text
     text = text.replace('\n', '')
     text = text[::-1]
-    return text.lower().capitalize()
+    return text.capitalize()
 
 
 def get_dates(
         days: list,
-        dates: list
+        dates: tuple
 ) -> list:
-    monday_date = get_monday(dates)
-    curr_day, curr_date = days[0], monday_date
+    curr_day, curr_date = days[0], get_monday(dates)
     dates_list = []
     for day in days:
         if day != curr_day:
@@ -134,7 +140,7 @@ def get_subj_code(
     code_pattern = r'^[А-Я]{1,5}\s?\d{0,2}\.?\d{1,3}\.?\d{0,2}'
     try:
         return re.search(code_pattern, text).group(0)
-    except:
+    except AttributeError:
         return ''
 
 
@@ -149,7 +155,7 @@ def get_subj(
     return text.strip()
 
 
-def clean_loc(text:str) -> str:
+def clean_loc(text: str) -> str:
     if ' ' in text:
         text = text.replace(' ', '')
     if '\n' in text:
@@ -159,16 +165,13 @@ def clean_loc(text:str) -> str:
 
 def process_df(
         df: pd.DataFrame,
-        dates: list
+        dates: tuple
 ) -> pd.DataFrame:
     df = df.copy()
-    if df.iloc[0, 0] == 'НЕДЕЛИ':
-        df.drop(0, inplace=True)
-        df.reset_index(inplace=True, drop=True)
-    if not df.iloc[0, 0]:
-        df.drop(0, inplace=True)
-        df.reset_index(inplace=True, drop=True)
-    if not df.iloc[0, 0]:
+    while (
+            df.iloc[0, 0] == 'НЕДЕЛИ' or
+            not df.iloc[0, 0]
+    ):
         df.drop(0, inplace=True)
         df.reset_index(inplace=True, drop=True)
     df = process_columns(df)

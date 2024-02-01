@@ -11,8 +11,8 @@ bot = Bot(
     parse_mode='MarkdownV2'
 )
 dp = Dispatcher()
-host, port = get_host_port()
 
+host, port = get_host_port()
 db = DB(
     host=host,
     user=USER,
