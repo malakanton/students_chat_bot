@@ -59,6 +59,7 @@ def logging_msg(
         logging_text: str = '',
 ) -> str:
     user_id = update.from_user.id
+    chat_type, command = '', ''
     if isinstance(update, Message):
         command = update.text
         chat_type = update.chat.type
