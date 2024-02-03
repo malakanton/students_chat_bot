@@ -34,7 +34,7 @@ def add_scheduled_jobs(scheduler: AsyncIOScheduler, times: list):
         trigger='cron',
         day_of_week='sat',
         hour=23,
-        minute=4
+        minute=15
     )
 
 
