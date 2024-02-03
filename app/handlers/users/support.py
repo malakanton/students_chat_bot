@@ -2,7 +2,7 @@ import re
 import logging
 from aiogram import F
 from lib import lexicon as lx
-from lib.misc import prep_markdown
+from lib.misc import prep_markdown, logging_msg
 from aiogram.types import Message
 from handlers.filters import UserFilter, SupportFilter
 from loader import dp, db, bot, users
@@ -16,7 +16,7 @@ async def support_message(message: Message,
                           first_name: str,
                           user_name: str,
                           date: str):
-    logging.info('support tag triggered')
+    logging.info(logging_msg(message, 'support hashtag processing'))
     user_group = db.get_user_group(user_id)
     if not user_group:
         user_group = (None, 'unregistered')
@@ -34,7 +34,7 @@ async def support_message(message: Message,
     await message.reply(prep_markdown(lx.REPLY_SUPPORT))
 
 
-@dp.message(F.chat.id==int(ADMIN_CHAT), F.text.startswith('#reply_support'))
+@dp.message(F.chat.id == int(ADMIN_CHAT), F.text.startswith('#reply_support'))
 async def support_reply(message: Message):
     text = message.text
     try:

@@ -12,12 +12,16 @@ from keyboards.schedule import schedule_kb
 from keyboards.buttons import ScheduleButt
 from aiogram.types import Message, CallbackQuery
 from keyboards.callbacks import ScheduleCallback
-from lib.misc import get_today, chat_msg_ids, prep_markdown, test_users_dates
+from lib.misc import (get_today,
+                    chat_msg_ids,
+                    prep_markdown,
+                    test_users_dates,
+                    logging_msg)
 
 
 @dp.message(Command('schedule'), UserFilter())
 async def schedule_commands(message: Message):
-    logging.info('Schedule command in a private chat')
+    logging.info(logging_msg(message, 'schedule command in private chat'))
     user_id = message.from_user.id
     today = get_today(test_users_dates.get(user_id, None))
     week_num = today.week
@@ -44,6 +48,7 @@ async def schedule_commands(message: Message):
 @dp.callback_query(ScheduleCallback.filter(~F.command.in_(ScheduleButt._member_names_)))
 async def day_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     await call.answer()
+    logging.info(logging_msg(call))
     user_id, msg_id = chat_msg_ids(call)
     week = db.get_schedule(user_id, callback_data.week)
     day_num = int(callback_data.command)
@@ -59,6 +64,7 @@ async def day_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
 @dp.callback_query(ScheduleCallback.filter(F.command == ScheduleButt.WEEK.name))
 async def week_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     await call.answer()
+    logging.info(logging_msg(call))
     user_id, msg_id = chat_msg_ids(call)
     week = db.get_schedule(user_id, callback_data.week)
     text = await form_week_schedule_text(week)
@@ -74,6 +80,7 @@ async def week_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
                                                           ScheduleButt.FORW.name})))
 async def change_week(call: CallbackQuery, callback_data: ScheduleCallback):
     user_id, msg_id = chat_msg_ids(call)
+    logging.info(logging_msg(call))
     if callback_data.command == ScheduleButt.BACK.name:
         week = db.get_schedule(user_id, callback_data.week - 1)
         if not week:

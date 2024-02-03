@@ -2,7 +2,7 @@ import logging
 from aiogram import F
 from lib import lexicon as lx
 from lib.models import Groups
-from lib.misc import prep_markdown
+from lib.misc import prep_markdown, logging_msg
 from loader import dp, db, gr, users
 from keyboards.buttons import Confirm
 from aiogram.filters import CommandStart
@@ -15,7 +15,7 @@ from handlers.filters import UserFilter, cb_user_filter, UnRegisteredUser
 @dp.message(CommandStart(),
             UserFilter())
 async def start(message: Message):
-    logging.info('start command in private chat')
+    logging.info(logging_msg(message, 'start command in private chat'))
     user_id = message.from_user.id
     name = message.from_user.first_name
     user_group = db.get_user_group(user_id)
@@ -38,7 +38,7 @@ async def start(message: Message):
 @dp.callback_query(StartCallback.filter(F.confirm == 'None'),
                    cb_user_filter)
 async def callback_start(call: CallbackQuery, callback_data: StartCallback):
-    logging.info('start callback processing in private chat')
+    logging.info(logging_msg(call, 'start callbacks processing'))
     groups = db.get_groups()
     await call.answer()
     if callback_data.group_id == 'None':
@@ -56,6 +56,7 @@ async def callback_start(call: CallbackQuery, callback_data: StartCallback):
                    cb_user_filter)
 async def confirm(call: CallbackQuery, callback_data: StartCallback):
     await call.answer()
+    logging.info(logging_msg(call, 'start callbacks processing'))
     gr = Groups(db.get_groups())
     if callback_data.confirm == Confirm.OK.name:
         user_id, user_name, tg_login = get_user_details(call)
@@ -87,6 +88,7 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
 # фильтр для незарегистрированных пользователей
 @dp.message(UserFilter(), UnRegisteredUser())
 async def unregistered_user(message: Message):
+    logging.info(logging_msg(message, 'unregistered user'))
     await message.answer(
         prep_markdown(lx.NOT_REGISTERED)
     )

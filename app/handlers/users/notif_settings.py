@@ -4,19 +4,17 @@ from aiogram.types import Message, CallbackQuery
 
 from loader import dp, db
 from lib import lexicon as lx
-from lib.misc import prep_markdown
+from lib.misc import prep_markdown, logging_msg
 from lib.dicts import NotificationsAdvance
 from handlers.filters import UserFilter
-from config import NOTIFICATIONS_ADVANCE
 from keyboards.buttons import SwitchNotif
 from keyboards.notifications import notif_kb
 from keyboards.callbacks import Notifications
 
 
-
 @dp.message(Command('notifications'), UserFilter())
 async def set_notifications(message: Message):
-    logging.info('notifications command')
+    logging.info(logging_msg(message, 'notifications command'))
     try:
         flag = db.check_notification_flag(message.from_user.id)[0]
         notif_on = int(flag != 0)
@@ -31,7 +29,7 @@ async def set_notifications(message: Message):
 
 
 @dp.callback_query(Notifications.filter())
-async def change_week(call: CallbackQuery, callback_data: Notifications):
+async def change_notifications_flag(call: CallbackQuery, callback_data: Notifications):
     # flag = int(callback_data.flag == SwitchNotif.ON.name)
     flag = callback_data.flag
     if flag == SwitchNotif.OFF.name:
@@ -41,7 +39,7 @@ async def change_week(call: CallbackQuery, callback_data: Notifications):
     await call.answer()
     user_id = call.message.chat.id
     db.set_notifications_flag(user_id, flag)
-    logging.info(f'notifications flag set for user {user_id}')
+    logging.info(logging_msg(call, 'notifications flag set for user'))
     notif_on = int(flag != 0)
     txt = get_notifications_text(notif_on, flag, end_of_dialog=True)
     await call.message.edit_text(text=txt, reply_markup=None)

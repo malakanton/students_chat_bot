@@ -32,5 +32,6 @@ class LessonLinkCallback(CallbackData, prefix='link'):
     subj_id: int
 
 
-class Notifications(CallbackData, prefix='notif'):
+class Notifications(CallbackData, prefix='notif_set'):
     flag: str
+

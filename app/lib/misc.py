@@ -3,6 +3,8 @@ import datetime as dt
 from .models import Today
 from aiogram import types
 from config import HOST, HOST_LOCAL, PORT, PORT_LOCAL
+from aiogram.types import Message, CallbackQuery
+
 
 test_users_dates = {}
 
@@ -50,3 +52,15 @@ def get_host_port():
     if sys.platform == 'darwin':
         return HOST_LOCAL, PORT_LOCAL
     return HOST, PORT
+
+
+def logging_msg(
+        update: Message | CallbackQuery,
+        logging_text: str = '',
+) -> str:
+    user_id = update.from_user.id
+    if isinstance(update, Message):
+        command = update.text
+    elif isinstance(update, CallbackQuery):
+        command = update.data
+    return f'user_id: {user_id} command: {command} message: {logging_text}'
