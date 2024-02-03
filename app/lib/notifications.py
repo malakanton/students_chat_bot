@@ -2,11 +2,11 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import logging
 from loader import db, bot
 import datetime as dt
-from config import NOTIFICATIONS_ADVANCE
 from lib.dicts import NotificationsAdvance
 import lib.lexicon as lx
 from lib.misc import prep_markdown
 from lib.models import Lesson
+from lib.logs_report import send_report
 
 
 def cron_trigger(time: str, advance: int) -> tuple:
@@ -27,6 +27,15 @@ def add_scheduled_jobs(scheduler: AsyncIOScheduler, times: list):
                 day_of_week='mon-fri',
                 hour=hour,
                 minute=minute)
+    date = str(dt.datetime.now().date())
+    scheduler.add_job(
+        send_report,
+        args=[date],
+        trigger='cron',
+        day_of_week='sat',
+        hour=23,
+        minute=4
+    )
 
 
 async def notify_users(time: str, advance: int):
