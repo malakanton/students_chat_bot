@@ -59,8 +59,9 @@ def logging_msg(
         logging_text: str = '',
 ) -> str:
     user_id = update.from_user.id
+    chat_type = update.chat.type
     if isinstance(update, Message):
         command = update.text
     elif isinstance(update, CallbackQuery):
         command = update.data
-    return f'user_id: {user_id} command: {command} message: {logging_text}'
+    return f'user_id: {user_id} chat_type: {chat_type} command: {command} message: {logging_text}'

@@ -144,5 +144,5 @@ async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
 
 async def hide_keyboard(chat_id, message_id):
     await asyncio.sleep(SCHEDULE_KB_TIMEOUT)
-    await bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id+1 ,reply_markup=None)
+    await bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id+1, reply_markup=None)
     logging.info('hide schedule kb')
