@@ -3,7 +3,7 @@ import logging
 from main_menu import set_menu
 from config import LESSONS_TIMINGS
 from loader import dp, bot, scheduler
-from lib.notifications import add_scheduled_jobs
+from lib.notifications import add_scheduled_jobs, add_report_scheduler
 
 
 async def main():
@@ -21,6 +21,7 @@ async def main():
     )
 
     add_scheduled_jobs(scheduler, LESSONS_TIMINGS)
+    add_report_scheduler(scheduler)
     scheduler.start()
     await set_menu(bot)
     await bot.delete_webhook(drop_pending_updates=True)

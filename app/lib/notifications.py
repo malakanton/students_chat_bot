@@ -7,6 +7,7 @@ import lib.lexicon as lx
 from lib.misc import prep_markdown
 from lib.models import Lesson
 from lib.logs_report import send_report
+from config import LOGS_REPORT_TIME
 
 
 def cron_trigger(time: str, advance: int) -> tuple:
@@ -27,14 +28,21 @@ def add_scheduled_jobs(scheduler: AsyncIOScheduler, times: list):
                 day_of_week='mon-fri',
                 hour=hour,
                 minute=minute)
+
+
+def add_report_scheduler(
+        scheduler: AsyncIOScheduler,
+        time: str = LOGS_REPORT_TIME
+) -> None:
+    hour, minute = list(map(int, time.split(':')))
     date = str(dt.datetime.now().date())
     scheduler.add_job(
         send_report,
         args=[date],
         trigger='cron',
-        day_of_week='sat',
-        hour=23,
-        minute=15
+        day_of_week='sun',
+        hour=hour,
+        minute=minute
     )
 
 

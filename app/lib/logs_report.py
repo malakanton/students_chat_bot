@@ -1,6 +1,6 @@
 import pandas as pd
 import re
-from config import LOGS_PATH, ADMIN_ID, PATH
+from config import LOGS_PATH, PATH, ADMIN_CHAT
 from loader import bot
 from aiogram.types.input_file import FSInputFile
 
@@ -24,7 +24,9 @@ def parce_line(line: str) -> dict:
     return log_items
 
 
-def form_dataframe(path: str = LOGS_PATH) -> pd.DataFrame:
+def form_dataframe(
+        path: str = LOGS_PATH
+) -> pd.DataFrame:
     with open(path, 'r') as file:
         lines = [line for line in file.readlines() if 'root' in line]
     data = []
@@ -35,15 +37,12 @@ def form_dataframe(path: str = LOGS_PATH) -> pd.DataFrame:
     return pd.DataFrame(data)
 
 
-async def send_report(date: str):
-    file_name = f'{PATH}report_{date}.xlsx'
+async def send_report(date: str, chat_id: int = ADMIN_CHAT):
+    file_name = f'{PATH}logs_raw_report_{date}.xlsx'
     df = form_dataframe()
     df.to_excel(file_name)
     file = FSInputFile(file_name)
     await bot.send_document(
-        chat_id=ADMIN_ID,
+        chat_id=chat_id,
         document=file
     )
-
-# import os
-# send_report('2024-02-03')
