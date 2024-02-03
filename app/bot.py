@@ -11,7 +11,15 @@ async def main():
     logging.basicConfig(
         level=logging.INFO,
         format='%(filename)s:%(lineno)d #%(levelname)-8s '
-               '[%(asctime)s] - %(name)s - %(message)s')
+               '[%(asctime)s] - %(name)s - %(message)s',
+        handlers=[
+            logging.FileHandler('bot_logs.log',
+                                mode='a'
+                                ),
+            logging.StreamHandler()
+        ]
+    )
+
     add_scheduled_jobs(scheduler, LESSONS_TIMINGS)
     scheduler.start()
     await set_menu(bot)
@@ -21,6 +29,3 @@ async def main():
 
 if __name__ == '__main__':
     asyncio.run(main())
-
-
-
