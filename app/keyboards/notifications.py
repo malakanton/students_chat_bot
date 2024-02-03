@@ -9,7 +9,7 @@ async def notif_kb():
     kb_builder = InlineKeyboardBuilder()
     buttons = []
     for butt in NotificationsAdvance:
-        button_text = SwitchNotif.ON.value + str(butt.value)
+        button_text = SwitchNotif.ON.value.format(str(butt.value))
         buttons.append(
             InlineKeyboardButton(
                 text=button_text,

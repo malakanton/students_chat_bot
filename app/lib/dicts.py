@@ -43,7 +43,7 @@ MONTHS = {
 RU_DAYS_INV = {v: k for k, v in RU_DAYS.items()}
 
 PERMANENT_LINKS = {
-    3: 'https://t.me/c/1917581433/75',
-    4: 'https://t.me/+cMt0bqkaiIVkNmEy',
-    22: 'https://t.me/PROG_mod'
+    3: 'https://t.me/c/1917581433/75', # Ильин
+    4: 'https://t.me/+cMt0bqkaiIVkNmEy', # Ерболова
+    22: 'https://t.me/PROG_mod' # Кузин
 }

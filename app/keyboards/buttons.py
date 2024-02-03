@@ -44,7 +44,7 @@ class ScheduleButt(Enum):
 
 
 class SwitchNotif(Enum):
-    ON = '🟩'
+    ON = '⏰{}\''
     OFF = '🟥OFF'
 
 
