@@ -17,8 +17,7 @@ async def set_notifications(message: Message):
     logging.info(logging_msg(message, 'notifications command'))
     try:
         flag = db.check_notification_flag(message.from_user.id)[0]
-        notif_on = int(flag != 0)
-        txt = get_notifications_text(notif_on, flag)
+        txt = get_notifications_text(flag)
         await message.answer(
             text=txt,
             reply_markup=await notif_kb()
@@ -40,16 +39,15 @@ async def change_notifications_flag(call: CallbackQuery, callback_data: Notifica
     user_id = call.message.chat.id
     db.set_notifications_flag(user_id, flag)
     logging.info(logging_msg(call, 'notifications flag set for user'))
-    notif_on = int(flag != 0)
-    txt = get_notifications_text(notif_on, flag, end_of_dialog=True)
+    txt = get_notifications_text(flag, end_of_dialog=True)
     await call.message.edit_text(text=txt, reply_markup=None)
 
 
 def get_notifications_text(
-        status: int,
         flag: int,
-        end_of_dialog: bool=False
+        end_of_dialog: bool = False
 ) -> str:
+    status = int(flag != 0)
     flag_wording = lx.NOTIF_FLAG[status]
     txt = lx.NOTIFICATIONS_STATUS.format(flag_wording)
     if status and not end_of_dialog:
