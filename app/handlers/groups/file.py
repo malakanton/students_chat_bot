@@ -34,8 +34,9 @@ async def document_processing(message: Message):
     ):
         sch = True
     await message.reply(
-        text=prep_markdown(lx.FILE_ATTACHED.format(file.file_name)),
-        reply_markup=await file_kb(db_file_id, sch)
+        text=lx.FILE_ATTACHED.format(file.file_name),
+        reply_markup=await file_kb(db_file_id, sch),
+        parse_mode='HTML'
     )
 
 
