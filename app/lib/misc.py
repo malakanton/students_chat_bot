@@ -41,7 +41,7 @@ def valid_schedule_format(
 def prep_markdown(
         text: str
 ) -> str:
-    MARKDOWN = '.()-!#='
+    MARKDOWN = '.()-!#=+|~'#['`', '(', ')', '~', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
     for ch in MARKDOWN:
         text = text.replace(ch, '\\' + ch)
     text = text.replace('<LINK>\\', '')
