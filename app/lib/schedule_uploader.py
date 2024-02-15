@@ -1,4 +1,4 @@
-from loader import db
+from loader import db, gc
 from lib.schedule_parser import get_schedule, filter_df
 from lib.dicts import RU_DAYS, PERMANENT_LINKS
 import logging
@@ -17,7 +17,7 @@ async def process_schedule_file(filename: str):
     return df, week_num, schedule_exists
 
 
-async def upload_schedule(df, week_num):
+async def upload_schedule(df, week_num, update=False):
     groups = db.get_groups()
     not_uploaded_groups = []
     for group in groups:
@@ -28,8 +28,14 @@ async def upload_schedule(df, week_num):
                 logging.warning(f'error!!! while filtering group {group.name}')
                 break
             await upload_group_schedule(schedule, week_num, group.id)
+            if group.course == 1:
+                if update:
+                    await gc.update_schedule(schedule, group.name)
+                else:
+                    await gc.upload_schedule(schedule, group.name)
         else:
             not_uploaded_groups.append(group)
+    return not_uploaded_groups
 
 
 async def upload_group_schedule(

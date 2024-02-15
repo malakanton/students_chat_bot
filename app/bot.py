@@ -13,9 +13,10 @@ async def main():
         format='%(filename)s:%(lineno)d #%(levelname)-8s '
                '[%(asctime)s] - %(name)s - %(message)s',
         handlers=[
-            logging.FileHandler('bot_logs.log',
-                                mode='a'
-                                ),
+            logging.FileHandler(
+                'bot_logs.log',
+                mode='a'
+            ),
             logging.StreamHandler()
         ]
     )

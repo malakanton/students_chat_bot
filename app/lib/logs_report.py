@@ -8,7 +8,7 @@ from aiogram.types.input_file import FSInputFile
 def parce_line(line: str) -> dict:
     timestamp = re.search(r'\[.*\]', line).group(0)[1:-1].split(',')[0]
     log_info = line.split('root')[1].replace('-', '').strip()
-    log_fields = ['user_id', 'command', 'message', 'chat_id','chat_type']
+    log_fields = ['user_id', 'command', 'message', 'chat_id', 'chat_type']
     log_items = {
         'timestamp': timestamp
     }

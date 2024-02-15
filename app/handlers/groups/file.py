@@ -89,7 +89,7 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
     elif action == SchdUpdButt.UPDATE.value:
         await call.answer()
         db.erase_existing_schedule(week_num)
-        not_uploaded = await upload_schedule(df, week_num)
+        not_uploaded = await upload_schedule(df, week_num, update=True)
         if not_uploaded:
             logging.warning(f'didnt manage to find groups {not_uploaded}')
         await call.message.edit_text(prep_markdown(lx.SCHEDULE_UPDATED))
