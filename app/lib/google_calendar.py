@@ -9,7 +9,11 @@ class GoogleCalendar:
     _scopes: list
     __creds: str
 
-    def __init__(self, scopes: list = SCOPES, creds_path: str = CREDS_PATH):
+    def __init__(
+            self,
+            scopes: list = SCOPES,
+            creds_path: str = CREDS_PATH
+    ) -> None:
         self._scopes = scopes
         self.__creds = service_account.Credentials.from_service_account_file(
             filename=creds_path
@@ -84,11 +88,11 @@ class GoogleCalendar:
             calendar_id: str = ''
     ) -> list:
         events = self._get_events_from_list(schedule)
+        links = []
         if not calendar_id:
             calendar_id = self._get_calendar_id(group_name)
         if not calendar_id:
-            return None
-        links = []
+            return links
         for event in events:
             event_upl = self.service.events().insert(
                 calendarId=calendar_id,
