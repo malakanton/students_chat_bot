@@ -1,4 +1,5 @@
 import psycopg2
+from psycopg2.extras import execute_values
 import datetime as dt
 from lib.models import Group, Week, Lesson
 
@@ -314,6 +315,13 @@ class DB:
         """
         self._execute_query(query, (flag, user_id))
 
+    def insert_logs(self, logs_list: list):
+        query = """
+        insert into logs (adddate, chat_id, chat_type, user_id, command, message)
+        values %s
+        """
+        execute_values(self.cur, query, logs_list)
+        self.conn.commit()
 
 # from config import HOST_LOCAL, USER, PG_PASS, DB_NAME, PORT_LOCAL
 # db = DB(host=HOST_LOCAL, user=USER, pg_pass=PG_PASS, db_name=DB_NAME, port=PORT_LOCAL)

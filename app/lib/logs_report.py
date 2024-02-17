@@ -1,8 +1,11 @@
 import pandas as pd
 import re
-from config import LOGS_PATH, PATH, ADMIN_CHAT
+from config import LOGS_PATH, PATH, ADMIN_CHAT, LOGS_UPLOAD_TIME
 from loader import bot
 from aiogram.types.input_file import FSInputFile
+from loader import db
+import datetime as dt
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
 def parce_line(line: str) -> dict:
@@ -24,9 +27,7 @@ def parce_line(line: str) -> dict:
     return log_items
 
 
-def form_dataframe(
-        path: str = LOGS_PATH
-) -> pd.DataFrame:
+def form_data(path: str = PATH, dataframe = True) -> pd.DataFrame | list:
     with open(path, 'r') as file:
         lines = [line for line in file.readlines() if 'root' in line]
     data = []
@@ -34,15 +35,50 @@ def form_dataframe(
         data.append(
             parce_line(line)
         )
-    return pd.DataFrame(data)
+    df = pd.DataFrame(data)
+    df = df[df.user_id != '']
+    if dataframe:
+        return df
+    data = [
+        (row['timestamp'],
+         row['chat_id'],
+         row['chat_type'],
+         row['user_id'],
+         row['command'],
+         row['message']) for _, row in df.iterrows()
+    ]
+    return data
 
 
 async def send_report(date: str, chat_id: int = ADMIN_CHAT):
     file_name = f'{PATH}logs_raw_report_{date}.xlsx'
-    df = form_dataframe()
+    df = form_data()
     df.to_excel(file_name)
     file = FSInputFile(file_name)
     await bot.send_document(
         chat_id=chat_id,
         document=file
+    )
+
+
+async def upload_logs_to_db() -> None:
+    today = str(dt.datetime.now() - dt.timedelta(hours=24))
+    data = [
+        row for row in form_data(dataframe=False)
+        if row[0] >= today
+    ]
+    db.insert_logs(data)
+
+
+def add_logs_scheduler(
+        scheduler: AsyncIOScheduler,
+        time: str = LOGS_UPLOAD_TIME
+) -> None:
+    hour, minute = list(map(int, time.split(':')))
+    scheduler.add_job(
+        upload_logs_to_db,
+        trigger='cron',
+        day_of_week='mon-sun',
+        hour=hour,
+        minute=minute
     )
