@@ -1,6 +1,6 @@
 from langchain_community.document_loaders import TextLoader
 from langchain.vectorstores.pgvector import PGVector
-from langchain.embeddings import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import tiktoken
 from config import OPEN_AI_URL, OPEN_AI_API_KEY, PG_PASS
