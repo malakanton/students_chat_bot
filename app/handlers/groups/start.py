@@ -6,7 +6,7 @@ from aiogram.filters import CommandStart
 from loader import bot, db, gr
 from lib.models import Groups
 from handlers.routers import groups_router
-from handlers.filters import IsRegisteredGroup, cb_group_filter
+from handlers.filters import IsRegisteredGroup
 from keyboards.callbacks import StartCallback
 from keyboards.buttons import Confirm
 from keyboards.start import course_kb, groups_kb, confirm_kb
@@ -37,7 +37,6 @@ async def start(message: Message):
 
 
 @groups_router.callback_query(StartCallback.filter(),
-                   cb_group_filter,
                    StartCallback.filter(F.confirm == 'None'))
 async def group_choice(call: CallbackQuery, callback_data: StartCallback):
     logging.info('start callback processing in private chat')
@@ -54,7 +53,7 @@ async def group_choice(call: CallbackQuery, callback_data: StartCallback):
                                      reply_markup=markup)
 
 
-@groups_router.callback_query(StartCallback.filter(), cb_group_filter)
+@groups_router.callback_query(StartCallback.filter())
 async def confirm(call: CallbackQuery, callback_data: StartCallback):
     gr_list = Groups(db.get_groups())
     groups = gr_list.groups

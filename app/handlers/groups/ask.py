@@ -1,22 +1,22 @@
-from loader import dp, bot
+import logging
+from loader import bot
 from aiogram.types import Message
-from handlers.filters import UserFilter, GroupFilter
 from aiogram.filters import Command
-from lib import lexicon as lx
 from lib.misc import prep_markdown
 from gpt.rag import gpt_respond
 from aiogram.exceptions import TelegramBadRequest
-from handlers.routers import users_router
+from handlers.routers import users_router, groups_router
+from lib.logs import logging_msg
 
 
-@users_router.message(
+@groups_router.message(
             Command('ask')
             )
 async def gpt_reply(message: Message):
     chat_id = message.chat.id
+    logging.info(logging_msg(message, 'ask command in group chat'))
     await bot.send_chat_action(chat_id, "typing")
     user_query = message.text.replace('/ask', '').strip()
-    user_id = message.from_user.id
     raw_answer = gpt_respond(user_query)
     answer = prep_markdown(raw_answer)
     if 'https://' in answer:

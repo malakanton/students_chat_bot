@@ -6,8 +6,8 @@ from config import PATH
 from lib import lexicon as lx
 from lib.misc import chat_msg_ids, valid_schedule_format, prep_markdown
 from lib.schedule_uploader import process_schedule_file, upload_schedule
-from loader import dp, db, bot, users
-from handlers.filters import cb_group_filter
+from loader import db, bot, users
+from lib.logs import logging_msg
 from handlers.routers import groups_router
 from keyboards.file import schedule_exists_kb, file_kb
 from keyboards.callbacks import FileCallback, LibCallback
@@ -19,7 +19,7 @@ from keyboards.buttons import FileButt, SchdUpdButt, Confirm, FileTypeButt
 # в групповых чатах прикреплять документы могут все пользователи
 @groups_router.message(F.content_type == 'document')
 async def document_processing(message: Message):
-    logging.info(f'document uploaded in group {message.chat.id}')
+    logging.info(logging_msg(message, 'file uploaded in group chat'))
     file = message.document
     db_file_id = db.add_file(
         file_name=file.file_name,
@@ -41,9 +41,9 @@ async def document_processing(message: Message):
 
 
 # если пользователь выбрал расписание
-@groups_router.callback_query(FileCallback.filter(F.file_type == FileButt.SCHEDULE.name),
-                   cb_group_filter)
+@groups_router.callback_query(FileCallback.filter(F.file_type == FileButt.SCHEDULE.name))
 async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
+    logging.info(logging_msg(call, 'schedule chosen when uploaded the file'))
     action = callback_data.update
     file_name, tg_file_id = db.update_file(
         file_id=callback_data.file_id,
@@ -52,7 +52,7 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
     file = await bot.get_file(tg_file_id)
     if not valid_schedule_format(file_name):
         await call.answer(lx.NOT_SCHEDULE_FORMAT, show_alert=True)
-        logging.info(f'file {file_name} doesnt pass the schedule test')
+        logging.info(logging_msg(call, f'file {file_name} doesnt pass the schedule test'))
         return
     schedule_path = PATH + file_name
     await bot.download_file(
@@ -85,7 +85,7 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
                 logging.warning(f'didnt manage to find groups {not_uploaded}')
             await call.answer(text=prep_markdown(lx.SCHEDULE_UPLOADED),
                               show_alert=True)
-            logging.info('schedule uploaded')
+            logging.info(logging_msg(call, 'schedule uploaded'))
     elif action == SchdUpdButt.UPDATE.value:
         await call.answer()
         db.erase_existing_schedule(week_num)
@@ -93,20 +93,21 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
         if not_uploaded:
             logging.warning(f'didnt manage to find groups {not_uploaded}')
         await call.message.edit_text(prep_markdown(lx.SCHEDULE_UPDATED))
-        logging.info('schedule updated')
+        logging.info(logging_msg(call, 'schedule uploaded'))
     elif action == SchdUpdButt.KEEP.value:
         await call.answer()
         await call.message.edit_text(lx.KEEP_SCHEDULE)
-        logging.info('schedule keep as it was')
+        logging.info(logging_msg(call, 'schedule upload cancelled'))
     os.remove(schedule_path)
 
 
 # если пользователь выбрал учебные материалы, даем выбрать предмет
-@groups_router.callback_query(FileCallback.filter(F.file_type == FileButt.STUDY.name),
-                   cb_group_filter)
+@groups_router.callback_query(
+    FileCallback.filter(F.file_type == FileButt.STUDY.name)
+)
 async def subj_choice(call: CallbackQuery, callback_data: FileCallback):
     await call.answer()
-    logging.info(f'Study file upload by chosen')
+    logging.info(logging_msg(call))
     users_subjects = db.get_group_subjects(call.message.chat.id)
     markup = await subjects_kb(users_subjects, callback_data.file_id)
     await call.message.edit_text(
@@ -115,12 +116,11 @@ async def subj_choice(call: CallbackQuery, callback_data: FileCallback):
     )
 
 
-# выбор типа материала и сохранение
-@groups_router.callback_query(LibCallback.filter(F.type == 'None'),
-                   cb_group_filter)
+# выбор типа материала
+@groups_router.callback_query(LibCallback.filter(F.type == 'None'))
 async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
     await call.answer()
-    logging.info('materials type choice')
+    logging.info(logging_msg(call))
     markup = await lib_type_kb(callback_data.subject_id, callback_data.file_id)
     await call.message.edit_text(
         text=prep_markdown(lx.CHOOSE_TYPE),
@@ -128,17 +128,17 @@ async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
     )
 
 
-# выбор типа материала и сохранение
-@groups_router.callback_query(LibCallback.filter(F.confirm == 'None'),
-                   cb_group_filter)
-async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
+# выбор предмета
+@groups_router.callback_query(LibCallback.filter(F.confirm == 'None'))
+async def choose_subject(call: CallbackQuery, callback_data: LibCallback):
     await call.answer()
+    logging.info(logging_msg(call))
     markup = await confirm_subj_kb(callback_data.file_id,
                                    callback_data.subject_id,
                                    callback_data.type)
-    subj_inv = {v: k for k, v in db.get_group_subjects(call.message.chat.id).items()}
-    subj_name = subj_inv[callback_data.subject_id]
-    subj_type = FileTypeButt._member_map_[callback_data.type].value
+    subjects_dict_inv = db.get_group_subjects(call.message.chat.id, inverted=True)
+    subj_name = subjects_dict_inv.get(callback_data.subject_id)
+    subj_type = FileTypeButt[callback_data.type].value
     msg = prep_markdown(lx.CONFIRM_SUBJECT.format(subj_type.lower(), subj_name))
     await call.message.edit_text(
         text=msg,
@@ -146,20 +146,19 @@ async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
     )
 
 
-@groups_router.callback_query(LibCallback.filter(F.confirm != 'None'),
-                   cb_group_filter)
+@groups_router.callback_query(LibCallback.filter(F.confirm != 'None'))
 async def confirm_subj(call: CallbackQuery, callback_data: LibCallback):
+    logging.info(logging_msg(call))
     await call.answer()
     if callback_data.confirm == Confirm.OK.name:
-        file_name, tg_file_id = db.update_file(
+        db.update_file(
             file_id=callback_data.file_id,
             file_type=callback_data.type,
             subj_id=callback_data.subject_id
         )
-        logging.info('file raw updated in db')
-        subj_inv = {v: k for k, v in db.get_group_subjects(call.message.chat.id).items()}
-        subj_name = subj_inv[callback_data.subject_id]
-        subj_type = FileTypeButt._member_map_[callback_data.type].value
+        subj_dict_inv = db.get_group_subjects(call.message.chat.id, inverted=True)
+        subj_name = subj_dict_inv[callback_data.subject_id]
+        subj_type = FileTypeButt[callback_data.type].value
         await call.message.edit_text(
             prep_markdown(lx.CONFIRM_SUBJECT_OK.format(subj_type.lower(), subj_name))
         )
@@ -177,12 +176,12 @@ async def confirm_subj(call: CallbackQuery, callback_data: LibCallback):
 
 
 # если пользователь выбрал не сохранять
-@groups_router.callback_query(FileCallback.filter(F.file_type == FileButt.CANCEL.name),
-                   cb_group_filter)
+@groups_router.callback_query(FileCallback.filter(F.file_type == FileButt.CANCEL.name))
 async def dont_save_choice(call: CallbackQuery, callback_data: FileCallback):
-    logging.info('file saving canceled')
+    logging.info(logging_msg(call))
     chat_id, msg_id = chat_msg_ids(call)
     await call.answer(lx.DIDNT_SAVE_FILE, show_alert=True)
     await bot.delete_message(
         chat_id=chat_id,
-        message_id=msg_id)
+        message_id=msg_id
+    )

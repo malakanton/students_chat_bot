@@ -3,10 +3,11 @@ import logging
 from config import PATH
 from aiogram import F
 from lib import lexicon as lx
+from lib.logs import logging_msg
 from lib.misc import prep_markdown
-from loader import dp, db, bot, users
+from loader import db, bot, users
 from handlers.routers import users_router
-from handlers.filters import UserFilter, cb_user_filter
+from handlers.filters import UserFilter
 from aiogram.types import Message, CallbackQuery
 from keyboards.file import schedule_exists_kb, file_kb
 from keyboards.callbacks import FileCallback, LibCallback
@@ -31,15 +32,16 @@ async def document_processing(message: Message):
     logging.info(f'file info uploaded: {db_file_id}')
     await message.reply(
         text=lx.FILE_ATTACHED.format(file.file_name),
-        reply_markup=await file_kb(db_file_id)
+        reply_markup=await file_kb(db_file_id),
+        parse_mode='HTML'
     )
 
 
 # если пользователь выбрал расписание
-@users_router.callback_query(FileCallback.filter(F.file_type == FileButt.SCHEDULE.name),
-                   cb_user_filter)
+@users_router.callback_query(FileCallback.filter(F.file_type == FileButt.SCHEDULE.name))
 async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
     action = callback_data.update
+    logging.info(logging_msg(call))
     file_name, tg_file_id = db.update_file(
         file_id=callback_data.file_id,
         file_type=callback_data.file_type
@@ -85,9 +87,9 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
 
 
 # если пользователь выбрал учебные материалы, даем выбрать предмет
-@users_router.callback_query(FileCallback.filter(F.file_type == FileButt.STUDY.name),
-                   cb_user_filter)
+@users_router.callback_query(FileCallback.filter(F.file_type == FileButt.STUDY.name))
 async def subj_choice(call: CallbackQuery, callback_data: FileCallback):
+    logging.info(logging_msg(call))
     await call.answer()
     users_subjects = db.get_users_subjects(call.from_user.id)
     markup = await subjects_kb(users_subjects, callback_data.file_id)
@@ -99,11 +101,10 @@ async def subj_choice(call: CallbackQuery, callback_data: FileCallback):
 
 
 # выбор типа материала
-@users_router.callback_query(LibCallback.filter(F.type == 'None'),
-                   cb_user_filter)
+@users_router.callback_query(LibCallback.filter(F.type == 'None'))
 async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
+    logging.info(logging_msg(call))
     await call.answer()
-    print(call.message.message_id)
     markup = await lib_type_kb(callback_data.subject_id, callback_data.file_id)
     await call.message.edit_text(
         text=prep_markdown(lx.CHOOSE_TYPE),
@@ -111,17 +112,16 @@ async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
     )
 
 # подтверждение выбора
-@users_router.callback_query(LibCallback.filter(F.confirm == 'None'),
-                   cb_user_filter)
+@users_router.callback_query(LibCallback.filter(F.confirm == 'None'))
 async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
     await call.answer()
-    print(call.message.message_id)
+    logging.info(logging_msg(call))
     markup = await confirm_subj_kb(callback_data.file_id,
                                    callback_data.subject_id,
                                    callback_data.type)
-    subj_inv = {v: k for k, v in db.get_users_subjects(call.from_user.id).items()}
-    subj_name = subj_inv[callback_data.subject_id]
-    subj_type = FileTypeButt._member_map_[callback_data.type].value
+    subj_dict_inv = db.get_users_subjects(call.from_user.id, inverted=True)
+    subj_name = subj_dict_inv[callback_data.subject_id]
+    subj_type = FileTypeButt[callback_data.type].value
     msg = lx.CONFIRM_SUBJECT.format(subj_type.lower(), subj_name)
     await call.message.edit_text(
         text=msg,
@@ -130,24 +130,22 @@ async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
 
 
 #сохранение если все ок, или откат назад если пользователь нажал отмена
-@users_router.callback_query(LibCallback.filter(F.confirm != 'None'),
-                   cb_user_filter)
+@users_router.callback_query(LibCallback.filter(F.confirm != 'None'))
 async def confirm_subj(call: CallbackQuery, callback_data: LibCallback):
     await call.answer()
-    print(call.message.message_id)
+    logging.info(logging_msg(call))
     if callback_data.confirm == Confirm.OK.name:
         file_name, tg_file_id = db.update_file(
             file_id=callback_data.file_id,
             file_type=callback_data.type,
             subj_id=callback_data.subject_id
         )
-        subj_inv = {v: k for k, v in db.get_users_subjects(call.from_user.id).items()}
-        subj_name = subj_inv[callback_data.subject_id]
-        subj_type = FileTypeButt._member_map_[callback_data.type].value
+        subj_dict_inv = db.get_users_subjects(call.from_user.id, inverted=True)
+        subj_name = subj_dict_inv[callback_data.subject_id]
+        subj_type = FileTypeButt[callback_data.type].value
         msg = prep_markdown(lx.CONFIRM_SUBJECT_OK.format(subj_type, subj_name))
         await call.message.edit_text(msg)
     else:
-        print(call.message.message_id)
         msg = prep_markdown(lx.FILE_ATTACHED.format(''))
         await call.message.edit_text(
             text=msg,
@@ -156,12 +154,11 @@ async def confirm_subj(call: CallbackQuery, callback_data: LibCallback):
 
 
 # если пользователь выбрал не сохранять
-@users_router.callback_query(FileCallback.filter(F.file_type == FileButt.CANCEL.name),
-                   cb_user_filter)
+@users_router.callback_query(FileCallback.filter(F.file_type == FileButt.CANCEL.name))
 async def dont_save_choice(call: CallbackQuery, callback_data: FileCallback):
+    logging.info(logging_msg(call))
     chat_id, msg_id = chat_msg_ids(call)
     await call.answer(lx.DIDNT_SAVE_FILE, show_alert=True)
     await bot.delete_message(
         chat_id=chat_id,
         message_id=msg_id)
-

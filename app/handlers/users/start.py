@@ -11,7 +11,7 @@ from keyboards.callbacks import StartCallback
 from handlers.routers import users_router
 from aiogram.types import Message, CallbackQuery
 from keyboards.start import course_kb, groups_kb, confirm_kb
-from handlers.filters import UserFilter, cb_user_filter, UnRegisteredUser
+from handlers.filters import UnRegisteredUser
 
 
 @users_router.message(CommandStart())
@@ -36,8 +36,7 @@ async def start(message: Message):
     await message.delete()
 
 
-@users_router.callback_query(StartCallback.filter(F.confirm == 'None'),
-                   cb_user_filter)
+@users_router.callback_query(StartCallback.filter(F.confirm == 'None'))
 async def callback_start(call: CallbackQuery, callback_data: StartCallback):
     logging.info(logging_msg(call, 'start callbacks processing'))
     groups = db.get_groups()
@@ -53,8 +52,7 @@ async def callback_start(call: CallbackQuery, callback_data: StartCallback):
                                      reply_markup=markup)
 
 
-@users_router.callback_query(StartCallback.filter(F.confirm != 'None'),
-                   cb_user_filter)
+@users_router.callback_query(StartCallback.filter(F.confirm != 'None'))
 async def confirm(call: CallbackQuery, callback_data: StartCallback):
     await call.answer()
     logging.info(logging_msg(call, 'start callbacks processing'))

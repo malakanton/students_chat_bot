@@ -19,7 +19,7 @@ async def help_cmd(message: Message):
 
 @users_router.message(Command('description'))
 async def help_cmd(message: Message):
-    logging.info(logging_msg(message, 'description command in pricate chat'))
+    logging.info(logging_msg(message, 'description command in private chat'))
     desc_msg = prep_markdown(lx.DESCRIPTION)
     await message.answer(text=desc_msg)
     await message.delete()
@@ -27,7 +27,7 @@ async def help_cmd(message: Message):
 
 @users_router.message(Command('contacts'))
 async def help_cmd(message: Message):
-    logging.info(logging_msg(message, 'contacts command in pricate chat'))
+    logging.info(logging_msg(message, 'contacts command in private chat'))
     desc_msg = prep_markdown(lx.CONTACTS)
     await message.answer(text=desc_msg)
     await message.delete()

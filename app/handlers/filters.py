@@ -7,9 +7,6 @@ import re
 
 
 GroupFilter = F.chat.type.in_({'group', 'supergroup'})
-cb_user_filter = F.message.chat.type == 'private'
-cb_group_filter = F.message.chat.type.in_({'group', 'supergroup'})
-
 
 class UserFilter(BaseFilter):
     def __init__(self, users_ids: set[int] = None) -> None:

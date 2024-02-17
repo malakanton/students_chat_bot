@@ -49,5 +49,3 @@ class SwitchNotif(Enum):
 
 
 codes = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ']
-
-

@@ -6,8 +6,8 @@ from lib.misc import prep_markdown
 from lib.logs import logging_msg
 from aiogram.types import Message
 from handlers.routers import users_router
-from handlers.filters import UserFilter, SupportFilter
-from loader import dp, db, bot, users
+from handlers.filters import SupportFilter
+from loader import db, bot
 from config import ADMIN_CHAT
 
 

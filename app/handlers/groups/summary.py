@@ -11,6 +11,7 @@ from gpt.chat_summary import gpt_summary
 
 @groups_router.message(Command('summary'))
 async def summary_request(message: Message):
+    logging.info(logging_msg(message, 'summary command in group chat'))
     chat_id = message.chat.id
     await bot.send_chat_action(chat_id, "typing")
     gpt_summary_text = await gpt_summary(chat_id)

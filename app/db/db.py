@@ -213,7 +213,7 @@ class DB:
         ids = [id[0] for id in self.cur.fetchall()]
         return set(ids)
 
-    def get_users_subjects(self, user_id: int):
+    def get_users_subjects(self, user_id: int, inverted=False):
         query = """
         select 
             s.name,
@@ -224,9 +224,12 @@ class DB:
         where group_id = (select group_id from users where user_id = %s)
         """
         self.cur.execute(query, (user_id,))
-        return dict(self.cur.fetchall())
+        res = self.cur.fetchall()
+        if inverted:
+            return dict([(r[1], r[0]) for r in res])
+        return dict(res)
 
-    def get_group_subjects(self, group_chat_id: int):
+    def get_group_subjects(self, group_chat_id: int, inverted = False):
         query = """
         select 
             distinct
@@ -238,7 +241,11 @@ class DB:
         where group_id = (select id from groups where chat_id = %s)
         """
         self.cur.execute(query, (group_chat_id,))
-        return dict(self.cur.fetchall())
+        res = self.cur.fetchall()
+        if inverted:
+            return dict([(r[1], r[0]) for r in res])
+        return dict(res)
+
 
     def get_future_two_days(self, user_id, date):
         query = """

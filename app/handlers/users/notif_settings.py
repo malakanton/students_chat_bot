@@ -30,7 +30,6 @@ async def set_notifications(message: Message):
 
 @users_router.callback_query(Notifications.filter())
 async def change_notifications_flag(call: CallbackQuery, callback_data: Notifications):
-    # flag = int(callback_data.flag == SwitchNotif.ON.name)
     flag = callback_data.flag
     if flag == SwitchNotif.OFF.name:
         flag = 0
