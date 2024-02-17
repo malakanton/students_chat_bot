@@ -2,13 +2,14 @@ import logging
 from lib import lexicon as lx
 from aiogram.types import Message
 from aiogram.filters import Command
-from loader import dp, bot
-from handlers.filters import GroupFilter
-from lib.misc import prep_markdown, logging_msg
+from loader import bot
+from handlers.routers import groups_router
+from lib.misc import prep_markdown
+from lib.logs import logging_msg
 from gpt.chat_summary import gpt_summary
 
 
-@dp.message(Command('summary'), GroupFilter)
+@groups_router.message(Command('summary'))
 async def summary_request(message: Message):
     chat_id = message.chat.id
     await bot.send_chat_action(chat_id, "typing")

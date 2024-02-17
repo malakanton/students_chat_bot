@@ -3,8 +3,6 @@ import datetime as dt
 from .models import Today
 from aiogram import types
 from config import HOST, HOST_LOCAL, PORT, PORT_LOCAL
-from aiogram.types import Message, CallbackQuery
-
 
 test_users_dates = {}
 
@@ -41,7 +39,7 @@ def valid_schedule_format(
 def prep_markdown(
         text: str
 ) -> str:
-    MARKDOWN = '.()-!#=+|~'#['`', '(', ')', '~', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+    MARKDOWN = '.()-!#=+|~'
     for ch in MARKDOWN:
         text = text.replace(ch, '\\' + ch)
     text = text.replace('<LINK>\\', '')
@@ -54,18 +52,3 @@ def get_host_port():
     return HOST, PORT
 
 
-def logging_msg(
-        update: Message | CallbackQuery,
-        logging_text: str = '',
-) -> str:
-    user_id = update.from_user.id
-    chat_type, chat_id, command = '', '', ''
-    if isinstance(update, Message):
-        command = update.text
-        chat_type = update.chat.type
-        chat_id = update.chat.id
-    elif isinstance(update, CallbackQuery):
-        command = update.data
-        chat_type = update.message.chat.type
-        chat_id = update.message.chat.id
-    return f'user_id: {user_id} chat_id: {chat_id} chat_type: {chat_type} command: {command} message: {logging_text}'

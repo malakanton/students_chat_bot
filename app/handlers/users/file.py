@@ -5,6 +5,7 @@ from aiogram import F
 from lib import lexicon as lx
 from lib.misc import prep_markdown
 from loader import dp, db, bot, users
+from handlers.routers import users_router
 from handlers.filters import UserFilter, cb_user_filter
 from aiogram.types import Message, CallbackQuery
 from keyboards.file import schedule_exists_kb, file_kb
@@ -17,7 +18,7 @@ from keyboards.buttons import FileButt, SchdUpdButt, Confirm, FileTypeButt
 
 # обработка прикрепленных документов
 # в личных сообщениях прикреплять документы могут только админы и старосты
-@dp.message(F.content_type == 'document',
+@users_router.message(F.content_type == 'document',
             UserFilter(users.admins | users.heads))
 async def document_processing(message: Message):
     logging.info(f'document uploaded in private chat {message.chat.id}')
@@ -35,7 +36,7 @@ async def document_processing(message: Message):
 
 
 # если пользователь выбрал расписание
-@dp.callback_query(FileCallback.filter(F.file_type == FileButt.SCHEDULE.name),
+@users_router.callback_query(FileCallback.filter(F.file_type == FileButt.SCHEDULE.name),
                    cb_user_filter)
 async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
     action = callback_data.update
@@ -84,7 +85,7 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
 
 
 # если пользователь выбрал учебные материалы, даем выбрать предмет
-@dp.callback_query(FileCallback.filter(F.file_type == FileButt.STUDY.name),
+@users_router.callback_query(FileCallback.filter(F.file_type == FileButt.STUDY.name),
                    cb_user_filter)
 async def subj_choice(call: CallbackQuery, callback_data: FileCallback):
     await call.answer()
@@ -98,7 +99,7 @@ async def subj_choice(call: CallbackQuery, callback_data: FileCallback):
 
 
 # выбор типа материала
-@dp.callback_query(LibCallback.filter(F.type == 'None'),
+@users_router.callback_query(LibCallback.filter(F.type == 'None'),
                    cb_user_filter)
 async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
     await call.answer()
@@ -110,7 +111,7 @@ async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
     )
 
 # подтверждение выбора
-@dp.callback_query(LibCallback.filter(F.confirm == 'None'),
+@users_router.callback_query(LibCallback.filter(F.confirm == 'None'),
                    cb_user_filter)
 async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
     await call.answer()
@@ -129,7 +130,7 @@ async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
 
 
 #сохранение если все ок, или откат назад если пользователь нажал отмена
-@dp.callback_query(LibCallback.filter(F.confirm != 'None'),
+@users_router.callback_query(LibCallback.filter(F.confirm != 'None'),
                    cb_user_filter)
 async def confirm_subj(call: CallbackQuery, callback_data: LibCallback):
     await call.answer()
@@ -155,7 +156,7 @@ async def confirm_subj(call: CallbackQuery, callback_data: LibCallback):
 
 
 # если пользователь выбрал не сохранять
-@dp.callback_query(FileCallback.filter(F.file_type == FileButt.CANCEL.name),
+@users_router.callback_query(FileCallback.filter(F.file_type == FileButt.CANCEL.name),
                    cb_user_filter)
 async def dont_save_choice(call: CallbackQuery, callback_data: FileCallback):
     chat_id, msg_id = chat_msg_ids(call)

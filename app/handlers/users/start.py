@@ -2,18 +2,19 @@ import logging
 from aiogram import F
 from lib import lexicon as lx
 from lib.models import Groups
-from lib.misc import prep_markdown, logging_msg
-from loader import dp, db, gr, users
+from lib.misc import prep_markdown
+from lib.logs import logging_msg
+from loader import db, gr, users
 from keyboards.buttons import Confirm
 from aiogram.filters import CommandStart
 from keyboards.callbacks import StartCallback
+from handlers.routers import users_router
 from aiogram.types import Message, CallbackQuery
 from keyboards.start import course_kb, groups_kb, confirm_kb
 from handlers.filters import UserFilter, cb_user_filter, UnRegisteredUser
 
 
-@dp.message(CommandStart(),
-            UserFilter())
+@users_router.message(CommandStart())
 async def start(message: Message):
     logging.info(logging_msg(message, 'start command in private chat'))
     user_id = message.from_user.id
@@ -35,7 +36,7 @@ async def start(message: Message):
     await message.delete()
 
 
-@dp.callback_query(StartCallback.filter(F.confirm == 'None'),
+@users_router.callback_query(StartCallback.filter(F.confirm == 'None'),
                    cb_user_filter)
 async def callback_start(call: CallbackQuery, callback_data: StartCallback):
     logging.info(logging_msg(call, 'start callbacks processing'))
@@ -52,7 +53,7 @@ async def callback_start(call: CallbackQuery, callback_data: StartCallback):
                                      reply_markup=markup)
 
 
-@dp.callback_query(StartCallback.filter(F.confirm != 'None'),
+@users_router.callback_query(StartCallback.filter(F.confirm != 'None'),
                    cb_user_filter)
 async def confirm(call: CallbackQuery, callback_data: StartCallback):
     await call.answer()
@@ -86,7 +87,7 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
 
 
 # фильтр для незарегистрированных пользователей
-@dp.message(UserFilter(), UnRegisteredUser())
+@users_router.message(UnRegisteredUser())
 async def unregistered_user(message: Message):
     logging.info(logging_msg(message, 'unregistered user'))
     await message.answer(

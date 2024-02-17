@@ -1,4 +1,2 @@
-from .groups import dp
-from .users import dp
-
-__all__ = ['dp']
+from .groups import groups_router
+from .users import users_router

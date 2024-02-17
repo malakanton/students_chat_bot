@@ -1,18 +1,14 @@
 import os
-from loader import dp
 from aiogram.types import Message
 from aiogram import F
-from handlers.filters import GroupFilter
-from lib import lexicon as lx
-from lib.misc import prep_markdown
+from handlers.routers import groups_router
 import datetime as dt
 from config import MESSAGES_TO_KEEP, CHATS_HISTORY
 
 
-@dp.message(
+@groups_router.message(
             ~F.text.startswith('/'),
             ~F.text.startswith('#'),
-            GroupFilter,
             F.content_type == 'text'
             )
 async def write_messages(message: Message):

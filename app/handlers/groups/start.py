@@ -3,9 +3,10 @@ from lib import lexicon as lx
 from aiogram import F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart
-from loader import dp, bot, db, gr
+from loader import bot, db, gr
 from lib.models import Groups
-from handlers.filters import GroupFilter, IsRegisteredGroup, cb_group_filter
+from handlers.routers import groups_router
+from handlers.filters import IsRegisteredGroup, cb_group_filter
 from keyboards.callbacks import StartCallback
 from keyboards.buttons import Confirm
 from keyboards.start import course_kb, groups_kb, confirm_kb
@@ -14,7 +15,7 @@ import asyncio
 from config import UNAUTHORIZED_GROUP_TIMOUT, ADMIN_CHAT
 
 
-@dp.message(CommandStart(), GroupFilter)
+@groups_router.message(CommandStart())
 async def start(message: Message):
     logging.debug('start command in group chat!')
     markup = await course_kb(gr.courses)
@@ -35,7 +36,7 @@ async def start(message: Message):
     )
 
 
-@dp.callback_query(StartCallback.filter(),
+@groups_router.callback_query(StartCallback.filter(),
                    cb_group_filter,
                    StartCallback.filter(F.confirm == 'None'))
 async def group_choice(call: CallbackQuery, callback_data: StartCallback):
@@ -53,7 +54,7 @@ async def group_choice(call: CallbackQuery, callback_data: StartCallback):
                                      reply_markup=markup)
 
 
-@dp.callback_query(StartCallback.filter(), cb_group_filter)
+@groups_router.callback_query(StartCallback.filter(), cb_group_filter)
 async def confirm(call: CallbackQuery, callback_data: StartCallback):
     gr_list = Groups(db.get_groups())
     groups = gr_list.groups
@@ -77,10 +78,11 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
         )
 
 
-@dp.message(GroupFilter,
-            F.text,
-            ~F.text.startswith('/start'),
-            ~IsRegisteredGroup(gr.chats))
+@groups_router.message(
+    F.text,
+    ~F.text.startswith('/start'),
+    ~IsRegisteredGroup(gr.chats)
+)
 async def leave_if_unauthorised(message: Message):
     await asyncio.sleep(UNAUTHORIZED_GROUP_TIMOUT)
     if message.chat.id not in gr.chats:

@@ -2,24 +2,24 @@ import asyncio
 import logging
 from aiogram import F
 from lib import lexicon as lx
-from loader import dp, db, bot
+from loader import db, bot
 from aiogram.filters import Command
 from lib.models import DayOfWeek, Week
 from config import SCHEDULE_KB_TIMEOUT
-from handlers.filters import UserFilter
+from handlers.routers import users_router
 from lib.dicts import LESSONS_DICT, MONTHS
 from keyboards.schedule import schedule_kb
 from keyboards.buttons import ScheduleButt
 from aiogram.types import Message, CallbackQuery
 from keyboards.callbacks import ScheduleCallback
 from lib.misc import (get_today,
-                    chat_msg_ids,
-                    prep_markdown,
-                    test_users_dates,
-                    logging_msg)
+                      chat_msg_ids,
+                      prep_markdown,
+                      test_users_dates)
+from lib.logs import logging_msg
 
 
-@dp.message(Command('schedule'), UserFilter())
+@users_router.message(Command('schedule'))
 async def schedule_commands(message: Message):
     logging.info(logging_msg(message, 'schedule command in private chat'))
     user_id = message.from_user.id
@@ -45,7 +45,7 @@ async def schedule_commands(message: Message):
 
 
 # если выбрал день
-@dp.callback_query(ScheduleCallback.filter(~F.command.in_(ScheduleButt._member_names_)))
+@users_router.callback_query(ScheduleCallback.filter(~F.command.in_(ScheduleButt._member_names_)))
 async def day_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     await call.answer()
     logging.info(logging_msg(call))
@@ -61,7 +61,7 @@ async def day_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
 
 
 # если выбрал всю неделю
-@dp.callback_query(ScheduleCallback.filter(F.command == ScheduleButt.WEEK.name))
+@users_router.callback_query(ScheduleCallback.filter(F.command == ScheduleButt.WEEK.name))
 async def week_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     await call.answer()
     logging.info(logging_msg(call))
@@ -76,7 +76,7 @@ async def week_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
 
 
 # если выбрал смену недели
-@dp.callback_query(ScheduleCallback.filter(F.command.in_({ScheduleButt.BACK.name,
+@users_router.callback_query(ScheduleCallback.filter(F.command.in_({ScheduleButt.BACK.name,
                                                           ScheduleButt.FORW.name})))
 async def change_week(call: CallbackQuery, callback_data: ScheduleCallback):
     user_id, msg_id = chat_msg_ids(call)

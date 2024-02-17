@@ -1,8 +1,8 @@
-from .file import dp
-from .schedule import dp
-from .start import dp
-from .write_msg_history import dp
-from .lesson_link import dp
-from .summary import dp
+from .file import groups_router
+from .schedule import groups_router
+from .start import groups_router
+from .write_msg_history import groups_router
+from .lesson_link import groups_router
+from .summary import groups_router
 
-__all__ = ['dp']
+__all__ = ['groups_router']

@@ -4,15 +4,16 @@ from aiogram.types import Message, CallbackQuery
 
 from loader import dp, db
 from lib import lexicon as lx
-from lib.misc import prep_markdown, logging_msg
+from lib.misc import prep_markdown
+from lib.logs import logging_msg
 from lib.dicts import NotificationsAdvance
-from handlers.filters import UserFilter
+from handlers.routers import users_router
 from keyboards.buttons import SwitchNotif
 from keyboards.notifications import notif_kb
 from keyboards.callbacks import Notifications
 
 
-@dp.message(Command('notifications'), UserFilter())
+@users_router.message(Command('notifications'))
 async def set_notifications(message: Message):
     logging.info(logging_msg(message, 'notifications command'))
     try:
@@ -27,7 +28,7 @@ async def set_notifications(message: Message):
     await message.delete()
 
 
-@dp.callback_query(Notifications.filter())
+@users_router.callback_query(Notifications.filter())
 async def change_notifications_flag(call: CallbackQuery, callback_data: Notifications):
     # flag = int(callback_data.flag == SwitchNotif.ON.name)
     flag = callback_data.flag

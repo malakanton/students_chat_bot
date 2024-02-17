@@ -1,11 +1,10 @@
-from .file import dp
-from .help_desc import dp
-from .library import dp
-from .support import dp
-from .schedule import dp
-from .start import dp
-from .notif_settings import dp
-from .fun import dp
+from .file import users_router
+from .help_desc import users_router
+from .library import users_router
+from .support import users_router
+from .schedule import users_router
+from .start import users_router
+from .notif_settings import users_router
+# from .ask import users_router
 
-
-__all__ = ['dp']
+__all__ = ['users_router']

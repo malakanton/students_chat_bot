@@ -6,8 +6,8 @@ import datetime
 import re
 
 
-cb_user_filter = F.message.chat.type == 'private'
 GroupFilter = F.chat.type.in_({'group', 'supergroup'})
+cb_user_filter = F.message.chat.type == 'private'
 cb_group_filter = F.message.chat.type.in_({'group', 'supergroup'})
 
 

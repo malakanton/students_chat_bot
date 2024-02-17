@@ -2,14 +2,15 @@ import re
 import logging
 from loader import dp, db
 from aiogram.types import Message, CallbackQuery
-from handlers.filters import LessonLinkFilter, GroupFilter
+from handlers.filters import LessonLinkFilter
+from handlers.routers import groups_router
 from lib import lexicon as lx
 from lib.misc import prep_markdown, get_today
 from keyboards.lesson_link import link_kb
 from keyboards.callbacks import LessonLinkCallback
 
 
-@dp.message(GroupFilter, LessonLinkFilter())
+@groups_router.message(LessonLinkFilter())
 async def link_detected(message: Message, link: str):
     logging.info('link detected')
     today = get_today()
@@ -23,7 +24,7 @@ async def link_detected(message: Message, link: str):
     )
 
 
-@dp.callback_query(LessonLinkCallback.filter())
+@groups_router.callback_query(LessonLinkCallback.filter())
 async def update_lesson_link(call: CallbackQuery, callback_data: LessonLinkCallback):
     if callback_data.subj_id == 0:
         await call.answer()
