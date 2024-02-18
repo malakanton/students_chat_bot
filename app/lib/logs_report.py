@@ -27,7 +27,7 @@ def parce_line(line: str) -> dict:
     return log_items
 
 
-def form_data(path: str = PATH, dataframe = True) -> pd.DataFrame | list:
+def form_data(path: str = LOGS_PATH, dataframe = True) -> pd.DataFrame | list:
     with open(path, 'r') as file:
         lines = [line for line in file.readlines() if 'root' in line]
     data = []
@@ -62,7 +62,7 @@ async def send_report(date: str, chat_id: int = ADMIN_CHAT):
 
 
 async def upload_logs_to_db() -> None:
-    today = str(dt.datetime.now() - dt.timedelta(hours=24))
+    today = str(dt.datetime.now() - dt.timedelta(hours=36))
     data = [
         row for row in form_data(dataframe=False)
         if row[0] >= today
