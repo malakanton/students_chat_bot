@@ -62,7 +62,7 @@ async def send_report(date: str, chat_id: int = ADMIN_CHAT):
 
 
 async def upload_logs_to_db() -> None:
-    today = str(dt.datetime.now() - dt.timedelta(hours=36))
+    today = str(dt.datetime.now() - dt.timedelta(hours=24))
     data = [
         row for row in form_data(dataframe=False)
         if row[0] >= today
