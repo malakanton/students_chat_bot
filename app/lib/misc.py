@@ -47,8 +47,6 @@ def prep_markdown(
 
 
 def get_host_port():
-    if sys.platform == 'darwin':
+    if sys.platform in {'darwin', 'win32'}:
         return HOST_LOCAL, PORT_LOCAL
     return HOST, PORT
-
-

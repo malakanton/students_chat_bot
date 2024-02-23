@@ -44,5 +44,5 @@ def gpt_respond(query: str, chunks: int = 3) -> str:
         temperature=0.5,
         max_tokens=4096
     )
-    respond = completion.choices[0].message.content
+    respond = completion.choices[0].message.content3
     return respond
