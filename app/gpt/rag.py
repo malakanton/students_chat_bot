@@ -1,4 +1,4 @@
-from langchain_community.document_loaders import TextLoader
+# from langchain_community.document_loaders import TextLoader
 from langchain.vectorstores.pgvector import PGVector
 from langchain_community.embeddings.openai import OpenAIEmbeddings
 # from langchain_openai import OpenAIEmbeddings
