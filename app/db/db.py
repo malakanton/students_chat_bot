@@ -52,15 +52,16 @@ class DB:
         query = f"""
         select 
             u.user_id,
-            g.name
+            g.name,
+            g.gc_link
         from users u
             join groups g 
                 on u.group_id=g.id
         where u.user_id = %s
         """
         self.cur.execute(query, (user_id,))
-        user = self.cur.fetchone()
-        return user
+        user_group_gc = self.cur.fetchone()
+        return user_group_gc
 
     def get_subjects(self):
         query = """select code, id from subjects"""

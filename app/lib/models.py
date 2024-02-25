@@ -23,6 +23,7 @@ class Group:
     name: str
     course: int
     chat_id: Optional[int]
+    gc_linc: Optional[str]
 
 
 @dataclass

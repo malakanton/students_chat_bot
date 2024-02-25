@@ -73,8 +73,11 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
                                  user_type
                                  )
         logging.info(f'New user added: {user_id} - {user_group[1]}')
+        gc_link = db.get_user_group(user_id)[2]
+        if not gc_link:
+            gc_link = 'https://calendar.google.com/'
         txt = prep_markdown(lx.ADDED_TO_GROUP.format(user_name, user_group[1]) +
-                            lx.DESCRIPTION)
+                            lx.DESCRIPTION.format(gc_link))
         await call.message.edit_text(text=txt)
         print(users)
     else:

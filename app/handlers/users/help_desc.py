@@ -1,5 +1,5 @@
 import logging
-from loader import dp
+from loader import db
 from lib import lexicon as lx
 from aiogram.types import Message
 from handlers.routers import users_router
@@ -20,8 +20,11 @@ async def help_cmd(message: Message):
 @users_router.message(Command('description'))
 async def help_cmd(message: Message):
     logging.info(logging_msg(message, 'description command in private chat'))
-    desc_msg = prep_markdown(lx.DESCRIPTION)
-    await message.answer(text=desc_msg)
+    gc_link = db.get_user_group(message.from_user.id)[2]
+    if not gc_link:
+        gc_link = 'https://calendar.google.com/'
+    desc_msg = prep_markdown(lx.DESCRIPTION.format(gc_link))
+    await message.answer(text=desc_msg, disable_web_page_preview=True)
     await message.delete()
 
 
