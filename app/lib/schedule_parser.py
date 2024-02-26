@@ -118,7 +118,7 @@ def merge_dt(
         time = time_items[0]
     return dt.datetime.combine(
         date.date(),
-        dt.datetime.strptime(time, '%H.%M').time()
+        dt.datetime.strptime(time.strip(), '%H.%M').time()
     )
 
 

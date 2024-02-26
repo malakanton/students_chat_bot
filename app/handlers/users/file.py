@@ -71,7 +71,7 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
                     end=schedule_exists['end'])
             )
         else:
-            await call.message.edit_text(lx.FILE_SAVED.format('Расписания'))
+            await call.message.edit_text(prep_markdown(lx.FILE_SAVED.format('Расписания')))
             await upload_schedule(df, week_num)
             await call.answer(text=lx.SCHEDULE_UPLOADED, show_alert=True)
             logging.info('schedule uploaded')
