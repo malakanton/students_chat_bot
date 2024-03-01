@@ -6,6 +6,7 @@ from openai import OpenAI
 from config import USER, PG_PASS, DB_NAME, TG_TOKEN, OPEN_AI_API_KEY, OPEN_AI_URL
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from lib.google_calendar import GoogleCalendar
+from config import SCOPES, CREDS_PATH
 
 
 bot = Bot(
@@ -34,6 +35,6 @@ gpt_client = OpenAI(
     api_key=OPEN_AI_API_KEY,
     base_url=OPEN_AI_URL
 )
-gc = GoogleCalendar()
+gc = GoogleCalendar(SCOPES, CREDS_PATH)
 
 

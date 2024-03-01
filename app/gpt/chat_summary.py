@@ -26,4 +26,4 @@ async def gpt_summary(
         logging.info('finish gpt request')
         return summary
     except:
-        logging.error('Didnt recieve a reply from OpenAI')
+        logging.error('Didnt receive a reply from OpenAI')

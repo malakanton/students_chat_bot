@@ -26,7 +26,7 @@ async def upload_schedule(df, week_num, update=False):
                 schedule = filter_df(df, group.name).to_dict(orient='records')
             except:
                 logging.warning(f'error!!! while filtering group {group.name}')
-                break
+                continue
             await upload_group_schedule(schedule, week_num, group.id)
             if group.course == 1:
                 if update:

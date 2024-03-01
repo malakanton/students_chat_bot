@@ -66,9 +66,11 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
         if schedule_exists:
             await call.message.edit_text(
                 reply_markup=await schedule_exists_kb(callback_data.file_id),
-                text=lx.SCHEDULE_EXISTS.format(
+                text=prep_markdown(
+                    lx.SCHEDULE_EXISTS.format(
                     start=schedule_exists['start'],
                     end=schedule_exists['end'])
+                )
             )
         else:
             await call.message.edit_text(prep_markdown(lx.FILE_SAVED.format('Расписания')))

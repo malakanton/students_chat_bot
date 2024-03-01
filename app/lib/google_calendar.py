@@ -1,8 +1,6 @@
 import datetime as dt
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-from config import SCOPES, CREDS_PATH
-import pprint
 
 
 class GoogleCalendar:
@@ -11,8 +9,8 @@ class GoogleCalendar:
 
     def __init__(
             self,
-            scopes: list = SCOPES,
-            creds_path: str = CREDS_PATH
+            scopes: list,
+            creds_path: str
     ) -> None:
         self._scopes = scopes
         self.__creds = service_account.Credentials.from_service_account_file(
