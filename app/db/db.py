@@ -5,11 +5,8 @@ from lib.models import Group, Week, Lesson
 
 
 class DB:
-    __host: str
-    __db_name: str
-    __user: str
-    __pg_pass: str
-    __port: str
+    conn: psycopg2.extensions.connection
+    cur: psycopg2.extensions.cursor
 
     def __init__(
             self,
@@ -20,11 +17,11 @@ class DB:
             port: str
     ):
         self.conn = psycopg2.connect(
-            __host=host,
-            __database=db_name,
-            __user=user,
-            __password=pg_pass,
-            __port=port
+            host=host,
+            database=db_name,
+            user=user,
+            password=pg_pass,
+            port=port
         )
         self.cur = self.conn.cursor()
 
