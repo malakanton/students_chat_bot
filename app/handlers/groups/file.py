@@ -5,7 +5,8 @@ from aiogram.types import Message, CallbackQuery
 from config import PATH
 from lib import lexicon as lx
 from lib.misc import chat_msg_ids, valid_schedule_format, prep_markdown
-from lib.schedule_uploader import process_schedule_file, upload_schedule
+from lib.schedule_uploader import upload_schedule
+from lib.schedule_parser import ScheduleParser
 from loader import db, bot, users
 from lib.logs import logging_msg
 from handlers.routers import groups_router
@@ -43,61 +44,58 @@ async def document_processing(message: Message):
 # если пользователь выбрал расписание
 @groups_router.callback_query(FileCallback.filter(F.file_type == FileButt.SCHEDULE.name))
 async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
-    logging.info(logging_msg(call, 'schedule chosen when uploaded the file'))
     action = callback_data.update
+    logging.info(logging_msg(call))
     file_name, tg_file_id = db.update_file(
         file_id=callback_data.file_id,
         file_type=callback_data.file_type
     )
-    file = await bot.get_file(tg_file_id)
     if not valid_schedule_format(file_name):
         await call.answer(lx.NOT_SCHEDULE_FORMAT, show_alert=True)
-        logging.info(logging_msg(call, f'file {file_name} doesnt pass the schedule test'))
+        logging.info(f'file {file_name} doesnt pass the schedule test')
         return
+    file = await bot.get_file(tg_file_id)
     schedule_path = PATH + file_name
+    logging.info(f'schedule file path: {schedule_path}')
     await bot.download_file(
         file_path=file.file_path,
         destination=schedule_path
     )
-    df, week_num, schedule_exists = await process_schedule_file(schedule_path)
-    if not week_num:
+    sp = ScheduleParser(schedule_path)
+    week_num = sp.week_num
+    if not sp.week_num:
         await call.answer(lx.DIDNT_PARSE, show_alert=True)
+        logging.error(f'didnt manage to get schedule dates {schedule_path}!!!')
         return
+    await call.answer()
+    # если это первоначальная загрузка файла
     if action == 'init':
-        if schedule_exists:
-            await call.answer()
+        # если расписание на эту неделю уже есть в бд
+        existing_weeks = db.get_weeks()
+        if week_num in existing_weeks:
+            schedule_exists = existing_weeks.get(week_num)
             await call.message.edit_text(
                 reply_markup=await schedule_exists_kb(callback_data.file_id),
                 text=prep_markdown(
                     lx.SCHEDULE_EXISTS.format(
-                    start=schedule_exists['start'],
-                    end=schedule_exists['end'])
+                        start=schedule_exists['start'],
+                        end=schedule_exists['end'])
                 )
             )
         else:
-            await call.message.edit_text(
-                prep_markdown(
-                    lx.FILE_SAVED.format('Расписания')
-                )
-            )
-            not_uploaded = await upload_schedule(df, week_num)
-            if not_uploaded:
-                logging.warning(f'didnt manage to find groups {not_uploaded}')
-            await call.answer(text=prep_markdown(lx.SCHEDULE_UPLOADED),
-                              show_alert=True)
-            logging.info(logging_msg(call, 'schedule uploaded'))
+            await call.message.edit_text(prep_markdown(lx.FILE_SAVED.format('Расписания')))
+            await upload_schedule(sp)
+            await call.answer(text=lx.SCHEDULE_UPLOADED, show_alert=True)
+            logging.info('schedule uploaded')
+    # если пользователь выбрал обновить расписание
     elif action == SchdUpdButt.UPDATE.value:
-        await call.answer()
-        db.erase_existing_schedule(week_num)
-        not_uploaded = await upload_schedule(df, week_num, update=True)
-        if not_uploaded:
-            logging.warning(f'didnt manage to find groups {not_uploaded}')
-        await call.message.edit_text(prep_markdown(lx.SCHEDULE_UPDATED))
-        logging.info(logging_msg(call, 'schedule uploaded'))
+        await upload_schedule(sp, update=True)
+        await call.message.edit_text(lx.SCHEDULE_UPDATED)
+        logging.info('schedule updated')
+    # если пользователь выбрал не обновлять расписание
     elif action == SchdUpdButt.KEEP.value:
-        await call.answer()
         await call.message.edit_text(lx.KEEP_SCHEDULE)
-        logging.info(logging_msg(call, 'schedule upload cancelled'))
+        logging.info('schedule keep as it was')
     os.remove(schedule_path)
 
 

@@ -1,9 +1,9 @@
-import pytest
-from app.lib.schedule_parser import ScheduleParser, ScheduleFilter
-from app.loader import db
 import os
 import re
+import pytest
 import pandas as pd
+from app.loader import db
+from app.lib.schedule_parser import ScheduleParser, ScheduleFilter
 
 
 def get_schedule_files() -> list:

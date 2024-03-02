@@ -1,75 +1,97 @@
-from loader import db, gc
-from lib.schedule_parser import get_schedule, filter_df
-from lib.dicts import RU_DAYS, PERMANENT_LINKS
 import logging
+from loader import db, gc
+from lib.models import Group
+from lib.dicts import RU_DAYS, PERMANENT_LINKS
+from lib.google_calendar import GoogleCalendar
+from lib.schedule_parser import ScheduleParser, ScheduleFilter
 
 
-async def process_schedule_file(filename: str):
+async def upload_schedule(sp: ScheduleParser, update=False) -> None:
     try:
-        df, week_num = get_schedule(filename)
+        df = sp.get_schedule()
+        groups = db.get_groups()
+        su = ScheduleUploader(sp.week_num, gc)
+        sf = ScheduleFilter(df, groups)
+        sf.extract_groups_schedules()
     except:
-        logging.error(f'didnt manage to get schedule from {filename}!!!')
-        return None, None, None
-    weeks = db.get_weeks()
-    schedule_exists = None
-    if week_num in weeks:
-        schedule_exists = weeks.get(week_num)
-    return df, week_num, schedule_exists
-
-
-async def upload_schedule(df, week_num, update=False):
-    groups = db.get_groups()
-    not_uploaded_groups = []
+        logging.error(f'Didnt manage to parse {sp.filename}')
+        return
+    if update:
+        db.erase_existing_schedule(sp.week_num)
+    logging.info(f'Start uploading schedules')
     for group in groups:
-        if group.name in df.columns:
-            try:
-                schedule = filter_df(df, group.name).to_dict(orient='records')
-            except:
-                logging.warning(f'error!!! while filtering group {group.name}')
-                continue
-            await upload_group_schedule(schedule, week_num, group.id)
-            if group.course == 1:
-                if update:
-                    await gc.update_schedule(schedule, group.name)
-                else:
-                    await gc.upload_schedule(schedule, group.name)
-        else:
-            not_uploaded_groups.append(group)
-    return not_uploaded_groups
+        schedule = sf.get_group_schedule(group.name)
+        await su.upload_group_schedule(schedule, group)
+        if group.course == 1:
+            await su.add_to_google(schedule, group.name, update)
 
 
-async def upload_group_schedule(
-        schedule: list,
-        week_num: int,
-        group_id: int
-):
-    teachers = db.get_teachers()
-    subjects = db.get_subjects()
-    for lesson in schedule:
-        subj_code = lesson.get('subj_code', '')
-        subject = lesson.get('subj', '')
-        teacher = lesson.get('teacher', '')
-        if (
-                not subj_code or
-                not subject
-        ):
-            continue
-        if teacher not in teachers:
-            teachers = db.add_teacher(teacher)
+class ScheduleUploader:
+    week_num: int
+    teachers: dict
+    subjects: dict
+    gc: GoogleCalendar
+
+    def __init__(self, week_num: int, gc: GoogleCalendar):
+        self.gc = gc
+        self.week_num = week_num
+        self.teachers = db.get_teachers()
+        self.subjects = db.get_subjects()
+
+    def _check_teacher(self, teacher: str):
+        """If teacher not in db, then add a new teacher"""
+        if teacher not in self.teachers:
+            self.teachers = db.add_teacher(teacher)
             logging.info(f'New teacher added: {teacher}')
-        if subj_code not in subjects:
-            subjects = db.add_subject(subj_code, subject)
+        return self.teachers.get(teacher)
+
+    def _check_subject(self, subject_code: str, subject):
+        """If subject not in db, then add a new subject"""
+        if subject_code not in self.subjects:
+            self.subjects = db.add_subject(subject_code, subject)
             logging.info(f'New subject added: {subject}')
-        teacher_id = teachers.get(teacher, 0)
-        db.add_lesson(
-            week_num=week_num,
-            day=RU_DAYS.get(lesson['day'], 1),
-            date=str(lesson['start'].to_pydatetime().date()),
-            start=str(lesson['start'].to_pydatetime().time()),
-            end=str(lesson['end'].to_pydatetime().time()),
-            group_id=group_id,
-            subj_id=subjects.get(subj_code, 0),
-            teacher_id=teacher_id,
-            loc=lesson.get('loc', ''),
-            link=PERMANENT_LINKS.get(teacher_id, None)
-        )
+        return self.subjects.get(subject_code)
+
+    async def add_to_google(
+            self,
+            schedule: list[dict],
+            group_name: str,
+            update: bool=False
+    ) -> None:
+        """Uploads or updates a schedule to google calendar"""
+        logging.info(f'Start uploaded to google for {group_name}')
+        if update:
+            await self.gc.update_schedule(schedule, group_name)
+        else:
+            await self.gc.upload_schedule(schedule, group_name)
+        logging.info(f'Finished upload to google for {group_name}')
+
+    async def upload_group_schedule(
+            self,
+            schedule: list[dict],
+            group: Group
+    ) -> None:
+        for lesson in schedule:
+            subj_code = lesson.get('subj_code', '')
+            subject = lesson.get('subj', '')
+            teacher = lesson.get('teacher', '')
+            if (
+                    not subj_code or
+                    not subject
+            ):
+                continue
+            teacher_id = self._check_teacher(teacher)
+            subj_id = self._check_subject(subj_code, subject)
+            db.add_lesson(
+                week_num=self.week_num,
+                day=RU_DAYS.get(lesson['day'], 1),
+                date=str(lesson['start'].to_pydatetime().date()),
+                start=str(lesson['start'].to_pydatetime().time()),
+                end=str(lesson['end'].to_pydatetime().time()),
+                group_id=group.id,
+                subj_id=subj_id,
+                teacher_id=teacher_id,
+                loc=lesson.get('loc', ''),
+                link=PERMANENT_LINKS.get(teacher_id, None)
+            )
+        logging.info(f'Uploaded schedule to db for group {group.name}')

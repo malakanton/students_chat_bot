@@ -13,7 +13,8 @@ from keyboards.file import schedule_exists_kb, file_kb
 from keyboards.callbacks import FileCallback, LibCallback
 from lib.misc import chat_msg_ids, valid_schedule_format
 from keyboards.library import lib_type_kb, subjects_kb, confirm_subj_kb
-from lib.schedule_uploader import process_schedule_file, upload_schedule
+from lib.schedule_uploader import upload_schedule
+from lib.schedule_parser import ScheduleParser
 from keyboards.buttons import FileButt, SchdUpdButt, Confirm, FileTypeButt
 
 
@@ -57,13 +58,19 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
         file_path=file.file_path,
         destination=schedule_path
     )
-    df, week_num, schedule_exists = await process_schedule_file(schedule_path)
-    if not week_num:
+    sp = ScheduleParser(schedule_path)
+    week_num = sp.week_num
+    if not sp.week_num:
         await call.answer(lx.DIDNT_PARSE, show_alert=True)
+        logging.error(f'didnt manage to get schedule dates {schedule_path}!!!')
         return
     await call.answer()
+    # если это первоначальная загрузка файла
     if action == 'init':
-        if schedule_exists:
+        # если расписание на эту неделю уже есть в бд
+        existing_weeks = db.get_weeks()
+        if week_num in existing_weeks:
+            schedule_exists = existing_weeks.get(week_num)
             await call.message.edit_text(
                 reply_markup=await schedule_exists_kb(callback_data.file_id),
                 text=prep_markdown(
@@ -74,14 +81,15 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
             )
         else:
             await call.message.edit_text(prep_markdown(lx.FILE_SAVED.format('Расписания')))
-            await upload_schedule(df, week_num)
+            await upload_schedule(sp)
             await call.answer(text=lx.SCHEDULE_UPLOADED, show_alert=True)
             logging.info('schedule uploaded')
+    # если пользователь выбрал обновить расписание
     elif action == SchdUpdButt.UPDATE.value:
-        db.erase_existing_schedule(week_num)
-        await upload_schedule(df, week_num)
+        await upload_schedule(sp, update=True)
         await call.message.edit_text(lx.SCHEDULE_UPDATED)
         logging.info('schedule updated')
+    # если пользователь выбрал не обновлять расписание
     elif action == SchdUpdButt.KEEP.value:
         await call.message.edit_text(lx.KEEP_SCHEDULE)
         logging.info('schedule keep as it was')
