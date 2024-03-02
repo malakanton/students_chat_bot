@@ -13,18 +13,18 @@ class DB:
 
     def __init__(
             self,
-            __host: str,
-            __db_name: str,
-            __user: str,
-            __pg_pass: str,
-            __port: str
+            host: str,
+            db_name: str,
+            user: str,
+            pg_pass: str,
+            port: str
     ):
         self.conn = psycopg2.connect(
-            host=__host,
-            database=__db_name,
-            user=__user,
-            password=__pg_pass,
-            port=__port
+            __host=host,
+            __database=db_name,
+            __user=user,
+            __password=pg_pass,
+            __port=port
         )
         self.cur = self.conn.cursor()
 
