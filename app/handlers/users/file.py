@@ -101,7 +101,7 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
 async def subj_choice(call: CallbackQuery, callback_data: FileCallback):
     logging.info(logging_msg(call))
     await call.answer()
-    users_subjects = db.get_users_subjects(call.from_user.id)
+    users_subjects = db.get_subjects_for_user_or_group(call.from_user.id)
     markup = await subjects_kb(users_subjects, callback_data.file_id)
     await call.message.edit_text(
         text=prep_markdown(lx.CHOOSE_SUBJ),
@@ -129,7 +129,7 @@ async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
     markup = await confirm_subj_kb(callback_data.file_id,
                                    callback_data.subject_id,
                                    callback_data.type)
-    subj_dict_inv = db.get_users_subjects(call.from_user.id, inverted=True)
+    subj_dict_inv = db.get_subjects_for_user_or_group(call.from_user.id, inverted=True)
     subj_name = subj_dict_inv[callback_data.subject_id]
     subj_type = FileTypeButt[callback_data.type].value
     msg = lx.CONFIRM_SUBJECT.format(subj_type.lower(), subj_name)
@@ -150,7 +150,7 @@ async def confirm_subj(call: CallbackQuery, callback_data: LibCallback):
             file_type=callback_data.type,
             subj_id=callback_data.subject_id
         )
-        subj_dict_inv = db.get_users_subjects(call.from_user.id, inverted=True)
+        subj_dict_inv = db.get_subjects_for_user_or_group(call.from_user.id, inverted=True)
         subj_name = subj_dict_inv[callback_data.subject_id]
         subj_type = FileTypeButt[callback_data.type].value
         msg = prep_markdown(lx.CONFIRM_SUBJECT_OK.format(subj_type, subj_name))

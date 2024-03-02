@@ -17,7 +17,7 @@ dp = Dispatcher()
 
 host, port = get_host_port()
 db = DB(
-    host=host,
+    __host=host,
     user=USER,
     pg_pass=PG_PASS,
     db_name=DB_NAME,
