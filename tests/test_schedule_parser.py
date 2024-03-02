@@ -75,5 +75,4 @@ def test_schedule_filter(schedule_filter: ScheduleFilter) -> None:
 # @pytest.mark.run
 def test_schedule_filter_ready(schedule_filter_ready: ScheduleFilter) -> None:
     for sch in schedule_filter_ready.schedules.values():
-        print(sch)
         assert isinstance(sch, pd.DataFrame)
