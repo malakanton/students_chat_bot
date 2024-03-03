@@ -198,12 +198,12 @@ class DB:
         return file_name, tg_file_id
 
     def get_schedule(self,
-                     user_id: int,
+                     id: int,
                      week_num: int):
         """Get schedule from lessons table by user_id and week_num
         Returns a Week class instance with lessons filled"""
         query = """
-        select 
+        select DISTINCT
             l.day as day,
             l.date as date,
             s.name as subject,
@@ -212,20 +212,19 @@ class DB:
             t.name as teacher_name,
             l.loc as loc,
             l.link
-        from lessons l
-            left join users u
-                on u.group_id = l.group_id
+        from lessons as l
+            left join users u on u.group_id = l.group_id
             left join groups g
                 on g.id = l.group_id
             left join teachers t
                 on t.id = l.teacher_id
             left join subjects s
                 on s.id = l.subj_id
-        where u.user_id = %s
-        and week_num = %s
-        order by date
+		where (g.chat_id = %s or u.user_id = %s)
+		and week_num = %s
+        order by date;
         """
-        self.cur.execute(query, (user_id, week_num))
+        self.cur.execute(query, (id, id, week_num))
         rows = self.cur.fetchall()
         if not rows:
             return None
@@ -374,6 +373,7 @@ class DB:
         """
         execute_values(self.cur, query, logs_list)
         self.conn.commit()
+
 
 # from config import HOST_LOCAL, USER, PG_PASS, DB_NAME, PORT_LOCAL
 # db = DB(host=HOST_LOCAL, user=USER, pg_pass=PG_PASS, db_name=DB_NAME, port=PORT_LOCAL)
