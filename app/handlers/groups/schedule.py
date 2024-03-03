@@ -9,6 +9,7 @@ import logging
 @groups_router.message(Command('schedule'))
 async def schedule_commands(message: Message):
     logging.warning('schedule command in group chat')
+    print('check')
     await message.reply(prep_markdown(lx.SCHEDULE_NOT_AVAILABLE))
     await message.delete()
     return
