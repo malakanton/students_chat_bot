@@ -7,6 +7,7 @@ from config import USER, PG_PASS, DB_NAME, TG_TOKEN, OPEN_AI_API_KEY, OPEN_AI_UR
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from lib.google_calendar import GoogleCalendar
 from config import SCOPES, CREDS_PATH
+from loguru import logger
 
 
 bot = Bot(
@@ -36,5 +37,5 @@ gpt_client = OpenAI(
     base_url=OPEN_AI_URL
 )
 gc = GoogleCalendar(SCOPES, CREDS_PATH)
-
+logger.success('All Tools initialized successfully')
 
