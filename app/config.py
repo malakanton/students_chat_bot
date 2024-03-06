@@ -32,7 +32,8 @@ SCOPES = ['https://www.googleapis.com/auth/calendar']
 CREDS_PATH = './lib/studentsbot-414221-88a1d65d3976.json'
 # OpenAI
 CHATS_HISTORY = './chats_history/chat_history{}.txt'
-MESSAGES_TO_KEEP = 100
+MESSAGES_TO_KEEP = 150
 OPEN_AI_API_KEY = env.str('OPEN_AI_API_KEY')
 OPEN_AI_URL = 'https://api.proxyapi.ru/openai/v1'
-MODEL = 'gpt-3.5-turbo-1106' #"gpt-3.5-turbo"
+BLABLA_MODEL = 'gpt-3.5-turbo-1106'
+SUMMARY_MODEL = 'gpt-4-1106-preview'

@@ -1,10 +1,7 @@
-# from langchain_community.document_loaders import TextLoader
 from langchain.vectorstores.pgvector import PGVector
 from langchain_community.embeddings.openai import OpenAIEmbeddings
-# from langchain_openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-import tiktoken
-from config import OPEN_AI_URL, OPEN_AI_API_KEY, PG_PASS
+from config import OPEN_AI_URL, OPEN_AI_API_KEY, PG_PASS, BLABLA_MODEL
 from loader import gpt_client
 from .prompts import RAG_HELPER
 import logging
@@ -35,7 +32,7 @@ def gpt_respond(query: str, chunks: int = 3) -> str:
     rag_text = '\n'.join([doc[0].page_content for doc in search_results])
     logging.debug('rag_text')
     completion = gpt_client.chat.completions.create(
-      model="gpt-3.5-turbo-1106",
+      model=BLABLA_MODEL,
       messages=[
           {"role": "system", "content": RAG_HELPER},
           {"role": "system", "content": rag_text},
