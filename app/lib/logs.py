@@ -15,7 +15,13 @@ def setup_logging() -> None:
                 level = record.levelno
             logger.opt(depth=0, exception=record.exc_info).log(level, record.getMessage())
     logging.basicConfig(
-        handlers=[InterceptHandler()],
+        handlers=[
+            logging.FileHandler(
+                'bot_logs.log',
+                mode='a'
+            ),
+            InterceptHandler()
+        ],
         level=0,
         force=True
     )
