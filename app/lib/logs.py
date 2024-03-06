@@ -6,33 +6,6 @@ import sys
 
 
 def setup_logging() -> None:
-    # logging.basicConfig(
-    #     level=logging.INFO,
-    #     format='%(filename)s:%(lineno)d #%(levelname)-8s '
-    #            '[%(asctime)s] - %(name)s - %(message)s',
-    #     handlers=[
-    #         logging.FileHandler(
-    #             'bot_logs.log',
-    #             mode='a'
-    #         ),
-    #         logging.StreamHandler()
-    #     ]
-    # )
-    # class InterceptHandler(logging.Handler):
-    #     def emit(self, record):
-    #         level = logger.level(record.levelname).name
-    #         logger.log(level, record.getMessage(), format="{time:YYYY-MM-DD at HH:mm:ss} | {level} | {message}")
-    #
-    # # logger.remove()
-    # logging.getLogger('aiogram').setLevel(logging.DEBUG)
-    # logging.getLogger('aiogram').addHandler(InterceptHandler())
-    # logging.getLogger('asyncio').setLevel(logging.DEBUG)
-    # logging.getLogger('asyncio').addHandler(InterceptHandler())
-    # class PropagateHandler(logging.Handler):
-    #     def emit(self, record: logging.LogRecord) -> None:
-    #         logging.getLogger(record.name).handle(record)
-    #
-    # logger.add(PropagateHandler(), format="{message}")
     class InterceptHandler(logging.Handler):
         def emit(self, record: logging.LogRecord) -> None:
             level: str | int
@@ -42,12 +15,16 @@ def setup_logging() -> None:
                 level = record.levelno
             logger.opt(depth=0, exception=record.exc_info).log(level, record.getMessage())
     logging.basicConfig(
-        handlers=[InterceptHandler()],
+        handlers=[
+            logging.FileHandler(
+                'bot_logs.log',
+                mode='a'
+            ),
+            InterceptHandler()
+        ],
         level=0,
         force=True
     )
-    # logger.add('logs / logs.log', level='TRACE', format="{time} {level} {message}")
-    # logger.add(sys.stderr, level='TRACE', format="{time} {level} {message}")
 
 
 def logging_msg(
