@@ -25,12 +25,12 @@ async def schedule_commands(message: Message):
     if not week:
         await message.answer(prep_markdown(lx.NO_SCHEDULE))
     else:
-        text = lx.SCHEDULE + await form_day_schedule_text(
-            week.get_day(day_of_week)) + prep_markdown(lx.SCHEDULE_FOR_DETAIL)
+        schedule_text = await form_day_schedule_text(
+                                    week.get_day(day_of_week)
+        )
+        text = lx.SCHEDULE + schedule_text + '\n' + prep_markdown(lx.SCHEDULE_FOR_DETAIL)
         await message.answer(
             text=text,
             disable_web_page_preview=True
         )
-    chat_id, msg_id = message.chat.id, message.message_id
     await message.delete()
-    return
