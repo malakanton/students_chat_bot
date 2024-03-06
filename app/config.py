@@ -36,4 +36,4 @@ MESSAGES_TO_KEEP = 150
 OPEN_AI_API_KEY = env.str('OPEN_AI_API_KEY')
 OPEN_AI_URL = 'https://api.proxyapi.ru/openai/v1'
 BLABLA_MODEL = 'gpt-3.5-turbo-1106'
-SUMMARY_MODEL = 'gpt-4-1106-preview'
+SUMMARY_MODEL = 'gpt-4'
