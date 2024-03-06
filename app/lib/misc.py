@@ -20,7 +20,6 @@ def get_today(set_date: dt.datetime=None):
     )
     return today
 
-
 def chat_msg_ids(
         call: types.CallbackQuery
 ) -> tuple:

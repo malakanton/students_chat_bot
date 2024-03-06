@@ -2,8 +2,9 @@ import os
 import re
 import pytest
 import pandas as pd
-from app.loader import db
+from app.loader import db, gc
 from app.lib.schedule_parser import ScheduleParser, ScheduleFilter
+from app.lib.schedule_uploader import ScheduleUploader
 
 
 def get_schedule_files() -> list:
@@ -76,3 +77,8 @@ def test_schedule_filter(schedule_filter: ScheduleFilter) -> None:
 def test_schedule_filter_ready(schedule_filter_ready: ScheduleFilter) -> None:
     for sch in schedule_filter_ready.schedules.values():
         assert isinstance(sch, pd.DataFrame)
+
+
+# @pytest.mark.run
+def test_schedule_uploader() -> None:
+    su = ScheduleUploader(5, gc)

@@ -6,7 +6,6 @@ from handlers.routers import users_router
 from lib.misc import prep_markdown
 from lib.logs import logging_msg
 from aiogram.filters import Command
-from handlers.filters import UserFilter
 
 
 @users_router.message(Command('help'))
@@ -30,7 +29,7 @@ async def help_cmd(message: Message):
 
 @users_router.message(Command('contacts'))
 async def help_cmd(message: Message):
-    logging.info(logging_msg(message, 'contacts command in private chat'))
+    logging.trace(logging_msg(message, 'contacts command in private chat'))
     desc_msg = prep_markdown(lx.CONTACTS)
     await message.answer(text=desc_msg)
     await message.delete()

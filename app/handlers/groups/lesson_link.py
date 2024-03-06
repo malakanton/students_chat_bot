@@ -1,6 +1,6 @@
 import re
 import logging
-from loader import dp, db
+from loader import db
 from aiogram.types import Message, CallbackQuery
 from handlers.filters import LessonLinkFilter
 from handlers.routers import groups_router
@@ -16,7 +16,6 @@ async def link_detected(message: Message, link: str):
     today = get_today()
     msg_id = message.message_id
     lessons = db.get_future_two_days(message.from_user.id, str(today.date))
-    print(link)
     markup = await link_kb(lessons, msg_id)
     await message.reply(
         text=prep_markdown(lx.LINK_POSTED),
