@@ -17,7 +17,6 @@ from lib.misc import (get_today,
 @groups_router.message(Command('schedule'))
 async def schedule_commands(message: Message):
     logging.warning('schedule command in group chat')
-    print('check')
     chat_id = message.chat.id
     today = get_today()
     week_num = today.week
@@ -26,7 +25,8 @@ async def schedule_commands(message: Message):
     if not week:
         await message.answer(prep_markdown(lx.NO_SCHEDULE))
     else:
-        text = lx.SCHEDULE + await form_day_schedule_text(week.get_day(day_of_week)) + lx.SCHEDULE_FOR_DETAIL
+        text = lx.SCHEDULE + await form_day_schedule_text(
+            week.get_day(day_of_week)) + prep_markdown(lx.SCHEDULE_FOR_DETAIL)
         await message.answer(
             text=text,
             disable_web_page_preview=True

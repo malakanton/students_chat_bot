@@ -105,7 +105,7 @@ KEEP_SCHEDULE = """ОК, просто считаем старое расписа
 
 SCHEDULE_NOT_AVAILABLE = """Расписание доступно только в [личных чатах]<LINK>(https://t.me/@KoteMTUCIbot<LINK>)"""
 
-SCHEDULE_FOR_DETAIL = """Больше информации по расписанию в [личных чатах](https://t.me/@KoteMTUCIbot)"""
+SCHEDULE_FOR_DETAIL = """Больше информации по расписанию в [личных чатах]<LINK>(https://t.me/@KoteMTUCIbot)"""
 
 SCHEDULE = """Расписание на сегодня\n"""
 
