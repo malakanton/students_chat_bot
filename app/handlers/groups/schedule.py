@@ -5,7 +5,7 @@ from lib import lexicon as lx
 from handlers.routers import groups_router
 from lib.models import DayOfWeek, Week
 from lib.dicts import LESSONS_DICT, MONTHS
-import logging
+from loguru import logger
 from handlers.users.schedule import form_day_schedule_text
 
 from lib.misc import (get_today,
@@ -16,7 +16,7 @@ from lib.misc import (get_today,
 
 @groups_router.message(Command('schedule'))
 async def schedule_commands(message: Message):
-    logging.warning('schedule command in group chat')
+    logger.warning('schedule command in group chat')
     chat_id = message.chat.id
     today = get_today()
     week_num = today.week

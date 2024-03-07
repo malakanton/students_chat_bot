@@ -1,9 +1,8 @@
 import pandas as pd
-import numpy as np
 import pdfplumber
 import datetime as dt
 import re
-import logging
+from loguru import logger
 from lib.models import Group
 
 
@@ -179,7 +178,7 @@ class ScheduleParser:
         try:
             self._extract_table()
             self._process_df()
-            logging.info('Schedule parsing succeed!')
+            logger.info('Schedule parsing succeed!')
             return self.df
         except:
             return None
@@ -261,16 +260,16 @@ class ScheduleFilter:
             try:
                 group_columns = [col for col in self.df.columns if group in col]
                 if not group_columns:
-                    logging.warning(f'Schedule for group {group} is not presented!')
+                    logger.warning(f'Schedule for group {group} is not presented!')
                     self.schedules.pop(group)
                     continue
                 df_gr = self.df[common_columns + group_columns].copy()
                 df_gr.columns = common_columns + ['subj', 'loc']
                 df_gr.fillna('', inplace=True)
                 self.schedules[group] = self._prepare_columns(df_gr)
-                logging.info(f'Schedule for group {group} has been parsed successfully')
+                logger.info(f'Schedule for group {group} has been parsed successfully')
             except:
-                logging.error(f'Error!!! while filtering group {group}')
+                logger.error(f'Error!!! while filtering group {group}')
 
     def get_group_schedule(
             self,
@@ -278,5 +277,3 @@ class ScheduleFilter:
     ) -> list:
         """Return a lessons list for the group"""
         return self.schedules.get(group_name).to_dict(orient='records')
-
-

@@ -1,4 +1,4 @@
-import logging
+from loguru import logger
 from loader import db, gc
 from lib.models import Group
 from lib.dicts import RU_DAYS, PERMANENT_LINKS
@@ -14,11 +14,11 @@ async def upload_schedule(sp: ScheduleParser, update=False) -> None:
         sf = ScheduleFilter(df, groups)
         sf.extract_groups_schedules()
     except:
-        logging.error(f'Didnt manage to parse {sp.filename}')
+        logger.error(f'Didnt manage to parse {sp.filename}')
         return
     if update:
         db.erase_existing_schedule(sp.week_num)
-    logging.info(f'Start uploading schedules')
+    logger.info(f'Start uploading schedules')
     for group in groups:
         schedule = sf.get_group_schedule(group.name)
         await su.upload_group_schedule(schedule, group)
@@ -42,14 +42,14 @@ class ScheduleUploader:
         """If teacher not in db, then add a new teacher"""
         if teacher not in self.teachers:
             self.teachers = db.add_teacher(teacher)
-            logging.info(f'New teacher added: {teacher}')
+            logger.info(f'New teacher added: {teacher}')
         return self.teachers.get(teacher)
 
     def _check_subject(self, subject_code: str, subject):
         """If subject not in db, then add a new subject"""
         if subject_code not in self.subjects:
             self.subjects = db.add_subject(subject_code, subject)
-            logging.info(f'New subject added: {subject}')
+            logger.info(f'New subject added: {subject}')
         return self.subjects.get(subject_code)
 
     async def add_to_google(
@@ -59,12 +59,12 @@ class ScheduleUploader:
             update: bool=False
     ) -> None:
         """Uploads or updates a schedule to google calendar"""
-        logging.info(f'Start uploaded to google for {group_name}')
+        logger.info(f'Start uploading to google for {group_name}')
         if update:
             await self.gc.update_schedule(schedule, group_name)
         else:
             await self.gc.upload_schedule(schedule, group_name)
-        logging.info(f'Finished upload to google for {group_name}')
+        logger.info(f'Finished upload to google for {group_name}')
 
     async def upload_group_schedule(
             self,
@@ -94,4 +94,4 @@ class ScheduleUploader:
                 loc=lesson.get('loc', ''),
                 link=PERMANENT_LINKS.get(teacher_id, None)
             )
-        logging.info(f'Uploaded schedule to db for group {group.name}')
+        logger.info(f'Uploaded schedule to db for group {group.name}')

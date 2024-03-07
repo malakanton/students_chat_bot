@@ -1,5 +1,5 @@
 import asyncio
-import logging
+from loader import logger
 from aiogram import F
 from lib import lexicon as lx
 from loader import db, bot
@@ -21,7 +21,7 @@ from lib.logs import logging_msg
 
 @users_router.message(Command('schedule'))
 async def schedule_commands(message: Message):
-    logging.info(logging_msg(message, 'schedule command in private chat'))
+    logger.info(logging_msg(message, 'schedule command in private chat'))
     user_id = message.from_user.id
     today = get_today(test_users_dates.get(user_id, None))
     week_num = today.week
@@ -48,7 +48,7 @@ async def schedule_commands(message: Message):
 @users_router.callback_query(ScheduleCallback.filter(~F.command.in_(ScheduleButt._member_names_)))
 async def day_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     await call.answer()
-    logging.info(logging_msg(call))
+    logger.info(logging_msg(call))
     user_id, msg_id = chat_msg_ids(call)
     week = db.get_schedule(user_id, callback_data.week)
     day_num = int(callback_data.command)
@@ -64,7 +64,7 @@ async def day_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
 @users_router.callback_query(ScheduleCallback.filter(F.command == ScheduleButt.WEEK.name))
 async def week_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     await call.answer()
-    logging.info(logging_msg(call))
+    logger.info(logging_msg(call))
     user_id, msg_id = chat_msg_ids(call)
     week = db.get_schedule(user_id, callback_data.week)
     text = await form_week_schedule_text(week)
@@ -80,7 +80,7 @@ async def week_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
                                                           ScheduleButt.FORW.name})))
 async def change_week(call: CallbackQuery, callback_data: ScheduleCallback):
     user_id, msg_id = chat_msg_ids(call)
-    logging.info(logging_msg(call))
+    logger.info(logging_msg(call))
     if callback_data.command == ScheduleButt.BACK.name:
         week = db.get_schedule(user_id, callback_data.week - 1)
         if not week:
@@ -145,4 +145,4 @@ async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
 async def hide_keyboard(chat_id, message_id):
     await asyncio.sleep(SCHEDULE_KB_TIMEOUT)
     await bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id+1, reply_markup=None)
-    logging.info('hide schedule kb')
+    logger.info('hide schedule kb')

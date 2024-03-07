@@ -1,4 +1,4 @@
-import logging
+from loguru import logger
 from aiogram import F
 from lib import lexicon as lx
 from lib.models import Groups
@@ -16,7 +16,7 @@ from handlers.filters import UnRegisteredUser
 
 @users_router.message(CommandStart())
 async def start(message: Message):
-    logging.info(logging_msg(message, 'start command in private chat'))
+    logger.info(logging_msg(message, 'start command in private chat'))
     user_id = message.from_user.id
     name = message.from_user.first_name
     user_group = db.get_user_group(user_id)
@@ -32,13 +32,13 @@ async def start(message: Message):
         await message.answer(
             text=prep_markdown(lx.YOURE_REGISTERED.format(user_group[1]))
         )
-        logging.info(f'user {user_id} is already registered')
+        logger.info(f'user {user_id} is already registered')
     await message.delete()
 
 
 @users_router.callback_query(StartCallback.filter(F.confirm == 'None'))
 async def callback_start(call: CallbackQuery, callback_data: StartCallback):
-    logging.info(logging_msg(call, 'start callbacks processing'))
+    logger.info(logging_msg(call, 'start callbacks processing'))
     groups = db.get_groups()
     await call.answer()
     if callback_data.group_id == 'None':
@@ -55,7 +55,7 @@ async def callback_start(call: CallbackQuery, callback_data: StartCallback):
 @users_router.callback_query(StartCallback.filter(F.confirm != 'None'))
 async def confirm(call: CallbackQuery, callback_data: StartCallback):
     await call.answer()
-    logging.info(logging_msg(call, 'start callbacks processing'))
+    logger.info(logging_msg(call, 'start callbacks processing'))
     gr = Groups(db.get_groups())
     if callback_data.confirm == Confirm.OK.name:
         user_id, user_name, tg_login = get_user_details(call)
@@ -72,7 +72,7 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
                                  tg_login,
                                  user_type
                                  )
-        logging.info(f'New user added: {user_id} - {user_group[1]}')
+        logger.info(f'New user added: {user_id} - {user_group[1]}')
         gc_link = db.get_user_group(user_id)[2]
         if not gc_link:
             gc_link = 'https://calendar.google.com/'
@@ -90,7 +90,7 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
 # фильтр для незарегистрированных пользователей
 @users_router.message(UnRegisteredUser())
 async def unregistered_user(message: Message):
-    logging.info(logging_msg(message, 'unregistered user'))
+    logger.info(logging_msg(message, 'unregistered user'))
     await message.answer(
         prep_markdown(lx.NOT_REGISTERED)
     )

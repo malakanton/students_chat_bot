@@ -5,12 +5,12 @@ from handlers.routers import users_router
 from aiogram.filters import Command
 from lib.misc import prep_markdown
 from lib.logs import logging_msg
-import logging
+from loguru import logger
 
 
 @users_router.message(Command('library'))
 async def library(message: Message):
-    logging.info(logging_msg(message, 'library command in private chat'))
+    logger.info(logging_msg(message, 'library command in private chat'))
     uid = message.from_user.id
     if uid in users.unreg:
         msg = prep_markdown(lx.USER_GROUP_NOT_REGISTER)

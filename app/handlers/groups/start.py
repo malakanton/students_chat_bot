@@ -1,4 +1,4 @@
-import logging
+from loguru import logger
 from lib import lexicon as lx
 from aiogram import F
 from aiogram.types import Message, CallbackQuery
@@ -17,7 +17,7 @@ from config import UNAUTHORIZED_GROUP_TIMOUT, ADMIN_CHAT
 
 @groups_router.message(CommandStart())
 async def start(message: Message):
-    logging.debug('start command in group chat!')
+    logger.debug('start command in group chat!')
     markup = await course_kb(gr.courses)
     hello_msg = lx.COURSE_CHOICE
     chat_id = message.chat.id
@@ -27,7 +27,7 @@ async def start(message: Message):
             await message.answer(
                 prep_markdown(lx.CHAT_IS_LINKED.format(group.name))
             )
-            logging.info(f'chat {chat_id} is already registered')
+            logger.info(f'chat {chat_id} is already registered')
             await message.delete()
             return
     await message.answer(
@@ -39,7 +39,7 @@ async def start(message: Message):
 @groups_router.callback_query(StartCallback.filter(),
                    StartCallback.filter(F.confirm == 'None'))
 async def group_choice(call: CallbackQuery, callback_data: StartCallback):
-    logging.info('start callback processing in private chat')
+    logger.info('start callback processing in private chat')
     gr_list = Groups(db.get_groups())
     await call.answer()
     if callback_data.group_id == 'None':
@@ -66,7 +66,7 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
             return
         group_name = db.update_group_chat(group_id, chat_id)
         #TODO add users update status
-        logging.info(f'New group chat added: {chat_id} - {group_name}')
+        logger.info(f'New group chat added: {chat_id} - {group_name}')
         global gr
         gr = Groups(db.get_groups())
         await call.message.edit_text(prep_markdown(lx.GROUP_LINKED.format(group_name)))
@@ -85,7 +85,7 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
 async def leave_if_unauthorised(message: Message):
     await asyncio.sleep(UNAUTHORIZED_GROUP_TIMOUT)
     if message.chat.id not in gr.chats:
-        logging.warning('unauthorized group!!!')
+        logger.warning('unauthorized group!!!')
         await bot.leave_chat(message.chat.id)
 
 
@@ -96,7 +96,7 @@ async def unauthorized_chat(call, groups, chosen_group_id) -> bool:
                 group.id == chosen_group_id and
                 group.chat_id
         ):
-            logging.warning(
+            logger.warning(
                 f'trying to attach a bot to a wrong chat: {call.message.chat.id}. The group {group.name} have a chat ({group.chat_id}) already')
             await call.answer(lx.GROUP_CHAT_VIOLATION, show_alert=True)
             return True

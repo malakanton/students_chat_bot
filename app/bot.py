@@ -20,7 +20,7 @@ async def main():
 
     await set_menu(bot)
     await bot.delete_webhook(drop_pending_updates=True)
-    logger.success('Bot polling started')
+    logger.success('Bot polling starting...')
     await dp.start_polling(bot)
     logger.success('Bot polling stopped')
 

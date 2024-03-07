@@ -1,4 +1,4 @@
-import logging
+from loguru import logger
 from loader import bot
 from aiogram.types import Message
 from aiogram.filters import Command
@@ -14,7 +14,7 @@ from lib.logs import logging_msg
             )
 async def gpt_reply(message: Message):
     chat_id = message.chat.id
-    logging.info(logging_msg(message, 'ask command in group chat'))
+    logger.info(logging_msg(message, 'ask command in group chat'))
     await bot.send_chat_action(chat_id, "typing")
     user_query = message.text.replace('/ask', '').strip()
     raw_answer = gpt_respond(user_query)

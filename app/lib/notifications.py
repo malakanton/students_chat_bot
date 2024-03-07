@@ -1,5 +1,5 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-import logging
+from loguru import logger
 from loader import db, bot
 import datetime as dt
 from lib.dicts import NotificationsAdvance
@@ -51,7 +51,7 @@ async def notify_users(time: str, advance: int):
     users_to_notify = db.get_users_lessons_notif(date, time, advance)
     for user, lesson in users_to_notify.items():
         await notify_user(user, lesson, advance)
-    logging.info(f'users notified: {len(users_to_notify)}')
+    logger.info(f'users notified: {len(users_to_notify)}')
 
 
 async def notify_user(

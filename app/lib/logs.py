@@ -6,6 +6,7 @@ import sys
 
 
 def setup_logging() -> None:
+    # pass
     class InterceptHandler(logging.Handler):
         def emit(self, record: logging.LogRecord) -> None:
             level: str | int
@@ -26,6 +27,7 @@ def setup_logging() -> None:
         level='INFO',
         force=True
     )
+    # logger.
 
 
 def logging_msg(

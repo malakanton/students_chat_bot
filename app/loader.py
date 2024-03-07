@@ -37,5 +37,5 @@ gpt_client = OpenAI(
     base_url=OPEN_AI_URL
 )
 gc = GoogleCalendar(SCOPES, CREDS_PATH)
-logger.success('All Tools initialized successfully')
+logger.success('All classes initialized successfully')
 

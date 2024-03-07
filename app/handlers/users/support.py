@@ -1,5 +1,5 @@
 import re
-import logging
+from loguru import logger
 from aiogram import F
 from lib import lexicon as lx
 from lib.misc import prep_markdown
@@ -18,7 +18,7 @@ async def support_message(message: Message,
                           first_name: str,
                           user_name: str,
                           date: str):
-    logging.info(logging_msg(message, 'support hashtag processing'))
+    logger.info(logging_msg(message, 'support hashtag processing'))
     user_group = db.get_user_group(user_id)
     if not user_group:
         user_group = (None, 'unregistered')

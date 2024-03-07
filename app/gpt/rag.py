@@ -4,7 +4,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from config import OPEN_AI_URL, OPEN_AI_API_KEY, PG_PASS, BLABLA_MODEL
 from loader import gpt_client
 from .prompts import RAG_HELPER
-import logging
+from loguru import logger
 
 
 CONN_STRING = f'postgresql+psycopg2://postgres:{PG_PASS}@51.250.109.13:5433/vector_db'
@@ -30,7 +30,7 @@ vector_db = PGVector.from_existing_index(
 def gpt_respond(query: str, chunks: int = 3) -> str:
     search_results = vector_db.similarity_search_with_score(query, k=chunks)
     rag_text = '\n'.join([doc[0].page_content for doc in search_results])
-    logging.debug('rag_text')
+    logger.debug('rag_text')
     completion = gpt_client.chat.completions.create(
       model=BLABLA_MODEL,
       messages=[

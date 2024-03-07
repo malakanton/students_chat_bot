@@ -1,4 +1,4 @@
-import logging
+from loguru import logger
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery
 
@@ -15,7 +15,7 @@ from keyboards.callbacks import Notifications
 
 @users_router.message(Command('notifications'))
 async def set_notifications(message: Message):
-    logging.info(logging_msg(message, 'notifications command'))
+    logger.info(logging_msg(message, 'notifications command'))
     try:
         flag = db.check_notification_flag(message.from_user.id)[0]
         txt = get_notifications_text(flag)
@@ -24,7 +24,7 @@ async def set_notifications(message: Message):
             reply_markup=await notif_kb()
         )
     except IndexError:
-        logging.warning('No user notifications info in database')
+        logger.warning('No user notifications info in database')
     await message.delete()
 
 
@@ -38,7 +38,7 @@ async def change_notifications_flag(call: CallbackQuery, callback_data: Notifica
     await call.answer()
     user_id = call.message.chat.id
     db.set_notifications_flag(user_id, flag)
-    logging.info(logging_msg(call, 'notifications flag set for user'))
+    logger.info(logging_msg(call, 'notifications flag set for user'))
     txt = get_notifications_text(flag, end_of_dialog=True)
     await call.message.edit_text(text=txt, reply_markup=None)
 

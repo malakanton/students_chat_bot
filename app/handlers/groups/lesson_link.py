@@ -1,5 +1,5 @@
 import re
-import logging
+from loguru import logger
 from loader import db
 from aiogram.types import Message, CallbackQuery
 from handlers.filters import LessonLinkFilter
@@ -12,7 +12,7 @@ from keyboards.callbacks import LessonLinkCallback
 
 @groups_router.message(LessonLinkFilter())
 async def link_detected(message: Message, link: str):
-    logging.info('link detected')
+    logger.info('link detected')
     today = get_today()
     msg_id = message.message_id
     lessons = db.get_future_two_days(message.from_user.id, str(today.date))
@@ -39,6 +39,6 @@ async def update_lesson_link(call: CallbackQuery, callback_data: LessonLinkCallb
         time = callback_data.time.replace('$', ':')
         subj_id = callback_data.subj_id
         db.update_link(date, time, subj_id, link)
-        logging.info(f'link updated for dt {date} {time} subject {subj_id}, link {link}')
+        logger.info(f'link updated for dt {date} {time} subject {subj_id}, link {link}')
         await call.answer(lx.LINK_UPDATED, show_alert=True)
         await call.message.delete()
