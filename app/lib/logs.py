@@ -1,12 +1,9 @@
 from aiogram.types import Message, CallbackQuery
 import logging
 from loguru import logger
-import inspect
-import sys
 
 
 def setup_logging() -> None:
-    # pass
     class InterceptHandler(logging.Handler):
         def emit(self, record: logging.LogRecord) -> None:
             level: str | int
@@ -16,7 +13,6 @@ def setup_logging() -> None:
                 level = record.levelno
             logger.opt(depth=0, exception=record.exc_info).log(level, record.getMessage())
     logging.basicConfig(
-
         handlers=[
             logging.FileHandler(
                 'bot_logs.log',
@@ -27,7 +23,6 @@ def setup_logging() -> None:
         level='INFO',
         force=True
     )
-    # logger.
 
 
 def logging_msg(

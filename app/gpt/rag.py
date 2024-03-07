@@ -28,7 +28,8 @@ vector_db = PGVector.from_existing_index(
 
 
 def gpt_respond(query: str, chunks: int = 3) -> str:
-    search_results = vector_db.similarity_search_with_score(query, k=chunks)
+    search_results = vector_db.similarity_search_with_score(query, k=chunks, filter={"source": "all_rag_fixed"})
+    print(search_results)
     rag_text = '\n'.join([doc[0].page_content for doc in search_results])
     logger.debug('rag_text')
     completion = gpt_client.chat.completions.create(
@@ -41,5 +42,5 @@ def gpt_respond(query: str, chunks: int = 3) -> str:
         temperature=0.5,
         max_tokens=4096
     )
-    respond = completion.choices[0].message.content3
+    respond = completion.choices[0].message.content
     return respond
