@@ -32,7 +32,7 @@ SCOPES = [
     'https://www.googleapis.com/auth/calendar',
     'https://www.googleapis.com/auth/drive.file'
 ]
-CREDS_PATH = 'google_api/studentsbot-414221-88a1d65d3976.json'
+CREDS_PATH = './google_api/studentsbot-414221-88a1d65d3976.json'
 # OpenAI
 RAG_FILES_DIR = 'gpt/temp/'
 CHATS_HISTORY = './chats_history/chat_history{}.txt'
@@ -42,4 +42,6 @@ OPEN_AI_URL = 'https://api.proxyapi.ru/openai/v1'
 BLABLA_MODEL = 'gpt-3.5-turbo-1106'
 SUMMARY_MODEL = 'gpt-3.5-turbo-1106'
 CONN_STRING = 'postgresql+psycopg2://{user}:{password}@{host}:{port}/vector_db'
-COLLECTION = 'test_collection'
+SUBJECTS_COLLECTION = 'subjects'
+INFO_COLLECTION = 'subjects_info'
+SUBJ_CLF_TH = 0.2

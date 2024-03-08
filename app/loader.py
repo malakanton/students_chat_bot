@@ -32,10 +32,16 @@ embeddings = OpenAIEmbeddings(
     base_url=OPEN_AI_URL,
     api_key=OPEN_AI_API_KEY
 )
+conn_str = CONN_STRING.format(host=host, port=port, user=USER, password=PG_PASS)
 vector_db = PGVector.from_existing_index(
     embedding=embeddings,
-    collection_name=COLLECTION,
-    connection_string=CONN_STRING.format(host=host, port=port, user=USER, password=PG_PASS),
+    collection_name=INFO_COLLECTION,
+    connection_string=conn_str,
+)
+subjects_vector_db = PGVector.from_existing_index(
+    embedding=embeddings,
+    collection_name=SUBJECTS_COLLECTION,
+    connection_string=conn_str,
 )
 gpt_client = OpenAI(
     api_key=OPEN_AI_API_KEY,
@@ -61,5 +67,3 @@ gd = GoogleDriver(
     local_path=PATH
 )
 logger.success('Google Driver initialized successfully')
-
-

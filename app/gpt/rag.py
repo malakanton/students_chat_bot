@@ -1,15 +1,15 @@
-from config import BLABLA_MODEL
-from loader import gpt_client, vector_db, embeddings
+from config import BLABLA_MODEL, SUBJ_CLF_TH
+from loader import gpt_client, vector_db, embeddings, subjects_vector_db
 from gpt.vector_db import IntentClassifier
 from gpt.prompts import RAG_HELPER, HELPER
 from loguru import logger
 import datetime as dt
 
 
-def gpt_respond(query: str, chunks: int = 3) -> str:
+def gpt_respond(query: str, chunks: int = 3, th=SUBJ_CLF_TH) -> str:
     logger.info(f'New user query: {query}')
     date = dt.datetime.now().date().ctime()
-    ic = IntentClassifier(query, 0.20, embeddings, vector_db)
+    ic = IntentClassifier(query, th, embeddings, subjects_vector_db)
     subject = ic.subject_clf()
     if subject:
         logger.info(f'subject initialized, subject code: {subject}')
