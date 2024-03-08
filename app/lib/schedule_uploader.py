@@ -2,7 +2,7 @@ from loguru import logger
 from loader import db, gc
 from lib.models import Group
 from lib.dicts import RU_DAYS, PERMANENT_LINKS
-from lib.google_calendar import GoogleCalendar
+from google_api.google_calendar import GoogleCalendar
 from lib.schedule_parser import ScheduleParser, ScheduleFilter
 
 

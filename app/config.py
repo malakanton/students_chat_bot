@@ -20,7 +20,7 @@ LOGS_UPLOAD_TIME = '00:00'
 LESSONS_TIMINGS = ['17:00', '18:40']
 TZ = env.str('TZ')
 # db
-HOST_LOCAL = '51.250.109.13'
+HOST_LOCAL = env.str('HOST')
 PORT_LOCAL = '5433'
 HOST = 'pg_db_container'
 PORT = '5432'
@@ -28,12 +28,18 @@ USER = 'postgres'
 PG_PASS = env.str('PG_PASS')
 DB_NAME = 'students_bot_db'
 # Google
-SCOPES = ['https://www.googleapis.com/auth/calendar']
-CREDS_PATH = './lib/studentsbot-414221-88a1d65d3976.json'
+SCOPES = [
+    'https://www.googleapis.com/auth/calendar',
+    'https://www.googleapis.com/auth/drive.file'
+]
+CREDS_PATH = 'google_api/studentsbot-414221-88a1d65d3976.json'
 # OpenAI
+RAG_FILES_DIR = 'gpt/temp/'
 CHATS_HISTORY = './chats_history/chat_history{}.txt'
 MESSAGES_TO_KEEP = 150
 OPEN_AI_API_KEY = env.str('OPEN_AI_API_KEY')
 OPEN_AI_URL = 'https://api.proxyapi.ru/openai/v1'
 BLABLA_MODEL = 'gpt-3.5-turbo-1106'
 SUMMARY_MODEL = 'gpt-3.5-turbo-1106'
+CONN_STRING = 'postgresql+psycopg2://{user}:{password}@{host}:{port}/vector_db'
+COLLECTION = 'test_collection'

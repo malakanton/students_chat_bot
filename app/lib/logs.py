@@ -1,4 +1,5 @@
 from aiogram.types import Message, CallbackQuery
+from logging.handlers import RotatingFileHandler
 import logging
 from loguru import logger
 
@@ -14,14 +15,17 @@ def setup_logging() -> None:
             logger.opt(depth=0, exception=record.exc_info).log(level, record.getMessage())
     logging.basicConfig(
         handlers=[
-            logging.FileHandler(
+            RotatingFileHandler(
                 'bot_logs.log',
+                maxBytes=5 * 1024 * 1024,
                 mode='a'
             ),
             InterceptHandler()
         ],
         level='INFO',
-        force=True
+        force=True,
+        format='%(filename)s:%(lineno)d #%(levelname)-8s '
+               '[%(asctime)s] - %(name)s - %(message)s'
     )
 
 
