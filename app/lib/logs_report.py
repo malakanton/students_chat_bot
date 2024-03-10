@@ -1,9 +1,9 @@
 import pandas as pd
 import re
 from config import LOGS_PATH, PATH, ADMIN_CHAT, LOGS_UPLOAD_TIME
-# from loader import bot
+from loader import bot
 from aiogram.types.input_file import FSInputFile
-# from loader import db
+from loader import db
 import datetime as dt
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 

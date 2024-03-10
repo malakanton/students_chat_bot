@@ -22,7 +22,12 @@ def setup_logging() -> None:
         format='%(filename)s:%(lineno)d #%(levelname)-8s '
                '[%(asctime)s] - %(name)s - %(message)s'
     )
-    logger.add('bot_logs.log', backtrace=True, diagnose=True, format='{time}|{level}|{name}:{function}:{line}|{message}')
+    logger.add(
+        'bot_logs.log',
+        backtrace=True,
+        diagnose=True,
+        format='{time}|{level}|{name}:{function}:{line}|{message}'
+    )
 
 
 def logging_msg(
