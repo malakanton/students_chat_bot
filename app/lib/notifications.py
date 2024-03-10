@@ -27,7 +27,8 @@ def add_scheduled_jobs(scheduler: AsyncIOScheduler, times: list):
                 trigger='cron',
                 day_of_week='mon-fri',
                 hour=hour,
-                minute=minute)
+                minute=minute
+            )
 
 
 def add_report_scheduler(
