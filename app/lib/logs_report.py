@@ -82,5 +82,3 @@ def add_logs_scheduler(
         hour=hour,
         minute=minute
     )
-
-print(form_data('../bot_logs.log'))
