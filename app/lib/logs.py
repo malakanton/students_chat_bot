@@ -15,11 +15,6 @@ def setup_logging() -> None:
             logger.opt(depth=0, exception=record.exc_info).log(level, record.getMessage())
     logging.basicConfig(
         handlers=[
-            RotatingFileHandler(
-                'bot_logs.log',
-                maxBytes=5 * 1024 * 1024,
-                mode='a'
-            ),
             InterceptHandler()
         ],
         level='INFO',
@@ -27,6 +22,7 @@ def setup_logging() -> None:
         format='%(filename)s:%(lineno)d #%(levelname)-8s '
                '[%(asctime)s] - %(name)s - %(message)s'
     )
+    logger.add('bot_logs.log', backtrace=True, diagnose=True, format='{time}|{level}|{name}:{function}:{line}|{message}')
 
 
 def logging_msg(

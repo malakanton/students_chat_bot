@@ -1,16 +1,16 @@
 import pandas as pd
 import re
 from config import LOGS_PATH, PATH, ADMIN_CHAT, LOGS_UPLOAD_TIME
-from loader import bot
+# from loader import bot
 from aiogram.types.input_file import FSInputFile
-from loader import db
+# from loader import db
 import datetime as dt
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
 def parce_line(line: str) -> dict:
-    timestamp = re.search(r'\[.*\]', line).group(0)[1:-1].split(',')[0]
-    log_info = line.split('root')[1].replace('-', '').strip()
+    timestamp = line.split('|')[0].split('.')[0].replace('T', ' ').strip()
+    log_info = line.split('|')[-1].strip()
     log_fields = ['user_id', 'command', 'message', 'chat_id', 'chat_type']
     log_items = {
         'timestamp': timestamp
@@ -29,7 +29,7 @@ def parce_line(line: str) -> dict:
 
 def form_data(path: str = LOGS_PATH, dataframe = True) -> pd.DataFrame | list:
     with open(path, 'r') as file:
-        lines = [line for line in file.readlines() if 'root' in line]
+        lines = [line for line in file.readlines() if 'INFO' in line and ':emit:' not in line]
     data = []
     for line in lines:
         data.append(
@@ -82,3 +82,5 @@ def add_logs_scheduler(
         hour=hour,
         minute=minute
     )
+
+print(form_data('../bot_logs.log'))
