@@ -81,13 +81,13 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
             )
         else:
             await call.message.edit_text(prep_markdown(lx.FILE_SAVED.format('Расписания')))
-            await bot.send_chat_action(call.chat.id, "typing")
+            await bot.send_chat_action(call.message.chat.id, "typing")
             await upload_schedule(sp)
             await call.answer(text=lx.SCHEDULE_UPLOADED, show_alert=True)
             logger.info('schedule uploaded')
     # если пользователь выбрал обновить расписание
     elif action == SchdUpdButt.UPDATE.value:
-        await bot.send_chat_action(call.chat.id, "typing")
+        await bot.send_chat_action(call.message.chat.id, "typing")
         await upload_schedule(sp, update=True)
         await call.message.edit_text(lx.SCHEDULE_UPDATED)
         logger.info('schedule updated')
