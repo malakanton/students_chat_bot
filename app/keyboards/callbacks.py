@@ -35,3 +35,6 @@ class LessonLinkCallback(CallbackData, prefix='link'):
 class Notifications(CallbackData, prefix='notif_set'):
     flag: str
 
+
+class ConfirmCallback(CallbackData, prefix='confirm'):
+    cnf: str
