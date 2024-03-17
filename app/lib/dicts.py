@@ -16,6 +16,9 @@ RU_DAYS = {
     'Пятница': 5,
     'Суббота': 6
 }
+
+RU_DAYS_INV = {v: k for k, v in RU_DAYS.items()}
+
 LESSONS_DICT = {
         1: 'Одна пара:',
         2: 'Две пары:',
@@ -40,11 +43,10 @@ MONTHS = {
     12: 'декабря',
 
 }
-RU_DAYS_INV = {v: k for k, v in RU_DAYS.items()}
 
 PERMANENT_LINKS = {
-    3: 'https://t.me/c/1917581433/75', # Ильин
-    4: 'https://t.me/+cMt0bqkaiIVkNmEy', # Ерболова
-    22: 'https://t.me/PROG_mod', # Кузин
-    57: 'https://t.me/+jYLYdPiB5xUyNzgy' # менеджмент
+    3: 'https://t.me/c/1917581433/75',  # Ильин
+    4: 'https://t.me/+cMt0bqkaiIVkNmEy',  # Ерболова
+    22: 'https://t.me/PROG_mod',  # Кузин
+    57: 'https://t.me/+jYLYdPiB5xUyNzgy'  # менеджмент
 }

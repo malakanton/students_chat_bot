@@ -77,7 +77,9 @@ async def send_newsletter(message: Message):
 async def confirm_subj(call: CallbackQuery, callback_data: ConfirmCallback):
     response = callback_data.cnf
     if response == NewsLetter.OK.name:
-        msgs_sent = await send_to_users(call.message.text)
+        msgs_sent = await send_to_users(
+            prep_markdown(call.message.text)
+        )
         reply = f'Отправил {msgs_sent} пользователям!'
     else:
         reply = 'Ок, не буду отправлять'
@@ -90,6 +92,7 @@ async def send_to_users(text: str) -> int:
     for user_id in user_ids:
         await bot.send_message(
             chat_id=user_id,
-            text=text
+            text=text,
+            parse_mode='HTML'
         )
     return len(user_ids)
