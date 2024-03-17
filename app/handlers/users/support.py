@@ -5,6 +5,7 @@ from lib import lexicon as lx
 from lib.misc import prep_markdown
 from lib.logs import logging_msg
 from aiogram.types import Message, CallbackQuery
+from aiogram.exceptions import TelegramForbiddenError
 from keyboards.callbacks import ConfirmCallback
 from handlers.routers import users_router, groups_router
 from handlers.filters import SupportFilter
@@ -89,10 +90,14 @@ async def confirm_subj(call: CallbackQuery, callback_data: ConfirmCallback):
 
 async def send_to_users(text: str) -> int:
     user_ids = db.get_users_ids('all')
+    notified_users = len(user_ids)
     for user_id in user_ids:
-        await bot.send_message(
-            chat_id=user_id,
-            text=text,
-            parse_mode='HTML'
-        )
-    return len(user_ids)
+        try:
+            await bot.send_message(
+                chat_id=user_id,
+                text=text
+            )
+        except TelegramForbiddenError:
+            notified_users -= 1
+            logger.warning(f'Failed to notify user {user_id}')
+    return notified_users
