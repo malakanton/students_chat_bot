@@ -30,8 +30,10 @@ DB_NAME = 'students_bot_db'
 # Google
 SCOPES = [
     'https://www.googleapis.com/auth/calendar',
-    'https://www.googleapis.com/auth/drive.file'
+    'https://www.googleapis.com/auth/drive.file',
+    'https://www.googleapis.com/auth/forms.responses.readonly'
 ]
+FORM_ID = '1sDsXgKFbf2D5WasvMXmx6h9s60wLlLQQOLDW021Cg_A'
 CREDS_PATH = './google_api/studentsbot-414221-88a1d65d3976.json'
 # OpenAI
 RAG_FILES_DIR = 'gpt/temp/'
