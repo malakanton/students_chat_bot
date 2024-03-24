@@ -7,7 +7,6 @@ import datetime as dt
 
 
 def gpt_respond(query: str, chunks: int = 3, th=SUBJ_CLF_TH) -> str:
-    logger.info(f'New user query: {query}')
     date = dt.datetime.now().date().ctime()
     ic = IntentClassifier(query, th, embeddings, subjects_vector_db)
     subject = ic.subject_clf()
@@ -18,9 +17,8 @@ def gpt_respond(query: str, chunks: int = 3, th=SUBJ_CLF_TH) -> str:
             k=chunks,
             filter={"source": "subj_info", 'subject': subject}
         )
-        print(search_results)
+        logger.info(f'Similarity search results: {str(search_results)}')
         rag_text = '\n'.join([doc.page_content for doc in search_results])
-        logger.debug('rag_text')
         messages = [
             {"role": "system", "content": RAG_HELPER.format(date)},
             {"role": "system", "content": rag_text},
