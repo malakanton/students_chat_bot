@@ -9,7 +9,7 @@ ADMIN_IDS = env.list('ADMIN_IDS')
 ADMIN_CHAT = env.str('ADMIN_CHAT')
 # basic
 PATH = './temp/'
-LOGS_PATH = './bot_logs.log'
+LOGS_PATH = './logs/bot_logs.log'
 GROUP = 'ИСП11-123ВПоз'
 UNAUTHORIZED_GROUP_TIMOUT = 60
 SCHEDULE_KB_TIMEOUT = 15 * 60

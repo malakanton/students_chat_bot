@@ -23,8 +23,9 @@ def setup_logging() -> None:
                '[%(asctime)s] - %(name)s - %(message)s'
     )
     logger.add(
-        'bot_logs.log',
+        'logs/bot_logs.log',
         backtrace=True,
+        rotation=10_000_000,
         diagnose=True,
         format='{time}|{level}|{name}:{function}:{line}|{message}'
     )
@@ -33,15 +34,18 @@ def setup_logging() -> None:
 def logging_msg(
         update: Message | CallbackQuery,
         logging_text: str = '',
+        command: str = ''
 ) -> str:
     user_id = update.from_user.id
-    chat_type, chat_id, command = '', '', ''
+    chat_type, chat_id = '', ''
     if isinstance(update, Message):
-        command = update.text
+        if not command:
+            command = update.text
         chat_type = update.chat.type
         chat_id = update.chat.id
     elif isinstance(update, CallbackQuery):
-        command = update.data
+        if not command:
+            command = update.data
         chat_type = update.message.chat.type
         chat_id = update.message.chat.id
     return f'user_id: {user_id} chat_id: {chat_id} chat_type: {chat_type} command: {command} message: {logging_text}'

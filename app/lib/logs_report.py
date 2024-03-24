@@ -29,7 +29,7 @@ def parce_line(line: str) -> dict:
     return log_items
 
 
-def form_data(path: str = LOGS_PATH, dataframe = True) -> pd.DataFrame | list:
+def form_data(path: str = LOGS_PATH, dataframe=True) -> pd.DataFrame | list:
     with open(path, 'r') as file:
         lines = [line for line in file.readlines() if 'INFO' in line and ':emit:' not in line]
     data = []
