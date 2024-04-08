@@ -1,4 +1,4 @@
-from config import BLABLA_MODEL, SUBJ_CLF_TH
+from config import BLABLA_MODEL, SUBJ_CLF_TH, INFO_COLLECTION
 from loader import gpt_client, vector_db, embeddings, subjects_vector_db
 from gpt.vector_db import IntentClassifier
 from gpt.prompts import RAG_HELPER, HELPER
@@ -15,7 +15,7 @@ def gpt_respond(query: str, chunks: int = 3, th=SUBJ_CLF_TH) -> str:
         search_results = vector_db.similarity_search_by_vector(
             ic.vector,
             k=chunks,
-            filter={"source": "subj_info", 'subject': subject}
+            filter={"source": INFO_COLLECTION, 'subject': subject}
         )
         logger.info(f'Similarity search results: {str(search_results)}')
         rag_text = '\n'.join([doc.page_content for doc in search_results])
@@ -24,13 +24,13 @@ def gpt_respond(query: str, chunks: int = 3, th=SUBJ_CLF_TH) -> str:
             {"role": "system", "content": rag_text},
             {"role": "user", "content": query}
         ]
-        temp = 0.8
+        temp = 0.5
     else:
         messages = [
             {"role": "system", "content": HELPER.format(date)},
             {"role": "user", "content": query}
         ]
-        temp = 1.2
+        temp = 0.8
     completion = gpt_client.chat.completions.create(
         model=BLABLA_MODEL,
         messages=messages,

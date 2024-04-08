@@ -180,8 +180,8 @@ class DB:
         returns file_name and telegram file id"""
         if subj_id:
             query = """
-            update files 
-            set file_type = %s, 
+            update files
+            set file_type = %s,
             subj_id = %s 
             where id = %s
             returning file_name, tg_file_id

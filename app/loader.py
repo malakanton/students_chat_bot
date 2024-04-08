@@ -11,6 +11,7 @@ from config import *
 from db.db import DB
 from lib.misc import get_host_port
 from lib.models import Groups, Users
+from lib.s3 import S3Client
 
 
 bot = Bot(
@@ -67,3 +68,6 @@ gd = GoogleDriver(
     local_path=PATH
 )
 logger.success('Google Driver initialized successfully')
+
+s3 = S3Client()
+logger.success('S3 Client initialized successfully')
