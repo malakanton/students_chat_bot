@@ -7,11 +7,12 @@ from lib import lexicon as lx
 from lib.misc import chat_msg_ids, valid_schedule_format, prep_markdown
 from lib.schedule_uploader import upload_schedule
 from lib.schedule_parser import ScheduleParser
-from loader import db, bot, users
+from loader import db, bot, users, s3
 from lib.logs import logging_msg
 from handlers.routers import groups_router
 from keyboards.file import schedule_exists_kb, file_kb
 from keyboards.callbacks import FileCallback, LibCallback
+from handlers.users.file import download_file
 from keyboards.library import lib_type_kb, subjects_kb, confirm_subj_kb
 from keyboards.buttons import FileButt, SchdUpdButt, Confirm, FileTypeButt
 
@@ -148,30 +149,29 @@ async def choose_subject(call: CallbackQuery, callback_data: LibCallback):
 
 @groups_router.callback_query(LibCallback.filter(F.confirm != 'None'))
 async def confirm_subj(call: CallbackQuery, callback_data: LibCallback):
-    logger.info(logging_msg(call))
     await call.answer()
+    logger.info(logging_msg(call))
     if callback_data.confirm == Confirm.OK.name:
-        db.update_file(
+        file_name, tg_file_id = db.update_file(
             file_id=callback_data.file_id,
             file_type=callback_data.type,
             subj_id=callback_data.subject_id
         )
-        subj_dict_inv = db.get_subjects_for_user_or_group(call.message.chat.id, inverted=True)
+        subj_dict_inv = db.get_subjects_for_user_or_group(call.from_user.id, inverted=True)
         subj_name = subj_dict_inv[callback_data.subject_id]
         subj_type = FileTypeButt[callback_data.type].value
-        await call.message.edit_text(
-            prep_markdown(lx.CONFIRM_SUBJECT_OK.format(subj_type.lower(), subj_name))
-        )
+
+        file_path = await download_file(tg_file_id, file_name)
+        uploaded = s3.upload_file(file_path, f'{subj_name}/{callback_data.type}/{file_name}')
+        if uploaded:
+            msg = prep_markdown(lx.CONFIRM_SUBJECT_OK.format(subj_type, subj_name))
+            await call.message.edit_text(msg)
+            os.remove(file_path)
     else:
-        sch, uid = True, call.from_user.id
-        if (
-                uid not in users.heads or
-                uid not in users.admins
-        ):
-            sch = False
+        msg = prep_markdown(lx.FILE_ATTACHED.format(''))
         await call.message.edit_text(
-            text=lx.FILE_ATTACHED.format(''),
-            reply_markup=await file_kb(callback_data.file_id, sch)
+            text=msg,
+            reply_markup=await file_kb(callback_data.file_id)
         )
 
 

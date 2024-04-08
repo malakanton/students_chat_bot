@@ -120,6 +120,7 @@ async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
         reply_markup=markup
     )
 
+
 # подтверждение выбора
 @users_router.callback_query(LibCallback.filter(F.confirm == 'None'))
 async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
