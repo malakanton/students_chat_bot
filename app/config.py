@@ -46,7 +46,7 @@ SUMMARY_MODEL = 'gpt-3.5-turbo-1106'
 CONN_STRING = 'postgresql+psycopg2://{user}:{password}@{host}:{port}/vector_db'
 SUBJECTS_COLLECTION = 'subjects'
 INFO_COLLECTION = 'subjects_info'
-SUBJ_CLF_TH = 0.2
+SUBJ_CLF_TH = 0.25
 # S3
 S3_KEY_ID = env.str('S3_KEY_ID')
 S3_SECRET = env.str('S3_SECRET')
