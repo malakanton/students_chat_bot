@@ -22,8 +22,8 @@ class DocumentsHandler:
         self.subj_pattert = re.compile(r'<[a-z_]*>')
         self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=256, chunk_overlap=32)
         self._collection_dict = {
-            SUBJECTS_COLLECTION: 'subjects_info',
-            INFO_COLLECTION: 'subjects'
+            SUBJECTS_COLLECTION: 'subjects',
+            INFO_COLLECTION: 'subjects_info'
         }
 
     def _split_documents(self) -> List[str]:
