@@ -110,7 +110,9 @@ async def subj_choice(call: CallbackQuery, callback_data: FileCallback):
 
 
 # выбор типа материала
-@users_router.callback_query(LibCallback.filter(F.type == 'None'))
+@users_router.callback_query(LibCallback.filter(
+    (F.type == 'None') & (F.file_id > 0))
+)
 async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
     logger.info(logging_msg(call))
     await call.answer()
@@ -122,7 +124,7 @@ async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
 
 
 # подтверждение выбора
-@users_router.callback_query(LibCallback.filter(F.confirm == 'None'))
+@users_router.callback_query(LibCallback.filter((F.confirm == 'None') & (F.file_id != -1)))
 async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
     await call.answer()
     logger.info(logging_msg(call))
@@ -140,7 +142,7 @@ async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
 
 
 #сохранение если все ок, или откат назад если пользователь нажал отмена
-@users_router.callback_query(LibCallback.filter(F.confirm != 'None'))
+@users_router.callback_query(LibCallback.filter((F.confirm != 'None') & (F.file_id != -1)))
 async def confirm_subj(call: CallbackQuery, callback_data: LibCallback):
     await call.answer()
     logger.info(logging_msg(call))

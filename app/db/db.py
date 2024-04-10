@@ -1,7 +1,7 @@
 import psycopg2
 from psycopg2.extras import execute_values
 import datetime as dt
-from lib.models import Group, Week, Lesson
+from lib.models import Group, Week, Lesson, File
 
 
 class DB:
@@ -373,6 +373,39 @@ class DB:
         """
         execute_values(self.cur, query, logs_list)
         self.conn.commit()
+
+    def list_files(self, user_id: int) -> list[File]:
+        """Get all subjects and files types for the user's group"""
+        query = """
+        with course as (
+            select course 
+            from groups 
+            where id = (select group_id from users where user_id = %s)
+        ),
+        subjects_list as (
+            select 
+                distinct
+                l.subj_id
+            from lessons l
+                left join groups g
+                    on g.id = l.group_id
+            where g.course = course
+        )
+        select
+        distinct
+        f.subj_id,
+        s.name,
+        file_type,
+        file_name
+        from files f
+        right join subjects_list sl
+            on sl.subj_id=f.subj_id
+        left join subjects s
+            on f.subj_id = s.id
+        where f.file_type is not null;
+        """
+        self.cur.execute(query, (user_id,))
+        return [File(*row) for row in self.cur.fetchall()]
 
 
 # from config import HOST_LOCAL, USER, PG_PASS, DB_NAME, PORT_LOCAL
