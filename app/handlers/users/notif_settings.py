@@ -5,6 +5,7 @@ from aiogram import F
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command, StateFilter
 from aiogram.types import Message, CallbackQuery
+from aiogram.exceptions import TelegramBadRequest
 
 from loader import db
 from lib import lexicon as lx
@@ -84,7 +85,6 @@ async def receive_time_from_user(message: Message, state: FSMContext):
 
     if push_time:
         await state.clear()
-        await message.delete()
         logger.info(logging_msg(message, 'Valid time format'))
 
         flag = db.set_push_time(message.from_user.id, push_time)
@@ -137,11 +137,16 @@ async def final_settings(call: CallbackQuery, callback_data: NotificationMenu):
 # финал любого сценария
 async def finish_dialog(flag: Union[int, str], push_time: str, message: Message) -> None:
     txt = get_notifications_text(flag, push_time, end_of_dialog=True)
-
-    await message.edit_text(
-        text=txt,
-        reply_markup=None
-    )
+    try:
+        await message.edit_text(
+            text=txt,
+            reply_markup=None
+        )
+    except TelegramBadRequest:
+        await message.answer(
+            text=txt,
+            reply_markup=None
+        )
 
 
 #TODO: порефакторить этот пиздец

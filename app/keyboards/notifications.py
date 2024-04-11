@@ -1,9 +1,6 @@
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from keyboards.callbacks import Notifications, NotificationMenu
-from lib import lexicon as lx
-from lib.misc import prep_markdown
-# from keyboards.buttons import SwitchNotif
+from keyboards.callbacks import NotificationMenu
 from lib.dicts import NotificationsAdvance
 
 from app.keyboards.buttons import NotifMenuBut, SwitchNotif
