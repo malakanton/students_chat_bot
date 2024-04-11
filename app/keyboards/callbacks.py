@@ -32,12 +32,6 @@ class LessonLinkCallback(CallbackData, prefix='link'):
     subj_id: int
 
 
-class Notifications(CallbackData, prefix='notif_set'):
-    flag: str
-    # push_time: str
-    # поле для определения режима flag или push
-
-
 class NotificationMenu(CallbackData, prefix='notif_menu'):
     action: str
     flag: str

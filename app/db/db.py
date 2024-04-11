@@ -367,9 +367,11 @@ class DB:
         self._execute_query(query, (flag, user_id))
 
     def set_push_time(self, user_id: int, push_time: str = None):
-        """Set a passed push notification flag by user id"""
+        """Set a passed push notification time by user id"""
         query = """
-        update users set push_time = %s where user_id = %s
+        update users 
+        set push_time = %s 
+        where user_id = %s
         returning notifications
         """
         if not push_time:
@@ -388,20 +390,13 @@ class DB:
         where
             u.push_time is not null
         """
+        self.cur.execute(query)
+        users_push_time = dict(self.cur.fetchall())
+
         if not user_id:
-            self.cur.execute(query)
-            users_push_time = dict(self.cur.fetchall())
             return users_push_time
-        else:
-            query += ' and u.user_id = %s'
-            self.cur.execute(query, (user_id, ))
-            push_time = self.cur.fetchone()
 
-            if push_time:
-                return push_time[1]
-
-            return ''
-
+        return users_push_time.get(user_id, '')
 
     def insert_logs(self, logs_list: list) -> None:
         """Upload bot logs to a logs table"""

@@ -61,9 +61,9 @@ async def notif_kb(push_time):
 async def daily_kb(flag, push_time):
     kb_builder = InlineKeyboardBuilder()
     buttons = [InlineKeyboardButton(
-        text=prep_markdown(lx.PUT_TIME),
+        text=SwitchNotif.SET.value,
         callback_data=NotificationMenu(
-            action='set_time',
+            action=SwitchNotif.SET.name,
             flag=str(flag),
             push_time=str(push_time).replace(':', '$')
         ).pack()),
