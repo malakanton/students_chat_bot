@@ -13,11 +13,15 @@ async def notif_menu_kb(flag, push_time):
     kb_builder = InlineKeyboardBuilder()
     buttons = []
     for butt in NotifMenuBut:
+        if butt.name == 'FINISH':
+            continue
+        if butt.name == 'ADVANCE':
+            flag = 'None'
         buttons.append(
             InlineKeyboardButton(
                 text=butt.value,
                 callback_data=NotificationMenu(
-                    action=str(butt.name),
+                    action=butt.name,
                     flag=str(flag),
                     push_time=str(push_time).replace(':', '$')
                 ).pack())
@@ -26,7 +30,7 @@ async def notif_menu_kb(flag, push_time):
     return kb_builder.as_markup()
 
 
-async def notif_kb(flag, push_time):
+async def notif_kb(push_time):
     kb_builder = InlineKeyboardBuilder()
     buttons = []
     for butt in NotificationsAdvance:
@@ -59,15 +63,15 @@ async def daily_kb(flag, push_time):
     buttons = [InlineKeyboardButton(
         text=prep_markdown(lx.PUT_TIME),
         callback_data=NotificationMenu(
-            action=NotifMenuBut.DAILY.name,
+            action='set_time',
             flag=str(flag),
             push_time=str(push_time).replace(':', '$')
-        ).pack()
-    ), InlineKeyboardButton(
+        ).pack()),
+     InlineKeyboardButton(
         text=SwitchNotif.OFF.value,
         callback_data=NotificationMenu(
-            action=NotifMenuBut.DAILY.name,
-            flag=SwitchNotif.OFF.name,
+            action=SwitchNotif.OFF.name,
+            flag=str(flag),
             push_time=str(push_time).replace(':', '$')
         ).pack()
     )]
