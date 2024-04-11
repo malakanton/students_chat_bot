@@ -16,13 +16,11 @@ from lib.dicts import NotificationsAdvance
 from handlers.routers import users_router
 from keyboards.buttons import SwitchNotif
 from keyboards.notifications import notif_kb, notif_menu_kb, daily_kb
-from keyboards.callbacks import Notifications
 from aiogram import F
 
 from app.handlers.states import PushNotoficationsState
 from app.keyboards.buttons import NotifMenuBut
 from app.keyboards.callbacks import NotificationMenu
-
 
 
 #TODO: накинуть логи на все
@@ -43,8 +41,6 @@ async def set_notifications(message: Message):
     await message.delete()
 
 
-
-
 @users_router.callback_query(NotificationMenu.filter(F.action == NotifMenuBut.DAILY.name))
 async def change_pushing_time(call: CallbackQuery, callback_data: NotificationMenu, state: FSMContext):
     print("change_pushing_time вызван")
@@ -60,17 +56,6 @@ async def change_pushing_time(call: CallbackQuery, callback_data: NotificationMe
                 text=txt,
                 reply_markup=await daily_kb(flag, push_time)
             )
-
-    # if flag == SwitchNotif.OFF.name:
-    #     push_time = None
-    #     await call.answer()
-    #     user_id = call.message.chat.id
-    #     db.set_push_time(user_id, push_time)
-    #     callback_data.action = NotifMenuBut.FINISH.name
-    #     await final_settings(call, callback_data)
-    # else:
-    #     await call.message.answer('введи время')
-    #     await state.set_state(PushNotoficationsState.set_time)
 
 
 # если выбрал устаноивить время
