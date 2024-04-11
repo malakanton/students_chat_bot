@@ -136,17 +136,16 @@ async def final_settings(call: CallbackQuery, callback_data: NotificationMenu):
 
 # финал любого сценария
 async def finish_dialog(flag: Union[int, str], push_time: str, message: Message) -> None:
-    txt = get_notifications_text(flag, push_time, end_of_dialog=True)
+
+    params = {
+        'text': get_notifications_text(flag, push_time, end_of_dialog=True),
+        'reply_markup': None
+    }
     try:
-        await message.edit_text(
-            text=txt,
-            reply_markup=None
-        )
+        await message.edit_text(**params)
+
     except TelegramBadRequest:
-        await message.answer(
-            text=txt,
-            reply_markup=None
-        )
+        await message.answer(**params)
 
 
 #TODO: порефакторить этот пиздец
