@@ -343,7 +343,7 @@ class DB:
         where 
             date = %s
             and start = %s
-            and u.notifications = %s
+            and (u.notifications = %s or u.push_time = %s)
         """
         self.cur.execute(query, (date, time, advance))
         res = self.cur.fetchall()
@@ -364,6 +364,34 @@ class DB:
         update users set notifications = %s where user_id = %s
         """
         self._execute_query(query, (flag, user_id))
+
+    def set_push_time(self, user_id: int, time: str):
+        """Set a passed push notification flag by user id"""
+        if time is None:
+            query = """
+            update users set push_time = NULL where user_id = %s
+            """
+            values = (user_id,)
+        else:
+            query = """
+            update users set push_time = %s where user_id = %s
+            """
+            values = (time, user_id)
+        self._execute_query(query, values)
+
+    def get_users_push_time(self) -> dict:
+        """Returns a dict of users_id and push_time"""
+        query = """
+        select
+            u.user_id,
+            u.push_time
+        from users u
+        where
+            u.push_time is not null
+        """
+        self.cur.execute(query)
+        users_push_time = dict(self.cur.fetchall())
+        return users_push_time
 
     def insert_logs(self, logs_list: list) -> None:
         """Upload bot logs to a logs table"""

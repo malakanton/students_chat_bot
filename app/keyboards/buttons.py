@@ -49,3 +49,10 @@ class SwitchNotif(Enum):
 
 
 codes = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ']
+
+
+class NotifMenuBut(Enum):
+    ADVANCE = 'Напоминалка до урока'
+    DAILY = 'Ежедневная напоминалка'
+    FINISH = 'Итоговые настройки'
+
