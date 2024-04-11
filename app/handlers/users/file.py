@@ -5,7 +5,7 @@ from aiogram import F
 from lib import lexicon as lx
 from lib.logs import logging_msg
 from lib.misc import prep_markdown
-from loader import db, bot, users
+from loader import db, bot, users, s3
 from handlers.routers import users_router
 from handlers.filters import UserFilter
 from aiogram.types import Message, CallbackQuery
@@ -51,18 +51,15 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
         await call.answer(lx.NOT_SCHEDULE_FORMAT, show_alert=True)
         logger.info(f'file {file_name} doesnt pass the schedule test')
         return
-    file = await bot.get_file(tg_file_id)
-    schedule_path = PATH + file_name
-    logger.info(f'schedule file path: {schedule_path}')
-    await bot.download_file(
-        file_path=file.file_path,
-        destination=schedule_path
-    )
-    sp = ScheduleParser(schedule_path)
+
+    file_path = await download_file(tg_file_id, file_name)
+    logger.info(f'schedule file path: {file_path}')
+
+    sp = ScheduleParser(file_path)
     week_num = sp.week_num
     if not sp.week_num:
         await call.answer(lx.DIDNT_PARSE, show_alert=True)
-        logger.error(f'didnt manage to get schedule dates {schedule_path}!!!')
+        logger.error(f'didnt manage to get schedule dates {file_path}!!!')
         return
     await call.answer()
     # если это первоначальная загрузка файла
@@ -81,13 +78,13 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
             )
         else:
             await call.message.edit_text(prep_markdown(lx.FILE_SAVED.format('Расписания')))
-            await bot.send_chat_action(call.chat.id, "typing")
+            await bot.send_chat_action(call.message.chat.id, "typing")
             await upload_schedule(sp)
             await call.answer(text=lx.SCHEDULE_UPLOADED, show_alert=True)
             logger.info('schedule uploaded')
     # если пользователь выбрал обновить расписание
     elif action == SchdUpdButt.UPDATE.value:
-        await bot.send_chat_action(call.chat.id, "typing")
+        await bot.send_chat_action(call.message.chat.id, "typing")
         await upload_schedule(sp, update=True)
         await call.message.edit_text(lx.SCHEDULE_UPDATED)
         logger.info('schedule updated')
@@ -95,7 +92,7 @@ async def schedule_choice(call: CallbackQuery, callback_data: FileCallback):
     elif action == SchdUpdButt.KEEP.value:
         await call.message.edit_text(lx.KEEP_SCHEDULE)
         logger.info('schedule keep as it was')
-    os.remove(schedule_path)
+    os.remove(file_path)
 
 
 # если пользователь выбрал учебные материалы, даем выбрать предмет
@@ -113,7 +110,9 @@ async def subj_choice(call: CallbackQuery, callback_data: FileCallback):
 
 
 # выбор типа материала
-@users_router.callback_query(LibCallback.filter(F.type == 'None'))
+@users_router.callback_query(LibCallback.filter(
+    (F.type == 'None') & (F.file_id > 0))
+)
 async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
     logger.info(logging_msg(call))
     await call.answer()
@@ -123,8 +122,9 @@ async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
         reply_markup=markup
     )
 
+
 # подтверждение выбора
-@users_router.callback_query(LibCallback.filter(F.confirm == 'None'))
+@users_router.callback_query(LibCallback.filter((F.confirm == 'None') & (F.file_id != -1)))
 async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
     await call.answer()
     logger.info(logging_msg(call))
@@ -142,7 +142,7 @@ async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
 
 
 #сохранение если все ок, или откат назад если пользователь нажал отмена
-@users_router.callback_query(LibCallback.filter(F.confirm != 'None'))
+@users_router.callback_query(LibCallback.filter((F.confirm != 'None') & (F.file_id != -1)))
 async def confirm_subj(call: CallbackQuery, callback_data: LibCallback):
     await call.answer()
     logger.info(logging_msg(call))
@@ -155,8 +155,13 @@ async def confirm_subj(call: CallbackQuery, callback_data: LibCallback):
         subj_dict_inv = db.get_subjects_for_user_or_group(call.from_user.id, inverted=True)
         subj_name = subj_dict_inv[callback_data.subject_id]
         subj_type = FileTypeButt[callback_data.type].value
-        msg = prep_markdown(lx.CONFIRM_SUBJECT_OK.format(subj_type, subj_name))
-        await call.message.edit_text(msg)
+
+        file_path = await download_file(tg_file_id, file_name)
+        uploaded = s3.upload_file(file_path, f'{subj_name}/{callback_data.type}/{file_name}')
+        if uploaded:
+            msg = prep_markdown(lx.CONFIRM_SUBJECT_OK.format(subj_type, subj_name))
+            await call.message.edit_text(msg)
+            os.remove(file_path)
     else:
         msg = prep_markdown(lx.FILE_ATTACHED.format(''))
         await call.message.edit_text(
@@ -173,4 +178,16 @@ async def dont_save_choice(call: CallbackQuery, callback_data: FileCallback):
     await call.answer(lx.DIDNT_SAVE_FILE, show_alert=True)
     await bot.delete_message(
         chat_id=chat_id,
-        message_id=msg_id)
+        message_id=msg_id
+    )
+
+
+async def download_file(tg_file_id: str, file_name: str):
+    file = await bot.get_file(tg_file_id)
+    file_path = PATH + file_name
+    logger.info(f'Downloaded file path: {file_path}')
+    await bot.download_file(
+        file_path=file.file_path,
+        destination=file_path
+    )
+    return file_path

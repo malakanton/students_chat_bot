@@ -16,10 +16,11 @@ from lib.logs import logging_msg
 )
 async def bot_reply(message: Message):
     chat_id = message.chat.id
-    logger.info(logging_msg(message, 'user chatting in private chat'))
+    logger.info(logging_msg(message, message.text, '$ask'))
     await bot.send_chat_action(chat_id, "typing")
     raw_answer = gpt_respond(message.text)
     answer = prep_markdown(raw_answer)
+    logger.info(logging_msg(message, answer, '$gpt_respond'))
     if 'https://' in answer:
         answer = prep_link(answer)
     print(answer)

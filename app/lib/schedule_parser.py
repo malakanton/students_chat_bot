@@ -81,11 +81,6 @@ class ScheduleParser:
 
     def _process_columns(self) -> None:
         """Process columns names"""
-        self.df = self.df.rename({
-            'ДНИ': 'day',
-            'ЧАСЫ': 'hours',
-            'ГРУППА': 'lesson_num',
-        }, axis=1)
         columns = list(self.df.columns).copy()
         columns = self._process_empty_cols(columns)
         for i, col in enumerate(columns):
@@ -96,6 +91,12 @@ class ScheduleParser:
                 if 'empty' in group:
                     group = columns[i - 2]
                 columns[i] = group + '_loc'
+            elif 'ДНИ' in col:
+                columns[i] = 'day'
+            elif 'АСЫ' in col and i < 5:
+                columns[i] = 'hours'
+            elif 'РУПП' in col:
+                columns[i] = 'lesson_num'
         self.df.columns = columns
         empty_columns = [col for col in columns if 'empty' in col]
         self.df.drop(empty_columns, axis=1, inplace=True)
@@ -180,7 +181,7 @@ class ScheduleParser:
             self._process_df()
             logger.info('Schedule parsing succeed!')
             return self.df
-        except:
+        except KeyError:
             return None
 
 

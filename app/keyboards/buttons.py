@@ -48,6 +48,11 @@ class SwitchNotif(Enum):
     OFF = '🟥OFF'
 
 
+class NewsLetter(Enum):
+    OK = '✅Отправить!'
+    CANCEL = '❌Отмена'
+
+
 codes = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ']
 
 

@@ -9,8 +9,10 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
 def parce_line(line: str) -> dict:
-    timestamp = re.search(r'\[.*\]', line).group(0)[1:-1].split(',')[0]
-    log_info = line.split('root')[1].replace('-', '').strip()
+    timestamp = line.split('|')[0].split('.')[0].replace('T', ' ').strip()
+    if not re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}', timestamp):
+        return dict()
+    log_info = line.split('|')[-1].strip()
     log_fields = ['user_id', 'command', 'message', 'chat_id', 'chat_type']
     log_items = {
         'timestamp': timestamp
@@ -27,14 +29,14 @@ def parce_line(line: str) -> dict:
     return log_items
 
 
-def form_data(path: str = LOGS_PATH, dataframe = True) -> pd.DataFrame | list:
+def form_data(path: str = LOGS_PATH, dataframe=True) -> pd.DataFrame | list:
     with open(path, 'r') as file:
-        lines = [line for line in file.readlines() if 'root' in line]
+        lines = [line for line in file.readlines() if 'INFO' in line and ':emit:' not in line]
     data = []
     for line in lines:
-        data.append(
-            parce_line(line)
-        )
+        line_dict = parce_line(line)
+        if line_dict:
+            data.append(line_dict)
     df = pd.DataFrame(data)
     df = df[df.user_id != '']
     if dataframe:

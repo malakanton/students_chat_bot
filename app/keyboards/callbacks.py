@@ -37,10 +37,12 @@ class Notifications(CallbackData, prefix='notif_set'):
     # push_time: str
     # поле для определения режима flag или push
 
-# новый класс для общего notifications
-
 
 class NotificationMenu(CallbackData, prefix='notif_menu'):
     action: str
     flag: str
     push_time: str
+
+
+class ConfirmCallback(CallbackData, prefix='confirm'):
+    cnf: str

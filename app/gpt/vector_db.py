@@ -1,11 +1,11 @@
 import re
 from loguru import logger
-from langchain_community.document_loaders import TextLoader
 from langchain.vectorstores.pgvector import PGVector
 from langchain_openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from typing import List, Tuple, Dict
+from typing import List
 from langchain.docstore.document import Document
+from config import SUBJECTS_COLLECTION, INFO_COLLECTION
 
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=512, chunk_overlap=32
@@ -21,11 +21,15 @@ class DocumentsHandler:
         self.raw_documents = raw_documents[0].page_content
         self.subj_pattert = re.compile(r'<[a-z_]*>')
         self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=256, chunk_overlap=32)
+        self._collection_dict = {
+            SUBJECTS_COLLECTION: 'subjects',
+            INFO_COLLECTION: 'subjects_info'
+        }
 
     def _split_documents(self) -> List[str]:
         return [text.strip() for text in self.raw_documents.split('<subj>') if text]
 
-    def prep_subjects_tags(self,  source: str = 'subject') -> List[Document]:
+    def prep_subjects_tags(self,  source: str) -> List[Document]:
         documents, metadatas = [], []
         texts = self._split_documents()
         for i, doc in enumerate(texts):
@@ -40,8 +44,10 @@ class DocumentsHandler:
             metadatas.append(meta)
         return self.text_splitter.create_documents(documents, metadatas=metadatas)
 
-    def prep_subjects_infos(self) -> List[Document]:
-        documents_prepped = self.prep_subjects_tags(source='subj_info')
+    def prep_subjects_infos(self, collection: str) -> List[Document]:
+        documents_prepped = self.prep_subjects_tags(
+            source=self._collection_dict.get(collection, collection)
+        )
         return self.text_splitter.split_documents(documents_prepped)
 
 
