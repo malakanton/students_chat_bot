@@ -1,13 +1,24 @@
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from loguru import logger
-from loader import db, bot
 import datetime as dt
-from lib.dicts import NotificationsAdvance
+from loguru import logger
+from typing import Union
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
 import lib.lexicon as lx
-from lib.misc import prep_markdown
+from loader import db, bot
 from lib.models import Lesson
 from lib.logs_report import send_report
-from config import LOGS_REPORT_TIME
+from lib.dicts import NotificationsAdvance
+from lib.logs_report import add_logs_scheduler
+from lib.misc import prep_markdown, get_today
+from config import LOGS_REPORT_TIME, LESSONS_TIMINGS
+from handlers.users.schedule import form_day_schedule_text
+
+
+def set_scheduler(scheduler: AsyncIOScheduler):
+    add_scheduled_jobs(scheduler, LESSONS_TIMINGS)
+    add_report_scheduler(scheduler)
+    add_logs_scheduler(scheduler)
+    add_daily_push_notification_jobs(scheduler)
 
 
 def cron_trigger(time: str, advance: int) -> tuple:
@@ -72,3 +83,67 @@ async def notify_user(
         link=link
     )
     await bot.send_message(user_id, text=prep_markdown(text))
+
+
+async def form_schedule_text(user_id: int) -> str:
+    text = ''
+    today = get_today()
+    week = db.get_schedule(user_id, today.week)
+
+    if week:
+        schedule_text = await form_day_schedule_text(
+                    week.get_day(today.day_of_week)
+        )
+        text = prep_markdown(lx.MORNING_SCHEDULE) + schedule_text + prep_markdown(lx.MORNING_GREETING)
+
+    return text
+
+
+async def daily_push(user_id: int) -> None:
+    text = await form_schedule_text(user_id)
+
+    if text:
+        await bot.send_message(user_id, text=text)
+        logger.info(f'Send daily notification to user {user_id}')
+
+
+def add_daily_push_for_user(
+        user_id: int,
+        time: Union[dt.datetime.time, str],
+        scheduler: AsyncIOScheduler
+) -> None:
+
+    job_id = str(user_id)
+    job = scheduler.get_job(job_id)
+
+    if isinstance(time, str):
+        time = dt.datetime.strptime(time, '%H:%M')
+
+    if job:
+        job.reschedule(
+            trigger='cron',
+            hour=time.hour,
+            minute=time.minute
+        )
+    else:
+        scheduler.add_job(
+            daily_push,
+            args=[user_id],
+            trigger='cron',
+            day_of_week='mon-fri',
+            hour=time.hour,
+            minute=time.minute,
+            id=job_id
+        )
+
+
+def add_daily_push_notification_jobs(scheduler: AsyncIOScheduler):
+
+    users_to_notify = db.get_users_push_time()
+
+    for user_id, time in users_to_notify.items():
+        add_daily_push_for_user(
+            user_id,
+            time,
+            scheduler
+        )

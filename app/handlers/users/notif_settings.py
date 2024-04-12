@@ -7,7 +7,7 @@ from aiogram.filters import Command, StateFilter
 from aiogram.types import Message, CallbackQuery
 from aiogram.exceptions import TelegramBadRequest
 
-from loader import db
+from loader import db, scheduler
 from lib import lexicon as lx
 from lib.misc import prep_markdown
 from lib.logs import logging_msg
@@ -74,6 +74,7 @@ async def turn_off_push_notif(call: CallbackQuery, callback_data: NotificationMe
 
     user_id = call.message.chat.id
     db.set_push_time(user_id)
+    scheduler.remove_job(str(user_id))
 
     await finish_dialog(callback_data.flag, None, call.message)
 
@@ -84,10 +85,14 @@ async def receive_time_from_user(message: Message, state: FSMContext):
     push_time = check_correct_time(message.text)
 
     if push_time:
+        from lib.notifications import add_daily_push_for_user
+
         await state.clear()
         logger.info(logging_msg(message, 'Valid time format'))
 
-        flag = db.set_push_time(message.from_user.id, push_time)
+        user_id = message.from_user.id
+        flag = db.set_push_time(user_id, push_time)
+        add_daily_push_for_user(user_id, push_time, scheduler)
 
         await finish_dialog(flag, push_time, message)
 
