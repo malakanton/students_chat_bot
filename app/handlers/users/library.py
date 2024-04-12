@@ -97,7 +97,7 @@ async def download_file(call: CallbackQuery, callback_data: LibCallback):
     files = await get_files_list(call.from_user.id, callback_data)
     file_to_download = files[int(callback_data.confirm)]
 
-    await send_file_to_chat(file_to_download, call.message.chat.id)
+    await send_file_to_chat(file_to_download, call)
 
 
 async def get_files_list(user_id: int, callback_data: LibCallback) -> list[File]:
@@ -112,8 +112,9 @@ async def get_files_list(user_id: int, callback_data: LibCallback) -> list[File]
     return sorted(files, key=lambda file: file.file_name)
 
 
-async def send_file_to_chat(file: File, chat_id: int) -> None:
+async def send_file_to_chat(file: File, call: CallbackQuery) -> None:
     """Send file to chat"""
+    chat_id = call.message.chat.id
     path_download_to = os.path.join(PATH, file.file_name)
 
     if s3.download_file(file.s3_path, path_download_to):
@@ -123,6 +124,11 @@ async def send_file_to_chat(file: File, chat_id: int) -> None:
             chat_id=chat_id,
             document=file_for_bot
         )
+        logger.info(logging_msg(
+            call,
+            f'Successfully sent file {file.s3_path}',
+            'send_file'
+        ))
         os.remove(path_download_to)
     else:
         await bot.send_message(
@@ -130,3 +136,4 @@ async def send_file_to_chat(file: File, chat_id: int) -> None:
             lx.LIB_FAILED_TO_DOWNLOAD.format(file.file_name),
             parse_mode='HTML'
         )
+        logger.warning(f'Failed to send file {file.s3_path} to user {chat_id}')

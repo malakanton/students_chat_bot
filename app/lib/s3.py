@@ -49,7 +49,7 @@ class S3Client:
             file_name = object_name
         try:
             self.client.download_file(self.__bucket, object_name, file_name)
-            logger.success(f'Successfully downloaded file {object_name} to s3')
+            logger.success(f'Successfully downloaded file {object_name} from s3')
         except ClientError as e:
             logger.error(e)
             return False
