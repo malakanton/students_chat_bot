@@ -27,7 +27,7 @@ async def set_notifications(message: Message):
     try:
         flag = db.check_notification_flag(user_id)[0]
         push_time = db.get_users_push_time(user_id)
-        txt = get_notifications_text(flag, push_time)
+        txt = get_notifications_text(flag, str(push_time))
         await message.answer(
             text=txt,
             reply_markup=await notif_menu_kb(flag, push_time)
@@ -43,11 +43,12 @@ async def change_pushing_time(call: CallbackQuery, callback_data: NotificationMe
     logger.info(logging_msg(call))
     await call.answer()
     flag = callback_data.flag
-    push_time = callback_data.push_time
+    push_time = callback_data.push_time.replace('$', ':')
+
+    txt = prep_markdown(lx.PUSHING_OFF)
     if push_time:
-        txt = prep_markdown(lx.PUSHING_CHANGE)
-    else:
-        txt = prep_markdown(lx.PUSHING_ON)
+        push_time = push_time[:-3]
+        txt = prep_markdown(lx.PUSHING_ON.format(push_time))
 
     await call.message.edit_text(
                 text=txt,
@@ -75,9 +76,8 @@ async def turn_off_push_notif(call: CallbackQuery, callback_data: NotificationMe
     user_id = call.message.chat.id
     db.set_push_time(user_id)
     scheduler.remove_job(str(user_id))
-    flag = db.check_notification_flag(user_id)[0]
-    flag = flag[:5]
-    await finish_dialog(flag, None, call.message)
+
+    await finish_dialog(callback_data.flag, None, call.message)
 
 
 # ввод времени с клавиатуры
@@ -111,6 +111,7 @@ async def change_notifications_flag(call: CallbackQuery, callback_data: Notifica
     await call.answer()
 
     push_time = callback_data.push_time.replace('$', ':')
+
     txt = prep_markdown(lx.NOTIFICATIONS_SET_TEXT)
 
     await call.message.edit_text(
@@ -152,30 +153,31 @@ async def finish_dialog(flag: Union[int, str], push_time: str, message: Message)
         await message.answer(**params)
 
 
-#TODO: порефакторить этот пиздец
 def get_notifications_text(
         flag: Union[int, str],
         push_time: Optional[str],
         end_of_dialog: bool = False
 ) -> str:
     status = int(flag != 0)
-    flag_wording = lx.NOTIF_FLAG[status]
-    txt = lx.NOTIFICATIONS_STATUS.format(flag_wording)
+    txt = lx.NOTIF_FLAG[status]
     if status:
         txt = txt.format(flag)
 
     push_status = int(1 if push_time else 0)
     push_wording = lx.NOTIF_PUSH[push_status]
-    txt_push = lx.NOTIFICATIONS_STATUS.format(push_wording)
     if push_status:
-        txt_push = txt_push.format(push_time)
-    txt += "\n" + txt_push + lx.NOTIFICATIONS_ON_BEGIN
+        if len(push_time) > 4:
+            push_time = push_time[:-3]
+        push_wording = push_wording.format(push_time)
+    txt += '\n'
+    txt += push_wording
+    txt += lx.NOTIFICATIONS_ON_BEGIN
+
     if end_of_dialog:
-        txt += lx.NOTIFICATIONS_ON_OFF_END
+        txt += lx.NOTIFICATIONS_DIALOG_END
     return prep_markdown(txt)
 
 
-#TODO: пофиксить разные форматы ввода
 def check_correct_time(users_input: str) -> str:
     match = re.match(r'^([01]?[0-9]|2[0-3])[\s\-?.:^ю]+([0-5][0-9])$', users_input)
 
