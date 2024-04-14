@@ -8,7 +8,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.exceptions import TelegramBadRequest
 
 from loader import db, scheduler
-from app.lib import lexicon as lx
+from lib import lexicon as lx
 from lib.misc import prep_markdown
 from lib.logs import logging_msg
 from lib.dicts import NotificationsAdvance
