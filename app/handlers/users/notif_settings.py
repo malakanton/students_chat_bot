@@ -165,7 +165,7 @@ def get_notifications_text(
     push_status = int(1 if push_time else 0)
     push_wording = lx.NOTIF_PUSH[push_status]
     if push_status:
-        if len(push_time) > 4:
+        if len(push_time) > 5:
             push_time = push_time[:-3]
         push_wording = push_wording.format(push_time)
     txt += '\n'
