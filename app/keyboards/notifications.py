@@ -10,8 +10,6 @@ async def notif_menu_kb(flag, push_time):
     kb_builder = InlineKeyboardBuilder()
     buttons = []
     for butt in NotifMenuBut:
-        if butt.name == 'FINISH':
-            continue
         if butt.name == 'ADVANCE':
             flag = 'None'
         buttons.append(
