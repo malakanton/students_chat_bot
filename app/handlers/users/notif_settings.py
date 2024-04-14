@@ -47,7 +47,6 @@ async def change_pushing_time(call: CallbackQuery, callback_data: NotificationMe
 
     txt = prep_markdown(lx.PUSHING_OFF)
     if push_time:
-        push_time = push_time[:-3]
         txt = prep_markdown(lx.PUSHING_ON.format(push_time))
 
     await call.message.edit_text(
