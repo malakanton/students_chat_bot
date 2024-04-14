@@ -76,6 +76,7 @@ async def turn_off_push_notif(call: CallbackQuery, callback_data: NotificationMe
     db.set_push_time(user_id)
     scheduler.remove_job(str(user_id))
     flag = db.check_notification_flag(user_id)[0]
+    flag = flag[:5]
     await finish_dialog(flag, None, call.message)
 
 
