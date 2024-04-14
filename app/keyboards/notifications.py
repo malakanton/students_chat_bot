@@ -3,7 +3,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from keyboards.callbacks import NotificationMenu
 from lib.dicts import NotificationsAdvance
 
-from app.keyboards.buttons import NotifMenuBut, SwitchNotif
+from keyboards.buttons import NotifMenuBut, SwitchNotif
 
 
 async def notif_menu_kb(flag, push_time):
