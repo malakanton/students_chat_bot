@@ -73,14 +73,13 @@ async def turn_off_push_notif(call: CallbackQuery, callback_data: NotificationMe
     await call.answer()
 
     user_id = call.message.chat.id
-    db.set_push_time(user_id)
-
+    flag = db.set_push_time(user_id)
     job_id = str(user_id)
     job = scheduler.get_job(job_id)
     if job:
         scheduler.remove_job(job_id)
 
-    await finish_dialog(callback_data.flag, None, call.message)
+    await finish_dialog(flag, None, call.message)
 
 
 # ввод времени с клавиатуры
@@ -161,7 +160,8 @@ def get_notifications_text(
         push_time: Optional[str],
         end_of_dialog: bool = False
 ) -> str:
-    status = int(flag != 0 and flag != 'None')
+
+    status = int(flag != 0)
     txt = lx.NOTIF_FLAG[status]
     if status:
         txt = txt.format(flag)
