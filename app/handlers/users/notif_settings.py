@@ -1,61 +1,189 @@
+import re
 from loguru import logger
-from aiogram.filters import Command
+from typing import Optional, Union
+from aiogram import F
+from aiogram.fsm.context import FSMContext
+from aiogram.filters import Command, StateFilter
 from aiogram.types import Message, CallbackQuery
+from aiogram.exceptions import TelegramBadRequest
 
-from loader import dp, db
-from lib import lexicon as lx
+from loader import db, scheduler
+from app.lib import lexicon as lx
 from lib.misc import prep_markdown
 from lib.logs import logging_msg
 from lib.dicts import NotificationsAdvance
 from handlers.routers import users_router
 from keyboards.buttons import SwitchNotif
-from keyboards.notifications import notif_kb
-from keyboards.callbacks import Notifications
+from keyboards.notifications import notif_kb, notif_menu_kb, daily_kb
+from handlers.states import PushNotoficationsState
+from keyboards.buttons import NotifMenuBut
+from keyboards.callbacks import NotificationMenu
 
 
 @users_router.message(Command('notifications'))
 async def set_notifications(message: Message):
     logger.info(logging_msg(message, 'notifications command'))
+    user_id = message.from_user.id
     try:
-        flag = db.check_notification_flag(message.from_user.id)[0]
-        txt = get_notifications_text(flag)
+        flag = db.check_notification_flag(user_id)[0]
+        push_time = db.get_users_push_time(user_id)
+        txt = get_notifications_text(flag, push_time)
         await message.answer(
             text=txt,
-            reply_markup=await notif_kb()
+            reply_markup=await notif_menu_kb(flag, push_time)
         )
     except IndexError:
         logger.warning('No user notifications info in database')
     await message.delete()
 
 
-@users_router.callback_query(Notifications.filter())
-async def change_notifications_flag(call: CallbackQuery, callback_data: Notifications):
+# выбрал настройки ежедневных уведомлений
+@users_router.callback_query(NotificationMenu.filter(F.action == NotifMenuBut.DAILY.name))
+async def change_pushing_time(call: CallbackQuery, callback_data: NotificationMenu):
+    logger.info(logging_msg(call))
+    await call.answer()
+    flag = callback_data.flag
+    push_time = callback_data.push_time
+    if push_time:
+        txt = prep_markdown(lx.PUSHING_CHANGE)
+    else:
+        txt = prep_markdown(lx.PUSHING_ON)
+
+    await call.message.edit_text(
+                text=txt,
+                reply_markup=await daily_kb(flag, push_time)
+            )
+
+
+# если выбрал устаноивить время
+@users_router.callback_query(NotificationMenu.filter(F.action == SwitchNotif.SET.name))
+async def set_push_time(call: CallbackQuery, callback_data: NotificationMenu, state: FSMContext):
+    logger.info(logging_msg(call))
+    await call.answer()
+    await call.message.delete()
+
+    await call.message.answer(prep_markdown(lx.PUSH_TIME_MESSAGE))
+    await state.set_state(PushNotoficationsState.set_time)
+
+
+# если пользователь выбрал выключить
+@users_router.callback_query(NotificationMenu.filter(F.action == SwitchNotif.OFF.name))
+async def turn_off_push_notif(call: CallbackQuery, callback_data: NotificationMenu):
+    logger.info(logging_msg(call))
+    await call.answer()
+
+    user_id = call.message.chat.id
+    db.set_push_time(user_id)
+    scheduler.remove_job(str(user_id))
+    flag = db.check_notification_flag(user_id)[0]
+    flag = flag[:5]
+    await finish_dialog(flag, None, call.message)
+
+
+# ввод времени с клавиатуры
+@users_router.message(StateFilter(PushNotoficationsState.set_time))
+async def receive_time_from_user(message: Message, state: FSMContext):
+    push_time = check_correct_time(message.text)
+
+    if push_time:
+        from lib.notifications import add_daily_push_for_user
+
+        await state.clear()
+        logger.info(logging_msg(message, 'Valid time format'))
+
+        user_id = message.from_user.id
+        flag = db.set_push_time(user_id, push_time)
+        add_daily_push_for_user(user_id, push_time, scheduler)
+        await finish_dialog(flag, push_time, message)
+
+    else:
+        logger.warning(logging_msg(message, 'Invalid time format'))
+        await message.answer(prep_markdown(lx.INVALID_PUSH_TIME))
+
+
+# выбрал уведомления перед уроком
+@users_router.callback_query(NotificationMenu.filter(
+    (F.action == NotifMenuBut.ADVANCE.name) &
+    (F.flag == 'None')
+))
+async def change_notifications_flag(call: CallbackQuery, callback_data: NotificationMenu):
+    logger.info(logging_msg(call))
+    await call.answer()
+
+    push_time = callback_data.push_time.replace('$', ':')
+    txt = prep_markdown(lx.NOTIFICATIONS_SET_TEXT)
+
+    await call.message.edit_text(
+        text=txt,
+        reply_markup=await notif_kb(push_time),
+    )
+
+
+# выбрано время уведомлений перед уроком
+@users_router.callback_query(NotificationMenu.filter(F.action == NotifMenuBut.ADVANCE.name))
+async def final_settings(call: CallbackQuery, callback_data: NotificationMenu):
+    logger.info(logging_msg(call))
+    await call.answer()
+
+    user_id = call.message.chat.id
     flag = callback_data.flag
     if flag == SwitchNotif.OFF.name:
         flag = 0
+
     else:
         flag = NotificationsAdvance[flag].value
-    await call.answer()
-    user_id = call.message.chat.id
     db.set_notifications_flag(user_id, flag)
-    logger.info(logging_msg(call, 'notifications flag set for user'))
-    txt = get_notifications_text(flag, end_of_dialog=True)
-    await call.message.edit_text(text=txt, reply_markup=None)
+    push_time = callback_data.push_time.replace('$', ':')
+
+    await finish_dialog(flag, push_time, call.message)
 
 
+# финал любого сценария
+async def finish_dialog(flag: Union[int, str], push_time: str, message: Message) -> None:
+
+    params = {
+        'text': get_notifications_text(flag, push_time, end_of_dialog=True),
+        'reply_markup': None
+    }
+    try:
+        await message.edit_text(**params)
+
+    except TelegramBadRequest:
+        await message.answer(**params)
+
+
+#TODO: порефакторить этот пиздец
 def get_notifications_text(
-        flag: int,
+        flag: Union[int, str],
+        push_time: Optional[str],
         end_of_dialog: bool = False
 ) -> str:
     status = int(flag != 0)
     flag_wording = lx.NOTIF_FLAG[status]
     txt = lx.NOTIFICATIONS_STATUS.format(flag_wording)
-    if status and not end_of_dialog:
-        txt += lx.NOTIFICATIONS_ON.format(flag) + lx.NOTIFICATIONS_ON_BEGIN
-    elif status:
-        txt += lx.NOTIFICATIONS_ON.format(flag) + lx.NOTIFICATIONS_ON_OFF_END
-    elif end_of_dialog:
+    if status:
+        txt = txt.format(flag)
+
+    push_status = int(1 if push_time else 0)
+    push_wording = lx.NOTIF_PUSH[push_status]
+    txt_push = lx.NOTIFICATIONS_STATUS.format(push_wording)
+    if push_status:
+        txt_push = txt_push.format(push_time)
+    txt += "\n" + txt_push + lx.NOTIFICATIONS_ON_BEGIN
+    if end_of_dialog:
         txt += lx.NOTIFICATIONS_ON_OFF_END
-    else:
-        txt += lx.NOTIFICATIONS_OFF
     return prep_markdown(txt)
+
+
+#TODO: пофиксить разные форматы ввода
+def check_correct_time(users_input: str) -> str:
+    match = re.match(r'^([01]?[0-9]|2[0-3])[\s\-?.:^ю]+([0-5][0-9])$', users_input)
+
+    if match:
+        corrected_time = re.sub(r'[\s\-?.^ю]+', ':', users_input)
+        return corrected_time
+
+    return ''
+
+
+

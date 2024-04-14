@@ -2,6 +2,7 @@ import psycopg2
 from psycopg2.extras import execute_values
 import datetime as dt
 from lib.models import Group, Week, Lesson, File
+from typing import Union
 
 
 class DB:
@@ -343,7 +344,7 @@ class DB:
         where 
             date = %s
             and start = %s
-            and u.notifications = %s
+            and (u.notifications = %s or u.push_time = %s)
         """
         self.cur.execute(query, (date, time, advance))
         res = self.cur.fetchall()
@@ -364,6 +365,38 @@ class DB:
         update users set notifications = %s where user_id = %s
         """
         self._execute_query(query, (flag, user_id))
+
+    def set_push_time(self, user_id: int, push_time: str = None):
+        """Set a passed push notification time by user id"""
+        query = """
+        update users 
+        set push_time = %s 
+        where user_id = %s
+        returning notifications
+        """
+        if not push_time:
+            push_time = None
+
+        self._execute_query(query, (push_time, user_id))
+        return self.cur.fetchone()[0]
+
+    def get_users_push_time(self, user_id: int = None) -> Union[dict, dt.datetime.time]:
+        """Returns a dict of users_id and push_time"""
+        query = """
+        select
+            u.user_id,
+            u.push_time
+        from users u
+        where
+            u.push_time is not null
+        """
+        self.cur.execute(query)
+        users_push_time = dict(self.cur.fetchall())
+
+        if not user_id:
+            return users_push_time
+
+        return users_push_time.get(user_id, '')
 
     def insert_logs(self, logs_list: list) -> None:
         """Upload bot logs to a logs table"""
@@ -407,7 +440,7 @@ class DB:
         self.cur.execute(query, (user_id,))
         return [File(*row) for row in self.cur.fetchall()]
 
-
+#
 # from config import HOST_LOCAL, USER, PG_PASS, DB_NAME, PORT_LOCAL
 # db = DB(host=HOST_LOCAL, user=USER, pg_pass=PG_PASS, db_name=DB_NAME, port=PORT_LOCAL)
 
@@ -417,4 +450,6 @@ class DB:
 # pprint.pprint(db.cur.fetchall())
 
 
-# print(db.get_users_lessons_notif('2024-02-01', '18:40', 1))
+# print(db.set_push_time(401939802, '18:40'))
+# users_to_notify = db.get_users_push_time()
+# print(users_to_notify.get(333317922).minute)

@@ -32,8 +32,10 @@ class LessonLinkCallback(CallbackData, prefix='link'):
     subj_id: int
 
 
-class Notifications(CallbackData, prefix='notif_set'):
+class NotificationMenu(CallbackData, prefix='notif_menu'):
+    action: str
     flag: str
+    push_time: str
 
 
 class ConfirmCallback(CallbackData, prefix='confirm'):

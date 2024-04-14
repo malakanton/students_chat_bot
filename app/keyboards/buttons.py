@@ -46,6 +46,7 @@ class ScheduleButt(Enum):
 class SwitchNotif(Enum):
     ON = '⏰{}\''
     OFF = '🟥OFF'
+    SET = 'Установить время уведомлений ⏰'
 
 
 class NewsLetter(Enum):
@@ -54,3 +55,9 @@ class NewsLetter(Enum):
 
 
 codes = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ']
+
+
+class NotifMenuBut(Enum):
+    ADVANCE = 'Напоминалка перед парой'
+    DAILY = 'Ежедневные оповещения'
+    FINISH = 'fff'
