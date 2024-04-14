@@ -160,9 +160,9 @@ def get_notifications_text(
         push_time: Optional[str],
         end_of_dialog: bool = False
 ) -> str:
-
+    txt = ''
     status = int(flag != 0)
-    txt = lx.NOTIF_FLAG[status]
+    txt += lx.NOTIF_FLAG[status]
     if status:
         txt = txt.format(flag)
 
@@ -172,12 +172,12 @@ def get_notifications_text(
         if len(push_time) > 5:
             push_time = push_time[:-3]
         push_wording = push_wording.format(push_time)
-    txt += '\n'
-    txt += push_wording
-    txt += lx.NOTIFICATIONS_ON_BEGIN
-
+    txt += '\n' + push_wording
     if end_of_dialog:
-        txt += lx.NOTIFICATIONS_DIALOG_END
+        txt = lx.NOTIFICATIONS_CHANGE + txt + lx.NOTIFICATIONS_DIALOG_END
+    else:
+        txt += lx.NOTIFICATIONS_ON_BEGIN
+
     return prep_markdown(txt)
 
 
