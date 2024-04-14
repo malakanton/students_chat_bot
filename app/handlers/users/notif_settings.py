@@ -157,7 +157,7 @@ def get_notifications_text(
         push_time: Optional[str],
         end_of_dialog: bool = False
 ) -> str:
-    status = int(flag != 0 and flag is not None)
+    status = int(flag != 0 and flag != 'None')
     txt = lx.NOTIF_FLAG[status]
     if status:
         txt = txt.format(flag)
