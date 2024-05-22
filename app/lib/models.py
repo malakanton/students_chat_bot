@@ -15,6 +15,7 @@ class Users:
     heads: set[int] = Field(default=set())
     regular: set[int] = Field(default=set())
     unreg: set[int] = Field(default=set())
+    allowed: set[int] = Field(default=set())
 
 
 @dataclass

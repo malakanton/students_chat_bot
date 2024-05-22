@@ -55,7 +55,8 @@ users = Users(
     admins=db.get_users_ids('admin'),
     heads=db.get_users_ids('head'),
     regular=db.get_users_ids('regular'),
-    unreg=db.get_users_ids('unreg')
+    unreg=db.get_users_ids('unreg'),
+    allowed=db.get_users_ids('allowed'),
 )
 gc = GoogleCalendar(
     SCOPES,

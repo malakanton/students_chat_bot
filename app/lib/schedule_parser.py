@@ -185,7 +185,6 @@ class ScheduleParser:
             return None
 
 
-
 class ScheduleFilter:
     """Get the entire week schedule dataframe and prepare groups schedules"""
     df: pd.DataFrame

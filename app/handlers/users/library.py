@@ -9,7 +9,7 @@ from aiogram.types.input_file import FSInputFile
 from lib import lexicon as lx
 from lib.logs import logging_msg
 from lib.misc import prep_markdown
-from loader import db, bot, s3
+from loader import db, bot, s3, users
 from handlers.routers import users_router
 from keyboards.callbacks import LibCallback
 from lib.models import File
@@ -53,8 +53,9 @@ async def choose_lib_type(call: CallbackQuery, callback_data: LibCallback):
     logger.info(logging_msg(call))
     await call.answer()
 
-    files = db.list_files(call.from_user.id)
-    file_types = [file.file_type for file in files if file.subj_id == int(callback_data.subject_id)]
+    user_id = call.from_user.id
+    files = db.list_files(user_id)
+    file_types = filter_file_types(user_id, callback_data, files)
 
     markup = await lib_type_kb(
         callback_data.subject_id,
@@ -137,3 +138,12 @@ async def send_file_to_chat(file: File, call: CallbackQuery) -> None:
             parse_mode='HTML'
         )
         logger.warning(f'Failed to send file {file.s3_path} to user {chat_id}')
+
+
+def filter_file_types(user_id: int, callback_data: LibCallback, files: list) -> list[str]:
+    file_types = [file.file_type for file in files if file.subj_id == int(callback_data.subject_id)]
+
+    if user_id not in users.allowed:
+        file_types = [f_type for f_type in file_types if f_type not in {'HOMEWORK'}]
+
+    return file_types
