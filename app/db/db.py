@@ -346,7 +346,7 @@ class DB:
         where 
             date = %s
             and start = %s
-            and (u.notifications = %s or u.push_time = %s)
+            and (u.notifications = %s)
         """
         self.cur.execute(query, (date, time, advance))
         res = self.cur.fetchall()
@@ -442,16 +442,11 @@ class DB:
         self.cur.execute(query, (user_id,))
         return [File(*row) for row in self.cur.fetchall()]
 
-#
+
 # from config import HOST_LOCAL, USER, PG_PASS, DB_NAME, PORT_LOCAL
 # db = DB(host=HOST_LOCAL, user=USER, pg_pass=PG_PASS, db_name=DB_NAME, port=PORT_LOCAL)
 
-# import pprint
+import pprint
 # db.cur.execute('select user_id from users')
-# # print(db.cur.fetchall())
+# print(db.cur.fetchall())
 # pprint.pprint(db.cur.fetchall())
-
-
-# print(db.set_push_time(401939802, '18:40'))
-# users_to_notify = db.get_users_push_time()
-# print(users_to_notify.get(333317922).minute)
