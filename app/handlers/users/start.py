@@ -4,7 +4,7 @@ from lib import lexicon as lx
 from lib.models import Groups
 from lib.misc import prep_markdown
 from lib.logs import logging_msg
-from loader import db, gr, users
+from loader import db, gr, users, bot
 from keyboards.buttons import Confirm
 from aiogram.filters import CommandStart
 from keyboards.callbacks import StartCallback
@@ -12,6 +12,7 @@ from handlers.routers import users_router
 from aiogram.types import Message, CallbackQuery
 from keyboards.start import course_kb, groups_kb, confirm_kb
 from handlers.filters import UnRegisteredUser
+from config import ADMIN_CHAT
 
 
 @users_router.message(CommandStart())
@@ -36,6 +37,15 @@ async def start(message: Message):
     await message.delete()
 
 
+# фильтр для незарегистрированных пользователей
+@users_router.message(UnRegisteredUser())
+async def unregistered_user(message: Message):
+    logger.info(logging_msg(message, 'unregistered user'))
+    await message.answer(
+        prep_markdown(lx.NOT_REGISTERED)
+    )
+
+
 @users_router.callback_query(StartCallback.filter(F.confirm == 'None'))
 async def callback_start(call: CallbackQuery, callback_data: StartCallback):
     logger.info(logging_msg(call, 'start callbacks processing'))
@@ -57,6 +67,7 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
     await call.answer()
     logger.info(logging_msg(call, 'start callbacks processing'))
     gr = Groups(db.get_groups())
+
     if callback_data.confirm == Confirm.OK.name:
         user_id, user_name, tg_login = get_user_details(call)
         group_id = callback_data.group_id
@@ -73,27 +84,23 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
                                  user_type
                                  )
         logger.info(f'New user added: {user_id} - {user_group[1]}')
+        await bot.send_message(
+            ADMIN_CHAT,
+            text=f'New user added: @{tg_login} {user_name} {user_id} - group: {user_group[1]}',
+            parse_mode='HTML'
+        )
         gc_link = db.get_user_group(user_id)[2]
         if not gc_link:
             gc_link = 'https://calendar.google.com/'
         txt = prep_markdown(lx.ADDED_TO_GROUP.format(user_name, user_group[1]) +
                             lx.DESCRIPTION.format(gc_link))
         await call.message.edit_text(text=txt)
-        print(users)
+
     else:
         await call.message.edit_text(
             text=lx.COURSE_CHOICE,
             reply_markup=await course_kb(gr.courses)
         )
-
-
-# фильтр для незарегистрированных пользователей
-@users_router.message(UnRegisteredUser())
-async def unregistered_user(message: Message):
-    logger.info(logging_msg(message, 'unregistered user'))
-    await message.answer(
-        prep_markdown(lx.NOT_REGISTERED)
-    )
 
 
 def get_user_details(call: CallbackQuery) -> tuple:
