@@ -21,9 +21,9 @@ async def bot_reply(message: Message):
     raw_answer = gpt_respond(message.text)
     answer = prep_markdown(raw_answer)
     logger.info(logging_msg(message, answer, '$gpt_respond'))
-    if 'https://' in answer:
-        answer = prep_link(answer)
-    print(answer)
+    # if 'https://' in answer:
+    #     answer = prep_link(answer)
+    # print(answer)
     try:
         await message.answer(answer)
     except TelegramBadRequest:

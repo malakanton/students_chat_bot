@@ -38,11 +38,12 @@ CREDS_PATH = './google_api/studentsbot-414221-88a1d65d3976.json'
 # OpenAI
 RAG_FILES_DIR = 'gpt/temp/'
 CHATS_HISTORY = './chats_history/chat_history{}.txt'
-MESSAGES_TO_KEEP = 150
+MESSAGES_TO_KEEP = 200
 OPEN_AI_API_KEY = env.str('OPEN_AI_API_KEY')
 OPEN_AI_URL = 'https://api.proxyapi.ru/openai/v1'
-BLABLA_MODEL = 'gpt-3.5-turbo-1106'
-SUMMARY_MODEL = 'gpt-3.5-turbo-1106'
+BLABLA_MODEL = 'gpt-4o'
+# SUMMARY_MODEL = 'gpt-3.5-turbo-1106'
+SUMMARY_MODEL = 'gpt-4o'
 CONN_STRING = 'postgresql+psycopg2://{user}:{password}@{host}:{port}/vector_db'
 SUBJECTS_COLLECTION = 'subjects'
 INFO_COLLECTION = 'subjects_info'
