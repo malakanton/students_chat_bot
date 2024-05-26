@@ -247,7 +247,10 @@ class DB:
             if user_type == 'all':
                 query = """select user_id from users"""
             elif user_type == 'allowed':
-                query = """select user_id from users where added_at < '2024-05-18'"""
+                query = """select * from users 
+                    where added_at < '2024-05-18' or user_id in (133051024)
+                    order by added_at
+                    """
             else:
                 query = """select user_id from users where user_type= %s"""
         self.cur.execute(query, (user_type,))
