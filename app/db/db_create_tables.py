@@ -81,11 +81,11 @@ tables = [
     create_subjects_query,
     create_users_query,
     create_files_query,
-    create_lessons_query
+    create_lessons_query,
 ]
 
 
-def create_tables(tables:list):
+def create_tables(tables: list):
     for table_query in tables:
         db._execute_query(table_query)
 

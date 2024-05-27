@@ -1,6 +1,6 @@
 from aiogram import Router
-from .filters import UserFilter, GroupFilter
 
+from .filters import GroupFilter, UserFilter
 
 users_router = Router()
 groups_router = Router()

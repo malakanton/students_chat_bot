@@ -1,27 +1,24 @@
 import asyncio
-from loader import logger
+
 from aiogram import F
-from lib import lexicon as lx
-from loader import db, bot
 from aiogram.filters import Command
-from lib.models import DayOfWeek, Week
+from aiogram.types import CallbackQuery, Message
 from config import SCHEDULE_KB_TIMEOUT
 from handlers.routers import users_router
-from lib.dicts import LESSONS_DICT, MONTHS
-from keyboards.schedule import schedule_kb
 from keyboards.buttons import ScheduleButt
-from aiogram.types import Message, CallbackQuery
 from keyboards.callbacks import ScheduleCallback
-from lib.misc import (get_today,
-                      chat_msg_ids,
-                      prep_markdown,
-                      test_users_dates)
+from keyboards.schedule import schedule_kb
+from lib import lexicon as lx
+from lib.dicts import LESSONS_DICT, MONTHS
 from lib.logs import logging_msg
+from lib.misc import chat_msg_ids, get_today, prep_markdown, test_users_dates
+from lib.models import DayOfWeek, Week
+from loader import bot, db, logger
 
 
-@users_router.message(Command('schedule'))
+@users_router.message(Command("schedule"))
 async def schedule_commands(message: Message):
-    logger.info(logging_msg(message, 'schedule command in private chat'))
+    logger.info(logging_msg(message, "schedule command in private chat"))
     user_id = message.from_user.id
     today = get_today(test_users_dates.get(user_id, None))
     week_num = today.week
@@ -37,7 +34,7 @@ async def schedule_commands(message: Message):
         await message.answer(
             text=text,
             reply_markup=await schedule_kb(week, day_of_week),
-            disable_web_page_preview=True
+            disable_web_page_preview=True,
         )
     chat_id, msg_id = message.chat.id, message.message_id
     await message.delete()
@@ -45,7 +42,9 @@ async def schedule_commands(message: Message):
 
 
 # если выбрал день
-@users_router.callback_query(ScheduleCallback.filter(~F.command.in_(ScheduleButt._member_names_)))
+@users_router.callback_query(
+    ScheduleCallback.filter(~F.command.in_(ScheduleButt._member_names_))
+)
 async def day_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     await call.answer()
     logger.info(logging_msg(call))
@@ -56,12 +55,14 @@ async def day_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     await call.message.edit_text(
         text=text,
         reply_markup=await schedule_kb(week, day_num),
-        disable_web_page_preview=True
+        disable_web_page_preview=True,
     )
 
 
 # если выбрал всю неделю
-@users_router.callback_query(ScheduleCallback.filter(F.command == ScheduleButt.WEEK.name))
+@users_router.callback_query(
+    ScheduleCallback.filter(F.command == ScheduleButt.WEEK.name)
+)
 async def week_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     await call.answer()
     logger.info(logging_msg(call))
@@ -71,13 +72,16 @@ async def week_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     await call.message.edit_text(
         text=text,
         reply_markup=await schedule_kb(week, 0),
-        disable_web_page_preview=True
+        disable_web_page_preview=True,
     )
 
 
 # если выбрал смену недели
-@users_router.callback_query(ScheduleCallback.filter(F.command.in_({ScheduleButt.BACK.name,
-                                                          ScheduleButt.FORW.name})))
+@users_router.callback_query(
+    ScheduleCallback.filter(
+        F.command.in_({ScheduleButt.BACK.name, ScheduleButt.FORW.name})
+    )
+)
 async def change_week(call: CallbackQuery, callback_data: ScheduleCallback):
     user_id, msg_id = chat_msg_ids(call)
     logger.info(logging_msg(call))
@@ -98,7 +102,7 @@ async def change_week(call: CallbackQuery, callback_data: ScheduleCallback):
     await call.message.edit_text(
         text=text,
         reply_markup=await schedule_kb(week, 0),
-        disable_web_page_preview=True
+        disable_web_page_preview=True,
     )
 
 
@@ -107,36 +111,36 @@ async def form_week_schedule_text(week: Week):
     to_day = week.days[-1].date
     text = lx.WEEK_SCHEDULE
     if from_day.month == to_day.month:
-        text += f'*{from_day.day}* по *{to_day.day} {MONTHS[to_day.month]}*\n'
+        text += f"*{from_day.day}* по *{to_day.day} {MONTHS[to_day.month]}*\n"
     else:
-        text += f'*{from_day.day} {MONTHS[from_day.month]}* по *{to_day.day} {MONTHS[to_day.month]}*\n'
+        text += f"*{from_day.day} {MONTHS[from_day.month]}* по *{to_day.day} {MONTHS[to_day.month]}*\n"
     days = week.get_all_active()
     for day in days:
         text += await form_day_schedule_text(day, single=False)
     text = prep_markdown(text)
-    text = text.replace('<LINK>\\', '')
+    text = text.replace("<LINK>\\", "")
     return text
 
 
 async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
     if single:
-        text = f'🗓*{day.name}* {day.date.day} {MONTHS[day.date.month]}\n\n'
+        text = f"🗓*{day.name}* {day.date.day} {MONTHS[day.date.month]}\n\n"
     else:
-        text = f'\n__*{day.name}*__\n'
+        text = f"\n__*{day.name}*__\n"
     if day.free:
         text += lx.FREE_DAY
     else:
         lessons_num = len(day.schedule)
         if single:
-            text += LESSONS_DICT[lessons_num] + '\n\n'
+            text += LESSONS_DICT[lessons_num] + "\n\n"
         for lesson in sorted(day.schedule, key=lambda lesson: lesson.start):
-            start_time = lesson.start.strftime('%H:%M')
-            end_time = lesson.end.strftime('%H:%M')
-            text += f'*{start_time}*-*{end_time}* **{lesson.subj}**, {lesson.teacher} '
+            start_time = lesson.start.strftime("%H:%M")
+            end_time = lesson.end.strftime("%H:%M")
+            text += f"*{start_time}*-*{end_time}* **{lesson.subj}**, {lesson.teacher} "
             if lesson.link and day.id != 6:
-                text += f'📺️[LINK]<LINK>({lesson.link}<LINK>)\n'
+                text += f"📺️[LINK]<LINK>({lesson.link}<LINK>)\n"
             else:
-                text += f'({lesson.loc})\n'
+                text += f"({lesson.loc})\n"
     if single:
         text = prep_markdown(text)
     return text
@@ -144,5 +148,7 @@ async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
 
 async def hide_keyboard(chat_id, message_id):
     await asyncio.sleep(SCHEDULE_KB_TIMEOUT)
-    await bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id+1, reply_markup=None)
-    logger.info('hide schedule kb')
+    await bot.edit_message_reply_markup(
+        chat_id=chat_id, message_id=message_id + 1, reply_markup=None
+    )
+    logger.info("hide schedule kb")

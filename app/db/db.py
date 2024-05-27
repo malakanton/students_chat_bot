@@ -1,28 +1,18 @@
-import psycopg2
-from psycopg2.extras import execute_values
 import datetime as dt
-from lib.models import Group, Week, Lesson, File
 from typing import Union
+
+import psycopg2
+from lib.models import File, Group, Lesson, Week
+from psycopg2.extras import execute_values
 
 
 class DB:
     conn: psycopg2.extensions.connection
     cur: psycopg2.extensions.cursor
 
-    def __init__(
-            self,
-            host: str,
-            db_name: str,
-            user: str,
-            pg_pass: str,
-            port: str
-    ):
+    def __init__(self, host: str, db_name: str, user: str, pg_pass: str, port: str):
         self.conn = psycopg2.connect(
-            host=host,
-            database=db_name,
-            user=user,
-            password=pg_pass,
-            port=port
+            host=host, database=db_name, user=user, password=pg_pass, port=port
         )
         self.cur = self.conn.cursor()
 
@@ -56,7 +46,7 @@ class DB:
 
     def get_user_group(self, user_id) -> tuple:
         """Returns a user id, group name and a google calendar link"""
-        query = f"""
+        query = """
         select 
             u.user_id,
             g.name,
@@ -81,7 +71,7 @@ class DB:
     def add_subject(self, code, name) -> dict:
         """Add a new subject to a subjects table
         Returns all subjects dictionary"""
-        query = f"""insert into subjects (code, name) values(%s, %s)"""
+        query = """insert into subjects (code, name) values(%s, %s)"""
         self._execute_query(query, (code, name))
         return self.get_subjects()
 
@@ -95,18 +85,20 @@ class DB:
     def add_teacher(self, name) -> dict:
         """Add new teacher to a database
         Returns all teachers dictionary"""
-        query = f"""insert into teachers (name) values(%s)"""
+        query = """insert into teachers (name) values(%s)"""
         self._execute_query(query, (name,))
         return self.get_teachers()
 
-    def add_user(self, user_id: int, group_id: int, name: str, tg_login: str, type: str = None) -> tuple:
+    def add_user(
+        self, user_id: int, group_id: int, name: str, tg_login: str, type: str = None
+    ) -> tuple:
         """Add new user to a users table
         returns a new users id, group name, google calendar link"""
         if type:
-            query = f"""insert into users (user_id, group_id, name, tg_login, user_type) values(%s, %s, %s, %s, %s)"""
+            query = """insert into users (user_id, group_id, name, tg_login, user_type) values(%s, %s, %s, %s, %s)"""
             self._execute_query(query, (user_id, group_id, name, tg_login, type))
         else:
-            query = f"""insert into users (user_id, group_id, name, tg_login) values(%s, %s, %s, %s)"""
+            query = """insert into users (user_id, group_id, name, tg_login) values(%s, %s, %s, %s)"""
             self._execute_query(query, (user_id, group_id, name, tg_login))
         return self.get_user_group(user_id)
 
@@ -118,47 +110,41 @@ class DB:
         """
         self.cur.execute(query)
         weeks = self.cur.fetchall()
-        weeks = {
-            week[0]:
-                {
-                    'start': week[1],
-                    'end': week[2]
-                }
-            for week in weeks
-        }
+        weeks = {week[0]: {"start": week[1], "end": week[2]} for week in weeks}
         return weeks
 
-    def add_lesson(self,
-                   week_num: int,
-                   day: int,
-                   date: dt.datetime,
-                   start: dt.datetime,
-                   end: dt.datetime,
-                   group_id: int,
-                   subj_id: int,
-                   teacher_id: int,
-                   loc: str,
-                   link: str = None) -> None:
+    def add_lesson(
+        self,
+        week_num: int,
+        day: int,
+        date: dt.datetime,
+        start: dt.datetime,
+        end: dt.datetime,
+        group_id: int,
+        subj_id: int,
+        teacher_id: int,
+        loc: str,
+        link: str = None,
+    ) -> None:
         """Insert a new lesson to a lessons table"""
-        query = f"""
+        query = """
         insert into lessons (week_num, day, date, start, end_t, group_id, subj_id, teacher_id, loc, link)
         values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        self._execute_query(query, (week_num, day, date, start, end, group_id, subj_id, teacher_id, loc, link))
+        self._execute_query(
+            query,
+            (week_num, day, date, start, end, group_id, subj_id, teacher_id, loc, link),
+        )
 
     def erase_existing_schedule(self, week_num) -> None:
         """Delete rows from lessons table by a week number"""
-        query = f"""
+        query = """
         delete from lessons
         where week_num = %s
         """
-        self._execute_query(query, (week_num, ))
+        self._execute_query(query, (week_num,))
 
-    def add_file(self,
-                 file_name: str,
-                 uploaded_by: int,
-                 tg_file_id: str
-                 ) -> int:
+    def add_file(self, file_name: str, uploaded_by: int, tg_file_id: str) -> int:
         """Insert a new file info to a files table
         Returns the file id"""
         query = """
@@ -172,10 +158,7 @@ class DB:
         return file_id
 
     def update_file(
-            self,
-            file_id: int,
-            file_type: str,
-            subj_id: int = None
+        self, file_id: int, file_type: str, subj_id: int = None
     ) -> tuple[str]:
         """Update file details in files table by file_id
         returns file_name and telegram file id"""
@@ -198,9 +181,7 @@ class DB:
         self.conn.commit()
         return file_name, tg_file_id
 
-    def get_schedule(self,
-                     id: int,
-                     week_num: int):
+    def get_schedule(self, id: int, week_num: int):
         """Get schedule from lessons table by user_id and week_num
         Returns a Week class instance with lessons filled"""
         query = """
@@ -237,16 +218,16 @@ class DB:
                     day.free = False
         return week
 
-    def get_users_ids(self, user_type='unreg') -> set:
+    def get_users_ids(self, user_type="unreg") -> set:
         """Get set of users telegram ids by type(or types).
         Type may be plural presented as list"""
         if isinstance(user_type, list):
             query = """select user_id from users where user_type in %s"""
             user_type = tuple(user_type)
         elif isinstance(user_type, str):
-            if user_type == 'all':
+            if user_type == "all":
                 query = """select user_id from users"""
-            elif user_type == 'allowed':
+            elif user_type == "allowed":
                 query = """select * from users 
                     where added_at < '2024-05-18' or user_id in (133051024)
                     order by added_at
@@ -257,11 +238,7 @@ class DB:
         ids = [id[0] for id in self.cur.fetchall()]
         return set(ids)
 
-    def get_subjects_for_user_or_group(
-            self,
-            chat_id: int,
-            inverted=False
-    ) -> dict:
+    def get_subjects_for_user_or_group(self, chat_id: int, inverted=False) -> dict:
         """Get subjects for group by user id or group id.
         May be straight forward(name:id) or inverted(id:name)"""
         query = """
@@ -305,13 +282,7 @@ class DB:
         self.cur.execute(query, (user_id, date))
         return self.cur.fetchall()
 
-    def update_link(
-            self,
-            date: str,
-            time: str,
-            subj_id: int,
-            link: str
-    ) -> None:
+    def update_link(self, date: str, time: str, subj_id: int, link: str) -> None:
         """Insert a lesson link by date, time and subject id"""
         query = """
         update lessons
@@ -322,12 +293,7 @@ class DB:
         """
         self._execute_query(query, (link, date, time, subj_id))
 
-    def get_users_lessons_notif(
-            self,
-            date: str,
-            time: str,
-            advance: int
-    ) -> dict:
+    def get_users_lessons_notif(self, date: str, time: str, advance: int) -> dict:
         """Get a dictionary with keys - user ids and values - lessons
         which should be mentioned in notification"""
         query = """
@@ -361,7 +327,7 @@ class DB:
     def check_notification_flag(self, user_id: int) -> tuple:
         """Get notifications flag for user by id"""
         query = """select notifications from users where user_id = %s"""
-        self.cur.execute(query, (user_id, ))
+        self.cur.execute(query, (user_id,))
         return self.cur.fetchone()
 
     def set_notifications_flag(self, user_id: int, flag: int) -> None:
@@ -401,7 +367,7 @@ class DB:
         if not user_id:
             return users_push_time
 
-        return users_push_time.get(user_id, '')
+        return users_push_time.get(user_id, "")
 
     def insert_logs(self, logs_list: list) -> None:
         """Upload bot logs to a logs table"""
@@ -449,7 +415,8 @@ class DB:
 # from config import HOST_LOCAL, USER, PG_PASS, DB_NAME, PORT_LOCAL
 # db = DB(host=HOST_LOCAL, user=USER, pg_pass=PG_PASS, db_name=DB_NAME, port=PORT_LOCAL)
 
-import pprint
+# import pprint
+
 # db.cur.execute('select user_id from users')
 # print(db.cur.fetchall())
 # pprint.pprint(db.cur.fetchall())

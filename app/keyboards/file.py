@@ -1,6 +1,6 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from keyboards.callbacks import FileCallback
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from keyboards.buttons import FileButt, SchdUpdButt
+from keyboards.callbacks import FileCallback
 
 
 async def file_kb(file_id, schedule=True):
@@ -8,29 +8,23 @@ async def file_kb(file_id, schedule=True):
         InlineKeyboardButton(
             text=FileButt.CANCEL.value,
             callback_data=FileCallback(
-                file_type=FileButt.CANCEL.name,
-                file_id=file_id,
-                update='init'
-            ).pack()
+                file_type=FileButt.CANCEL.name, file_id=file_id, update="init"
+            ).pack(),
         ),
         InlineKeyboardButton(
             text=FileButt.STUDY.value,
             callback_data=FileCallback(
-                file_type=FileButt.STUDY.name,
-                file_id=file_id,
-                update='init'
-            ).pack()
-        )
+                file_type=FileButt.STUDY.name, file_id=file_id, update="init"
+            ).pack(),
+        ),
     ]
     if schedule:
         buttons.append(
             InlineKeyboardButton(
                 text=FileButt.SCHEDULE.value,
                 callback_data=FileCallback(
-                    file_type=FileButt.SCHEDULE.name,
-                    file_id=file_id,
-                    update='init'
-                ).pack()
+                    file_type=FileButt.SCHEDULE.name, file_id=file_id, update="init"
+                ).pack(),
             )
         )
     return InlineKeyboardMarkup(inline_keyboard=[buttons])
@@ -43,19 +37,16 @@ async def schedule_exists_kb(file_id):
             callback_data=FileCallback(
                 file_type=FileButt.SCHEDULE.name,
                 file_id=file_id,
-                update=SchdUpdButt.UPDATE.value
-            ).pack()
+                update=SchdUpdButt.UPDATE.value,
+            ).pack(),
         ),
         InlineKeyboardButton(
             text=SchdUpdButt.KEEP.value,
             callback_data=FileCallback(
                 file_type=FileButt.SCHEDULE.name,
                 file_id=file_id,
-                update=SchdUpdButt.KEEP.value
-            ).pack()
-        )
+                update=SchdUpdButt.KEEP.value,
+            ).pack(),
+        ),
     ]
     return InlineKeyboardMarkup(inline_keyboard=[buttons])
-
-
-

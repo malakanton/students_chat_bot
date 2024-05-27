@@ -1,17 +1,16 @@
 import datetime as dt
-from loguru import logger
 from typing import Union
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 import lib.lexicon as lx
-from loader import db, bot
-from lib.models import Lesson
-from lib.logs_report import send_report
-from lib.dicts import NotificationsAdvance
-from lib.logs_report import add_logs_scheduler
-from lib.misc import prep_markdown, get_today
-from config import LOGS_REPORT_TIME, LESSONS_TIMINGS
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from config import LESSONS_TIMINGS, LOGS_REPORT_TIME
 from handlers.users.schedule import form_day_schedule_text
+from lib.dicts import NotificationsAdvance
+from lib.logs_report import add_logs_scheduler, send_report
+from lib.misc import get_today, prep_markdown
+from lib.models import Lesson
+from loader import bot, db
+from loguru import logger
 
 
 def set_scheduler(scheduler: AsyncIOScheduler):
@@ -23,7 +22,7 @@ def set_scheduler(scheduler: AsyncIOScheduler):
 
 def cron_trigger(time: str, advance: int) -> tuple:
     delta = dt.timedelta(minutes=advance)
-    time = dt.datetime.strptime(time, '%H:%M')
+    time = dt.datetime.strptime(time, "%H:%M")
     trigger_time = (time - delta).time()
     return trigger_time.hour, trigger_time.minute
 
@@ -35,26 +34,25 @@ def add_scheduled_jobs(scheduler: AsyncIOScheduler, times: list):
             scheduler.add_job(
                 notify_users,
                 args=[time, advance.value],
-                trigger='cron',
-                day_of_week='mon-fri',
+                trigger="cron",
+                day_of_week="mon-fri",
                 hour=hour,
-                minute=minute
+                minute=minute,
             )
 
 
 def add_report_scheduler(
-        scheduler: AsyncIOScheduler,
-        time: str = LOGS_REPORT_TIME
+    scheduler: AsyncIOScheduler, time: str = LOGS_REPORT_TIME
 ) -> None:
-    hour, minute = list(map(int, time.split(':')))
+    hour, minute = list(map(int, time.split(":")))
     date = str(dt.datetime.now().date())
     scheduler.add_job(
         send_report,
         args=[date],
-        trigger='cron',
-        day_of_week='sun',
+        trigger="cron",
+        day_of_week="sun",
         hour=hour,
-        minute=minute
+        minute=minute,
     )
 
 
@@ -63,38 +61,36 @@ async def notify_users(time: str, advance: int):
     users_to_notify = db.get_users_lessons_notif(date, time, advance)
     for user, lesson in users_to_notify.items():
         await notify_user(user, lesson, advance)
-    logger.info(f'users notified: {len(users_to_notify)}')
+    logger.info(f"users notified: {len(users_to_notify)}")
 
 
-async def notify_user(
-        user_id: int,
-        lesson: Lesson,
-        advance: int
-) -> None:
+async def notify_user(user_id: int, lesson: Lesson, advance: int) -> None:
     link = lx.NO_LINK_YET
     if lesson.link:
-        link = f'[{lx.LINK_PHRASE}]<LINK>({lesson.link}<LINK>)'
+        link = f"[{lx.LINK_PHRASE}]<LINK>({lesson.link}<LINK>)"
     text = lx.NOTIF.format(
         minutes=advance,
         subject=lesson.subj,
         teacher=lesson.teacher,
-        start=lesson.start.strftime('%H:%M'),
-        end=lesson.end.strftime('%H:%M'),
-        link=link
+        start=lesson.start.strftime("%H:%M"),
+        end=lesson.end.strftime("%H:%M"),
+        link=link,
     )
     await bot.send_message(user_id, text=prep_markdown(text))
 
 
 async def form_schedule_text(user_id: int) -> str:
-    text = ''
+    text = ""
     today = get_today()
     week = db.get_schedule(user_id, today.week)
 
     if week:
-        schedule_text = await form_day_schedule_text(
-                    week.get_day(today.day_of_week)
+        schedule_text = await form_day_schedule_text(week.get_day(today.day_of_week))
+        text = (
+            prep_markdown(lx.MORNING_SCHEDULE)
+            + schedule_text
+            + prep_markdown(lx.MORNING_GREETING)
         )
-        text = prep_markdown(lx.MORNING_SCHEDULE) + schedule_text + prep_markdown(lx.MORNING_GREETING)
 
     return text
 
@@ -104,36 +100,30 @@ async def daily_push(user_id: int) -> None:
 
     if text:
         await bot.send_message(user_id, text=text)
-        logger.info(f'Send daily notification to user {user_id}')
+        logger.info(f"Send daily notification to user {user_id}")
 
 
 def add_daily_push_for_user(
-        user_id: int,
-        time: Union[dt.datetime.time, str],
-        scheduler: AsyncIOScheduler
+    user_id: int, time: Union[dt.datetime.time, str], scheduler: AsyncIOScheduler
 ) -> None:
 
     job_id = str(user_id)
     job = scheduler.get_job(job_id)
 
     if isinstance(time, str):
-        time = dt.datetime.strptime(time, '%H:%M')
+        time = dt.datetime.strptime(time, "%H:%M")
 
     if job:
-        job.reschedule(
-            trigger='cron',
-            hour=time.hour,
-            minute=time.minute
-        )
+        job.reschedule(trigger="cron", hour=time.hour, minute=time.minute)
     else:
         scheduler.add_job(
             daily_push,
             args=[user_id],
-            trigger='cron',
-            day_of_week='mon-fri',
+            trigger="cron",
+            day_of_week="mon-fri",
             hour=time.hour,
             minute=time.minute,
-            id=job_id
+            id=job_id,
         )
 
 
@@ -142,8 +132,4 @@ def add_daily_push_notification_jobs(scheduler: AsyncIOScheduler):
     users_to_notify = db.get_users_push_time()
 
     for user_id, time in users_to_notify.items():
-        add_daily_push_for_user(
-            user_id,
-            time,
-            scheduler
-        )
+        add_daily_push_for_user(user_id, time, scheduler)

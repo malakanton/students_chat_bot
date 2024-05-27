@@ -1,22 +1,17 @@
-from aiogram import F
-from loguru import logger
-from aiogram.types import Message
-from aiogram.filters import Command
-from aiogram.exceptions import TelegramBadRequest
-from langchain_community.document_loaders import TextLoader
-
 import lib.lexicon as lx
-from lib.misc import prep_markdown
-from handlers.routers import groups_router
-from loader import vector_db, gd, embeddings, conn_str, bot
+from aiogram import F
+from aiogram.filters import Command
+from aiogram.types import Message
+from config import ADMIN_CHAT, INFO_COLLECTION, SUBJECTS_COLLECTION
 from gpt.vector_db import DocumentsHandler
-from config import SUBJECTS_COLLECTION, INFO_COLLECTION, ADMIN_CHAT
+from handlers.routers import groups_router
+from langchain_community.document_loaders import TextLoader
+from lib.misc import prep_markdown
+from loader import bot, conn_str, embeddings, gd, vector_db
+from loguru import logger
 
 
-@groups_router.message(
-            Command('knowledge_update'),
-            F.chat.id == int(ADMIN_CHAT)
-            )
+@groups_router.message(Command("knowledge_update"), F.chat.id == int(ADMIN_CHAT))
 async def update_knowlage(message: Message):
     await bot.send_chat_action(message.chat.id, "upload_document")
     if update_collection(INFO_COLLECTION):
@@ -26,10 +21,7 @@ async def update_knowlage(message: Message):
     await message.delete()
 
 
-@groups_router.message(
-            Command('subjects_update'),
-            F.chat.id == int(ADMIN_CHAT)
-            )
+@groups_router.message(Command("subjects_update"), F.chat.id == int(ADMIN_CHAT))
 async def update_subjects_triggers(message: Message):
     await bot.send_chat_action(message.chat.id, "upload_document")
     if update_collection(SUBJECTS_COLLECTION):
@@ -40,11 +32,11 @@ async def update_subjects_triggers(message: Message):
 
 
 def update_collection(collection: str) -> bool:
-    logger.info('Start vector collection updating')
-    file_name = collection + '.txt'
+    logger.info("Start vector collection updating")
+    file_name = collection + ".txt"
     file_path = gd.download_file(file_name)
     if not file_path:
-        logger.info(f'failed to download file {file_name}')
+        logger.info(f"failed to download file {file_name}")
         return False
     docs = TextLoader(file_path).load()
     dh = DocumentsHandler(docs)

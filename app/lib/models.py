@@ -1,12 +1,11 @@
-from pydantic import Field
-from pydantic.dataclasses import dataclass
-from typing import List, Optional, Set
 import datetime as dt
+from typing import List, Optional, Set
+
 from config import ADMIN_CHAT
-
-
 from keyboards.buttons import codes
 from lib.dicts import RU_DAYS, RU_DAYS_INV
+from pydantic import Field
+from pydantic.dataclasses import dataclass
 
 
 @dataclass
@@ -35,7 +34,9 @@ class Groups:
 
     def __post_init__(self):
         self.groups = sorted(self.groups, key=lambda group: group.id)
-        self.chats = set([group.chat_id for group in self.groups if group.chat_id])|set([int(ADMIN_CHAT)])
+        self.chats = set(
+            [group.chat_id for group in self.groups if group.chat_id]
+        ) | set([int(ADMIN_CHAT)])
         self.courses = sorted(list(set([group.course for group in self.groups])))
 
 
@@ -44,10 +45,10 @@ class Today:
     date: dt.date
     week: int
     day_of_week: int
-    name: str = Field(default='')
+    name: str = Field(default="")
 
     def __post_init__(self):
-        self.name = RU_DAYS_INV.get(self.day_of_week, 'Воскресенье')
+        self.name = RU_DAYS_INV.get(self.day_of_week, "Воскресенье")
 
 
 @dataclass
@@ -85,7 +86,7 @@ class Week:
         return [item for item in self.days if not item.free]
 
     def get_day(self, day_id: int):
-        return self.days[day_id-1]
+        return self.days[day_id - 1]
 
 
 @dataclass
@@ -97,4 +98,4 @@ class File:
     s3_path: str = Field(default_factory=str)
 
     def __post_init__(self):
-        self.s3_path = f'{self.subj_name}/{self.file_type}/{self.file_name}'
+        self.s3_path = f"{self.subj_name}/{self.file_type}/{self.file_name}"
