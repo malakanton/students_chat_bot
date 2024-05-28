@@ -11,11 +11,10 @@ from handlers.states import PushNotoficationsState
 from keyboards.buttons import NotifMenuBut, SwitchNotif
 from keyboards.callbacks import NotificationMenu
 from keyboards.notifications import daily_kb, notif_kb, notif_menu_kb
-from lib import lexicon as lx
 from lib.dicts import NotificationsAdvance
 from lib.logs import logging_msg
 from lib.misc import prep_markdown
-from loader import db, scheduler
+from loader import db, scheduler, lx
 from loguru import logger
 
 

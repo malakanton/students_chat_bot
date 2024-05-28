@@ -9,11 +9,10 @@ from handlers.routers import users_router
 from keyboards.buttons import CancelButt
 from keyboards.callbacks import LibCallback
 from keyboards.library import choose_file_kb, lib_type_kb, subjects_kb
-from lib import lexicon as lx
 from lib.logs import logging_msg
 from lib.misc import prep_markdown
 from lib.models import File
-from loader import bot, db, s3, users
+from loader import bot, db, s3, users, lx
 from loguru import logger
 
 

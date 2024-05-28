@@ -2,10 +2,9 @@ from aiogram.filters import Command
 from aiogram.types import Message
 from gpt.chat_summary import gpt_summary
 from handlers.routers import groups_router
-from lib import lexicon as lx
 from lib.logs import logging_msg
 from lib.misc import prep_markdown
-from loader import bot
+from loader import bot, lx
 from loguru import logger
 
 

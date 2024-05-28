@@ -1,4 +1,3 @@
-import lib.lexicon as lx
 from aiogram import F
 from aiogram.filters import Command
 from aiogram.types import Message
@@ -7,7 +6,7 @@ from gpt.vector_db import DocumentsHandler
 from handlers.routers import groups_router
 from langchain_community.document_loaders import TextLoader
 from lib.misc import prep_markdown
-from loader import bot, conn_str, embeddings, gd, vector_db
+from loader import bot, conn_str, embeddings, gd, vector_db, lx
 from loguru import logger
 
 

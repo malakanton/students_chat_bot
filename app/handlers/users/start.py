@@ -7,11 +7,10 @@ from handlers.routers import users_router
 from keyboards.buttons import Confirm
 from keyboards.callbacks import StartCallback
 from keyboards.start import confirm_kb, course_kb, groups_kb
-from lib import lexicon as lx
 from lib.logs import logging_msg
 from lib.misc import prep_markdown
 from lib.models import Groups
-from loader import bot, db, gr, users
+from loader import bot, db, gr, users, lx
 from loguru import logger
 
 

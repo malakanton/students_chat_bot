@@ -5,9 +5,8 @@ from handlers.filters import LessonLinkFilter
 from handlers.routers import groups_router
 from keyboards.callbacks import LessonLinkCallback
 from keyboards.lesson_link import link_kb
-from lib import lexicon as lx
 from lib.misc import get_today, prep_markdown
-from loader import db
+from loader import db, lx
 from loguru import logger
 
 

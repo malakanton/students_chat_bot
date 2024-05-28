@@ -9,12 +9,11 @@ from keyboards.buttons import Confirm, FileButt, FileTypeButt, SchdUpdButt
 from keyboards.callbacks import FileCallback, LibCallback
 from keyboards.file import file_kb, schedule_exists_kb
 from keyboards.library import confirm_subj_kb, lib_type_kb, subjects_kb
-from lib import lexicon as lx
 from lib.logs import logging_msg
 from lib.misc import chat_msg_ids, prep_markdown, valid_schedule_format
 from lib.schedule_parser import ScheduleParser
 from lib.schedule_uploader import upload_schedule
-from loader import bot, db, s3, users
+from loader import bot, db, s3, users, lx
 from loguru import logger
 
 

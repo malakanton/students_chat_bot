@@ -6,7 +6,7 @@ from google_api.google_calendar import GoogleCalendar
 from google_api.google_drive import GoogleDriver
 from langchain.vectorstores.pgvector import PGVector
 from langchain_openai import OpenAIEmbeddings
-from lib.misc import get_host_port
+from lib.misc import get_host_port, Lexicon
 from lib.models import Groups, Users
 from lib.s3 import S3Client
 from loguru import logger
@@ -48,3 +48,5 @@ logger.success("Google Driver initialized successfully")
 
 s3 = S3Client()
 logger.success("S3 Client initialized successfully")
+
+lx = Lexicon('lexicon.yml')

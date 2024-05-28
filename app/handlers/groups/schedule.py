@@ -2,9 +2,8 @@ from aiogram.filters import Command
 from aiogram.types import Message
 from handlers.routers import groups_router
 from handlers.users.schedule import form_day_schedule_text
-from lib import lexicon as lx
 from lib.misc import get_today, prep_markdown
-from loader import db
+from loader import db, lx
 from loguru import logger
 
 

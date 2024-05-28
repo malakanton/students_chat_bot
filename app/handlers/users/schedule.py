@@ -8,12 +8,11 @@ from handlers.routers import users_router
 from keyboards.buttons import ScheduleButt
 from keyboards.callbacks import ScheduleCallback
 from keyboards.schedule import schedule_kb
-from lib import lexicon as lx
 from lib.dicts import LESSONS_DICT, MONTHS
 from lib.logs import logging_msg
 from lib.misc import chat_msg_ids, get_today, prep_markdown, test_users_dates
 from lib.models import DayOfWeek, Week
-from loader import bot, db, logger
+from loader import bot, db, logger, lx
 
 
 @users_router.message(Command("schedule"))

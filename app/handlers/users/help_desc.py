@@ -1,10 +1,9 @@
 from aiogram.filters import Command
 from aiogram.types import Message
 from handlers.routers import users_router
-from lib import lexicon as lx
 from lib.logs import logging_msg
 from lib.misc import prep_markdown
-from loader import db
+from loader import db, lx
 from loguru import logger
 
 

@@ -1,5 +1,6 @@
 import datetime as dt
 import sys
+import yaml
 
 from aiogram import types
 from config import HOST, HOST_LOCAL, PORT, PORT_LOCAL
@@ -43,3 +44,13 @@ def get_host_port():
     if sys.platform in {"darwin", "win32"}:
         return HOST_LOCAL, PORT_LOCAL
     return HOST, PORT
+
+
+class Lexicon:
+
+    def __init__(self, lexicon_file_path: str):
+        with open(lexicon_file_path, 'r') as file:
+            docs = yaml.safe_load(file)
+
+        for name, value in docs.items():
+            setattr(self, name, value)

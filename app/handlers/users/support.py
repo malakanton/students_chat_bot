@@ -9,10 +9,9 @@ from handlers.routers import groups_router, users_router
 from keyboards.buttons import NewsLetter
 from keyboards.callbacks import ConfirmCallback
 from keyboards.universal import send_newsletter_kb
-from lib import lexicon as lx
 from lib.logs import logging_msg
 from lib.misc import prep_markdown
-from loader import bot, db
+from loader import bot, db, lx
 from loguru import logger
 
 

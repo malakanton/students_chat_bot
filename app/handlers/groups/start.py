@@ -3,16 +3,15 @@ import asyncio
 from aiogram import F
 from aiogram.filters import CommandStart
 from aiogram.types import CallbackQuery, Message
-from config import ADMIN_CHAT, UNAUTHORIZED_GROUP_TIMOUT
+from config import UNAUTHORIZED_GROUP_TIMOUT
 from handlers.filters import IsRegisteredGroup
 from handlers.routers import groups_router
 from keyboards.buttons import Confirm
 from keyboards.callbacks import StartCallback
 from keyboards.start import confirm_kb, course_kb, groups_kb
-from lib import lexicon as lx
 from lib.misc import chat_msg_ids, prep_markdown
 from lib.models import Groups
-from loader import bot, db, gr
+from loader import bot, db, lx, gr
 from loguru import logger
 
 
