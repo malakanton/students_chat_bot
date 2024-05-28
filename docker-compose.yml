@@ -39,8 +39,8 @@ services:
     depends_on:
       - db
     environment:
-      - PGADMIN_DEFAULT_EMAIL=${PG_ADMIN_LOGIN}
-      - PGADMIN_DEFAULT_PASSWORD=${PG_ADMIN_PASS}
+      - PGADMIN_DEFAULT_EMAIL:${PG_ADMIN_LOGIN}
+      - PGADMIN_DEFAULT_PASSWORD:${PG_ADMIN_PASS}
     ports:
       - "5050:80"
     networks:
