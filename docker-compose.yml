@@ -6,7 +6,7 @@ services:
     container_name: st_bot
     command: python bot.py
     env_file:
-      - ./app/.env
+      - .env
     volumes:
       - ./app:/app
     expose:
@@ -21,7 +21,7 @@ services:
     volumes:
       - ./pg_db:/var/lib/postgresql/data/
     env_file:
-      - ./app/.env
+      - .env
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${PG_PASS}
@@ -35,7 +35,7 @@ services:
     container_name: pg_admin_container
     image: dpage/pgadmin4
     env_file:
-      - ./app/.env
+      - .env
     depends_on:
       - db
     environment:
