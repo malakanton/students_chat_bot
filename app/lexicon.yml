@@ -126,13 +126,13 @@ SCHEDULE_NOT_AVAILABLE:
 SCHEDULE_FOR_DETAIL:
   Больше информации по расписанию в [личных чатах]<LINK>(https://t.me/@KoteMTUCIbot<LINK>)
 
-SCHEDULE:
+SCHEDULE: |-
   Расписание на сегодня\n
 
-MORNING_SCHEDULE:
+MORNING_SCHEDULE: |-
   Привет! Сегодня занятия в колледже:\n\n
 
-MORNING_GREETING:
+MORNING_GREETING: |-
   \n\nХорошего дня!🙃
 
 WEEK_SCHEDULE:
