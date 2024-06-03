@@ -68,6 +68,7 @@ class ScheduleUploader:
             subj_code = lesson.get("subj_code", "")
             subject = lesson.get("subj", "")
             teacher = lesson.get("teacher", "")
+            comment = lesson.get("comment", "")
             if not subj_code or not subject:
                 continue
             teacher_id = self._check_teacher(teacher)
@@ -83,5 +84,6 @@ class ScheduleUploader:
                 teacher_id=teacher_id,
                 loc=lesson.get("loc", ""),
                 link=PERMANENT_LINKS.get(teacher_id, None),
+                comment=comment,
             )
         logger.info(f"Uploaded schedule to db for group {group.name}")

@@ -110,9 +110,9 @@ async def form_week_schedule_text(week: Week):
     to_day = week.days[-1].date
     text = lx.WEEK_SCHEDULE
     if from_day.month == to_day.month:
-        text += f"*{from_day.day}* по *{to_day.day} {MONTHS[to_day.month]}*\n"
+        text += f" *{from_day.day}* по *{to_day.day} {MONTHS[to_day.month]}*\n"
     else:
-        text += f"*{from_day.day} {MONTHS[from_day.month]}* по *{to_day.day} {MONTHS[to_day.month]}*\n"
+        text += f" *{from_day.day} {MONTHS[from_day.month]}* по *{to_day.day} {MONTHS[to_day.month]}*\n"
     days = week.get_all_active()
     for day in days:
         text += await form_day_schedule_text(day, single=False)
@@ -135,6 +135,8 @@ async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
         for lesson in sorted(day.schedule, key=lambda lesson: lesson.start):
             start_time = lesson.start.strftime("%H:%M")
             end_time = lesson.end.strftime("%H:%M")
+            if lesson.comment:
+                text += f'❗️**{lesson.comment.upper()}**❗️\n'
             text += f"*{start_time}*-*{end_time}* **{lesson.subj}**, {lesson.teacher} "
             if lesson.link and day.id != 6:
                 text += f"📺️[LINK]<LINK>({lesson.link}<LINK>)\n"

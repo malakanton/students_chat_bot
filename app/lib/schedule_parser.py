@@ -2,6 +2,7 @@ import datetime as dt
 import re
 
 import pandas as pd
+import numpy as np
 import pdfplumber
 from lib.models import Group
 from loguru import logger
@@ -25,7 +26,7 @@ class ScheduleParser:
         self.dates = self._extract_dates()
         self.week_num = self._get_monday().isocalendar()[1]
 
-    def _extract_dates(self) -> tuple:
+    def _extract_dates(self) -> tuple|None:
         """Extract dates from either a filename or from pdf text string"""
         try:
             text = self._extract_pdf_text()
@@ -60,7 +61,7 @@ class ScheduleParser:
             )
         self.df = pd.DataFrame(table[1:], columns=table[0])
 
-    def _get_monday(self) -> dt.datetime:
+    def _get_monday(self) -> dt.datetime|None:
         """Returns a datetime object of monday from current week"""
         if self.dates:
             return dt.datetime(
@@ -214,13 +215,24 @@ class ScheduleFilter:
         if loc:
             separators.append(" ")
         for sep in separators:
-            text = text.replace(sep, "")
-        return text
+            text = text.replace(sep, " ")
+        return text.replace("  ", " ")
+
+    @staticmethod
+    def _get_special_cases(text: str) -> list[str]:
+        """Get special cases such as exam etc"""
+        words = {'экзамен'}
+        for word in words:
+            if word in text.lower():
+                cleaned = re.sub(word, '', text, flags=re.IGNORECASE)
+                return [cleaned.replace('\n', ' ').strip(), word]
+        return [text, '']
 
     def _prepare_columns(self, df_gr: pd.DataFrame):
         """Clean and extract teacher, location, subject and code for the lessons"""
         df_gr["subj"] = df_gr.subj.map(self.clean_text)
-        df_gr["loc"] = df_gr["loc"].map(lambda x: self.clean_text(x, loc=True))
+        df_gr[["subj", "comment"]] = np.vstack(df_gr.subj.map(self._get_special_cases))
+        df_gr["loc"] = df_gr["loc"].map(lambda x: self.clean_text(x, loc=True).split(' ')[0])
         df_gr["teacher"] = df_gr.subj.map(self._get_teacher)
         df_gr["subj_code"] = df_gr.subj.map(self._get_subj_code)
         df_gr["subj"] = df_gr.subj.map(self._get_subj)

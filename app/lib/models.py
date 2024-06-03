@@ -59,6 +59,7 @@ class Lesson:
     teacher: str
     loc: str
     link: Optional[str] = Field(default=None)
+    comment: Optional[str] = Field(default=None)
 
 
 @dataclass

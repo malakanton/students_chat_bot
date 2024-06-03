@@ -1,6 +1,6 @@
 from aiogram import F
 from aiogram.filters import CommandStart
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, ChatMemberUpdated
 from config import ADMIN_CHAT
 from handlers.filters import UnRegisteredUser
 from handlers.routers import users_router
@@ -12,6 +12,14 @@ from lib.misc import prep_markdown
 from lib.models import Groups
 from loader import bot, db, gr, users, lx
 from loguru import logger
+
+
+@users_router.my_chat_member()
+async def my_chat_member_handler(my_chat_member: ChatMemberUpdated) -> None:
+    #TODO: write a scenarios when user deletes the bot
+    print('my chat member')
+    print(my_chat_member)
+#ChatMemberUpdated(chat=Chat(id=401939802, type='private', title=None, username='malakanton', first_name='Anton', last_name='M', is_forum=None, photo=None, active_usernames=None, available_reactions=None, accent_color_id=None, background_custom_emoji_id=None, profile_accent_color_id=None, profile_background_custom_emoji_id=None, emoji_status_custom_emoji_id=None, emoji_status_expiration_date=None, bio=None, has_private_forwards=None, has_restricted_voice_and_video_messages=None, join_to_send_messages=None, join_by_request=None, description=None, invite_link=None, pinned_message=None, permissions=None, slow_mode_delay=None, message_auto_delete_time=None, has_aggressive_anti_spam_enabled=None, has_hidden_members=None, has_protected_content=None, has_visible_history=None, sticker_set_name=None, can_set_sticker_set=None, linked_chat_id=None, location=None), from_user=User(id=401939802, is_bot=False, first_name='Anton', last_name='M', username='malakanton', language_code='en', is_premium=True, added_to_attachment_menu=None, can_join_groups=None, can_read_all_group_messages=None, supports_inline_queries=None), date=datetime.datetime(2024, 5, 30, 22, 9, 56, tzinfo=TzInfo(UTC)), old_chat_member=ChatMemberMember(status=<ChatMemberStatus.MEMBER: 'member'>, user=User(id=6510929369, is_bot=True, first_name='ElmoBot', last_name=None, username='KonstantinSergeevichBot', language_code=None, is_premium=None, added_to_attachment_menu=None, can_join_groups=None, can_read_all_group_messages=None, supports_inline_queries=None)), new_chat_member=ChatMemberBanned(status=<ChatMemberStatus.KICKED: 'kicked'>, user=User(id=6510929369, is_bot=True, first_name='ElmoBot', last_name=None, username='KonstantinSergeevichBot', language_code=None, is_premium=None, added_to_attachment_menu=None, can_join_groups=None, can_read_all_group_messages=None, supports_inline_queries=None), until_date=datetime.datetime(1970, 1, 1, 0, 0, tzinfo=TzInfo(UTC))), invite_link=None, via_chat_folder_invite_link=None)
 
 
 @users_router.message(CommandStart())

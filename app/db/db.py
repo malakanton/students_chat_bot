@@ -125,15 +125,16 @@ class DB:
         teacher_id: int,
         loc: str,
         link: str = None,
+        comment: str = ''
     ) -> None:
         """Insert a new lesson to a lessons table"""
         query = """
-        insert into lessons (week_num, day, date, start, end_t, group_id, subj_id, teacher_id, loc, link)
-        values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        insert into lessons (week_num, day, date, start, end_t, group_id, subj_id, teacher_id, loc, link, comment)
+        values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         self._execute_query(
             query,
-            (week_num, day, date, start, end, group_id, subj_id, teacher_id, loc, link),
+            (week_num, day, date, start, end, group_id, subj_id, teacher_id, loc, link, comment),
         )
 
     def erase_existing_schedule(self, week_num) -> None:
@@ -193,7 +194,8 @@ class DB:
             l.end_t as end,
             t.name as teacher_name,
             l.loc as loc,
-            l.link
+            l.link,
+            l.comment
         from lessons as l
             left join users u on u.group_id = l.group_id
             left join groups g
@@ -414,9 +416,6 @@ class DB:
 
 # from config import HOST_LOCAL, USER, PG_PASS, DB_NAME, PORT_LOCAL
 # db = DB(host=HOST_LOCAL, user=USER, pg_pass=PG_PASS, db_name=DB_NAME, port=PORT_LOCAL)
-
-# import pprint
-
 # db.cur.execute('select user_id from users')
 # print(db.cur.fetchall())
 # pprint.pprint(db.cur.fetchall())
