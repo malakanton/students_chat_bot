@@ -231,7 +231,7 @@ class DB:
                 query = """select user_id from users"""
             elif user_type == "allowed":
                 query = """select * from users 
-                    where added_at < '2024-05-18' or user_id in (133051024)
+                    where added_at < '2024-05-18' or user_id in (133051024, 436166667)
                     order by added_at
                     """
             else:
