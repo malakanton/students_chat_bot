@@ -1,3 +1,4 @@
+import os
 import yaml
 from loguru import logger
 import sys
@@ -6,12 +7,14 @@ import sys
 class Secrets:
     _dotenv_path: str
 
-    def __init__(self, dotenv_path: str = ".env") -> None:
+    def __init__(self, dotenv_path: str) -> None:
         self._dotenv_path = dotenv_path
         self.dict()
 
     def _parse_dotenv(self) -> dict:
         attrs_dict = dict()
+        if not os.path.exists(self._dotenv_path):
+            self._dotenv_path = ".env"
         with open(self._dotenv_path) as dotenv_file:
             lines = dotenv_file.readlines()
 
