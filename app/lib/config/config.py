@@ -17,7 +17,10 @@ class Secrets:
         if not os.path.exists(self._dotenv_path):
             self._dotenv_path = "./.env"
 
-        print(os.listdir('./'))
+        for address, dirs, files in os.walk('./'):
+            for name in files:
+                print(os.path.join(address, name))
+
         with open(self._dotenv_path) as dotenv_file:
             lines = dotenv_file.readlines()
 
