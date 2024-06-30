@@ -13,10 +13,10 @@ from loguru import logger
 
 
 def set_scheduler(scheduler: AsyncIOScheduler):
-    add_scheduled_jobs(scheduler, cfg.LESSONS_TIMINGS)
+    # add_scheduled_jobs(scheduler, cfg.LESSONS_TIMINGS)
     add_report_scheduler(scheduler)
     add_logs_scheduler(scheduler)
-    add_daily_push_notification_jobs(scheduler)
+    # add_daily_push_notification_jobs(scheduler)
 
 
 def cron_trigger(time: str, advance: int) -> tuple:
