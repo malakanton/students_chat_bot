@@ -93,7 +93,7 @@ async def receive_time_from_user(message: Message, state: FSMContext):
 
         user_id = message.from_user.id
         flag = db.set_push_time(user_id, push_time)
-        add_daily_push_for_user(user_id, push_time, scheduler)
+        # add_daily_push_for_user(user_id, push_time, scheduler)
         await finish_dialog(flag, push_time, message)
 
     else:
