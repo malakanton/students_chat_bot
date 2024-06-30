@@ -18,6 +18,7 @@ class Secrets:
             self._dotenv_path = ".env"
         print('Dotenv file:', self._dotenv_path)
         print(os.getcwd())
+        print(os.listdir('../'))
         with open(self._dotenv_path) as dotenv_file:
             lines = dotenv_file.readlines()
 
