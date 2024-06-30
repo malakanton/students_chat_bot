@@ -17,7 +17,7 @@ class Secrets:
         if not os.path.exists(self._dotenv_path):
             self._dotenv_path = "./.env"
 
-        print(os.listdir('../'))
+        print(os.listdir('./'))
         with open(self._dotenv_path) as dotenv_file:
             lines = dotenv_file.readlines()
 
