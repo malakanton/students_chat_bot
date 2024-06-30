@@ -15,7 +15,7 @@ class Secrets:
         attrs_dict = dict()
 
         if not os.path.exists(self._dotenv_path):
-            self._dotenv_path = ".env"
+            self._dotenv_path = "./.env"
         print('Dotenv file:', self._dotenv_path)
         print(os.getcwd())
         print(os.listdir('../'))
