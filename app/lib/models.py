@@ -1,7 +1,7 @@
 import datetime as dt
 from typing import List, Optional, Set
 
-from config import ADMIN_CHAT
+from lib.config.config import cfg
 from keyboards.buttons import codes
 from lib.dicts import RU_DAYS, RU_DAYS_INV
 from pydantic import Field
@@ -36,7 +36,7 @@ class Groups:
         self.groups = sorted(self.groups, key=lambda group: group.id)
         self.chats = set(
             [group.chat_id for group in self.groups if group.chat_id]
-        ) | set([int(ADMIN_CHAT)])
+        ) | set([int(cfg.secrets.ADMIN_CHAT)])
         self.courses = sorted(list(set([group.course for group in self.groups])))
 
 

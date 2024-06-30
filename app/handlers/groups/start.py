@@ -3,7 +3,6 @@ import asyncio
 from aiogram import F
 from aiogram.filters import CommandStart
 from aiogram.types import CallbackQuery, Message
-from config import UNAUTHORIZED_GROUP_TIMOUT
 from handlers.filters import IsRegisteredGroup
 from handlers.routers import groups_router
 from keyboards.buttons import Confirm
@@ -12,6 +11,7 @@ from keyboards.start import confirm_kb, course_kb, groups_kb
 from lib.misc import chat_msg_ids, prep_markdown
 from lib.models import Groups
 from loader import bot, db, lx, gr
+from lib.config.config import cfg
 from loguru import logger
 
 
@@ -76,7 +76,7 @@ async def confirm(call: CallbackQuery, callback_data: StartCallback):
     F.text, ~F.text.startswith("/start"), ~IsRegisteredGroup(gr.chats)
 )
 async def leave_if_unauthorised(message: Message):
-    await asyncio.sleep(UNAUTHORIZED_GROUP_TIMOUT)
+    await asyncio.sleep(cfg.UNAUTHORIZED_GROUP_TIMOUT)
     if message.chat.id not in gr.chats:
         logger.warning("unauthorized group!!!")
         await bot.leave_chat(message.chat.id)

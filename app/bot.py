@@ -6,10 +6,12 @@ from lib.notifications import set_scheduler
 from loader import bot, dp, scheduler
 from loguru import logger
 from main_menu import set_menu
+import uvicorn
+from api import http_app
 
 
 @logger.catch()
-async def main():
+async def start_bot():
     setup_logging()
     dp.include_routers(users_router, groups_router)
 
@@ -21,7 +23,23 @@ async def main():
     await bot.delete_webhook(drop_pending_updates=True)
     logger.success("Bot polling starting...")
     await dp.start_polling(bot)
-    logger.success("Bot polling stopped")
+    logger.success("Bot polling stopped.")
+
+
+async def start_fastapi():
+    log_config = uvicorn.config.LOGGING_CONFIG
+    log_config["formatters"]["access"]["fmt"] = "%(asctime)s | %(levelname)s | %(message)s"
+    config = uvicorn.Config(http_app, host="127.0.0.1", port=8000, log_level="info", log_config=log_config)
+    server = uvicorn.Server(config)
+    logger.success("Uvicorn start server")
+    await server.serve()
+
+
+async def main():
+    await asyncio.gather(
+        start_bot(),
+        start_fastapi(),
+    )
 
 
 if __name__ == "__main__":

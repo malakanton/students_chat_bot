@@ -3,7 +3,6 @@ import asyncio
 from aiogram import F
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
-from config import SCHEDULE_KB_TIMEOUT
 from handlers.routers import users_router
 from keyboards.buttons import ScheduleButt
 from keyboards.callbacks import ScheduleCallback
@@ -13,6 +12,7 @@ from lib.logs import logging_msg
 from lib.misc import chat_msg_ids, get_today, prep_markdown, test_users_dates
 from lib.models import DayOfWeek, Week
 from loader import bot, db, logger, lx
+from lib.config.config import cfg
 
 
 @users_router.message(Command("schedule"))
@@ -136,7 +136,7 @@ async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
             start_time = lesson.start.strftime("%H:%M")
             end_time = lesson.end.strftime("%H:%M")
             if lesson.comment:
-                text += f'❗️**{lesson.comment.upper()}**❗️\n'
+                text += f"❗️**{lesson.comment.upper()}**❗️\n"
             text += f"*{start_time}*-*{end_time}* **{lesson.subj}**, {lesson.teacher} "
             if lesson.link and day.id != 6:
                 text += f"📺️[LINK]<LINK>({lesson.link}<LINK>)\n"
@@ -148,7 +148,7 @@ async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
 
 
 async def hide_keyboard(chat_id, message_id):
-    await asyncio.sleep(SCHEDULE_KB_TIMEOUT)
+    await asyncio.sleep(cfg.SCHEDULE_KB_TIMEOUT)
     await bot.edit_message_reply_markup(
         chat_id=chat_id, message_id=message_id + 1, reply_markup=None
     )

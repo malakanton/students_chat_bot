@@ -4,8 +4,7 @@ import re
 import pandas as pd
 from aiogram.types.input_file import FSInputFile
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from config import ADMIN_CHAT, LOGS_PATH, LOGS_UPLOAD_TIME, PATH
-from loader import bot, db
+from loader import bot, db, cfg
 
 
 def parce_line(line: str) -> dict:
@@ -27,7 +26,7 @@ def parce_line(line: str) -> dict:
     return log_items
 
 
-def form_data(path: str = LOGS_PATH, dataframe=True) -> pd.DataFrame | list:
+def form_data(path: str = cfg.LOGS_PATH, dataframe=True) -> pd.DataFrame | list:
     with open(path, "r") as file:
         lines = [
             line for line in file.readlines() if "INFO" in line and ":emit:" not in line
@@ -55,8 +54,8 @@ def form_data(path: str = LOGS_PATH, dataframe=True) -> pd.DataFrame | list:
     return data
 
 
-async def send_report(date: str, chat_id: int = ADMIN_CHAT):
-    file_name = f"{PATH}logs_raw_report_{date}.xlsx"
+async def send_report(date: str, chat_id: int = cfg.secrets.ADMIN_CHAT):
+    file_name = f"{cfg.PATH}logs_raw_report_{date}.xlsx"
     df = form_data()
     df.to_excel(file_name)
     file = FSInputFile(file_name)
@@ -70,7 +69,7 @@ async def upload_logs_to_db() -> None:
 
 
 def add_logs_scheduler(
-    scheduler: AsyncIOScheduler, time: str = LOGS_UPLOAD_TIME
+    scheduler: AsyncIOScheduler, time: str = cfg.LOGS_UPLOAD_TIME
 ) -> None:
     hour, minute = list(map(int, time.split(":")))
     scheduler.add_job(

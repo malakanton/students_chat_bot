@@ -9,7 +9,6 @@ def log_line() -> str:
            ' chat_id: 1234567 chat_type: private command: schedule:12:FORW message:'
 
 
-@pytest.mark.logparser
 def test_line_parser(log_line: str) -> None:
     log_items = parce_line(log_line)
     for item in ['timestamp', 'user_id', 'command', 'message', 'chat_id', 'chat_type']:

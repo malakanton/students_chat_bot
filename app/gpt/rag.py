@@ -1,20 +1,21 @@
 import datetime as dt
 
-from config import BLABLA_MODEL, INFO_COLLECTION, SUBJ_CLF_TH
 from gpt.prompts import HELPER, RAG_HELPER
 from gpt.vector_db import IntentClassifier
-from loader import embeddings, gpt_client, subjects_vector_db, vector_db
+from loader import embeddings, gpt_client, subjects_vector_db, vector_db, cfg
 from loguru import logger
 
 
-def gpt_respond(query: str, chunks: int = 3, th=SUBJ_CLF_TH) -> str:
+def gpt_respond(query: str, chunks: int = 3, th=cfg.SUBJ_CLF_TH) -> str:
     date = dt.datetime.now().date().ctime()
     ic = IntentClassifier(query, th, embeddings, subjects_vector_db)
     subject = ic.subject_clf()
     if subject:
         logger.info(f"subject initialized, subject code: {subject}")
         search_results = vector_db.similarity_search_by_vector(
-            ic.vector, k=chunks, filter={"source": INFO_COLLECTION, "subject": subject}
+            ic.vector,
+            k=chunks,
+            filter={"source": cfg.INFO_COLLECTION, "subject": subject},
         )
         logger.info(f"Similarity search results: {str(search_results)}")
         rag_text = "\n".join([doc.page_content for doc in search_results])
@@ -31,7 +32,7 @@ def gpt_respond(query: str, chunks: int = 3, th=SUBJ_CLF_TH) -> str:
         ]
         temp = 0.8
     completion = gpt_client.chat.completions.create(
-        model=BLABLA_MODEL, messages=messages, temperature=temp, max_tokens=4096
+        model=cfg.BLABLA_MODEL, messages=messages, temperature=temp, max_tokens=4096
     )
     respond = completion.choices[0].message.content
     return respond

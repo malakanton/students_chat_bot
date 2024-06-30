@@ -68,17 +68,14 @@ def schedule_filter_ready(schedule_filter: ScheduleFilter) -> ScheduleFilter:
     return schedule_filter
 
 
-# @pytest.mark.run
 def test_schedule_filter(schedule_filter: ScheduleFilter) -> None:
     assert isinstance(schedule_filter.schedules, dict)
 
 
-# @pytest.mark.run
 def test_schedule_filter_ready(schedule_filter_ready: ScheduleFilter) -> None:
     for sch in schedule_filter_ready.schedules.values():
         assert isinstance(sch, pd.DataFrame)
 
 
-# @pytest.mark.run
 def test_schedule_uploader() -> None:
-    su = ScheduleUploader(5, gc)
+    ScheduleUploader(5, gc)

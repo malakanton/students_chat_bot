@@ -1,0 +1,28 @@
+BLABLA_MODEL: gpt-4o
+CHATS_HISTORY: ./chats_history/chat_history{}.txt
+CONN_STRING: postgresql+psycopg2://{user}:{password}@{host}:{port}/vector_db
+CREDS_PATH: ./google_api/studentsbot-414221-88a1d65d3976.json
+DB_NAME: students_bot_db
+FORM_ID: 1sDsXgKFbf2D5WasvMXmx6h9s60wLlLQQOLDW021Cg_A
+INFO_COLLECTION: subjects_info
+LESSONS_TIMINGS:
+- '17:00'
+- '18:40'
+LOGS_PATH: ./logs/bot_logs.log
+LOGS_REPORT_TIME: '12:00'
+LOGS_UPLOAD_TIME: 00:00
+MESSAGES_TO_KEEP: 200
+NEW_KEY: new key
+OPEN_AI_URL: https://api.proxyapi.ru/openai/v1
+PATH: ./temp/
+RAG_FILES_DIR: gpt/temp/
+SCHEDULE_KB_TIMEOUT: 900
+SCOPES:
+- https://www.googleapis.com/auth/calendar
+- https://www.googleapis.com/auth/drive.file
+- https://www.googleapis.com/auth/forms.responses.readonly
+SUBJECTS_COLLECTION: subjects
+SUBJ_CLF_TH: 0.25
+SUMMARY_MODEL: gpt-4o
+UNAUTHORIZED_GROUP_TIMOUT: 60
+USER: postgres

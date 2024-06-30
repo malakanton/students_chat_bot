@@ -16,7 +16,7 @@ async def help_cmd(message: Message):
 
 
 @users_router.message(Command("description"))
-async def help_cmd(message: Message):
+async def desc_cmd(message: Message):
     logger.info(logging_msg(message, "description command in private chat"))
     gc_link = db.get_user_group(message.from_user.id)[2]
     if not gc_link:

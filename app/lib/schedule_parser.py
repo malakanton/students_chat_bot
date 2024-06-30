@@ -26,7 +26,7 @@ class ScheduleParser:
         self.dates = self._extract_dates()
         self.week_num = self._get_monday().isocalendar()[1]
 
-    def _extract_dates(self) -> tuple|None:
+    def _extract_dates(self) -> tuple | None:
         """Extract dates from either a filename or from pdf text string"""
         try:
             text = self._extract_pdf_text()
@@ -61,7 +61,7 @@ class ScheduleParser:
             )
         self.df = pd.DataFrame(table[1:], columns=table[0])
 
-    def _get_monday(self) -> dt.datetime|None:
+    def _get_monday(self) -> dt.datetime | None:
         """Returns a datetime object of monday from current week"""
         if self.dates:
             return dt.datetime(
@@ -221,18 +221,20 @@ class ScheduleFilter:
     @staticmethod
     def _get_special_cases(text: str) -> list[str]:
         """Get special cases such as exam etc"""
-        words = {'экзамен'}
+        words = {"экзамен"}
         for word in words:
             if word in text.lower():
-                cleaned = re.sub(word, '', text, flags=re.IGNORECASE)
-                return [cleaned.replace('\n', ' ').strip(), word]
-        return [text, '']
+                cleaned = re.sub(word, "", text, flags=re.IGNORECASE)
+                return [cleaned.replace("\n", " ").strip(), word]
+        return [text, ""]
 
     def _prepare_columns(self, df_gr: pd.DataFrame):
         """Clean and extract teacher, location, subject and code for the lessons"""
         df_gr["subj"] = df_gr.subj.map(self.clean_text)
         df_gr[["subj", "comment"]] = np.vstack(df_gr.subj.map(self._get_special_cases))
-        df_gr["loc"] = df_gr["loc"].map(lambda x: self.clean_text(x, loc=True).split(' ')[0])
+        df_gr["loc"] = df_gr["loc"].map(
+            lambda x: self.clean_text(x, loc=True).split(" ")[0]
+        )
         df_gr["teacher"] = df_gr.subj.map(self._get_teacher)
         df_gr["subj_code"] = df_gr.subj.map(self._get_subj_code)
         df_gr["subj"] = df_gr.subj.map(self._get_subj)
@@ -255,7 +257,9 @@ class ScheduleFilter:
                 self.schedules[group] = self._prepare_columns(df_gr)
                 logger.info(f"Schedule for group {group} has been parsed successfully")
             except Exception as e:
-                logger.error(f"Error!!! while filtering group {group}, an error occured {e}")
+                logger.error(
+                    f"Error!!! while filtering group {group}, an error occured {e}"
+                )
 
     def get_group_schedule(self, group_name: str) -> list:
         """Return a lessons list for the group"""
