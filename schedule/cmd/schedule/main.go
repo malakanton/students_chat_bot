@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log/slog"
 	"os"
 
 	"schedule/internal/config"
+	"schedule/internal/storage"
 )
 
 const (
@@ -14,15 +17,18 @@ const (
 
 func main() {
 	cfg := config.MustConfig()
-
+	fmt.Println(cfg)
 	logger := setupLogger(cfg.Env)
 
 	logger.Info("Starting schedule service", slog.String("env", cfg.Env))
 	logger.Debug("Debug mode is ON")
 
-	// init logger
-
-	// init storage
+	db, err := storage.NewClient(context.Background(), cfg.Storage)
+	if err != nil {
+		logger.Error("Failed to init Postgres")
+	}
+	logger.Info("Storage Initialised successfully")
+	fmt.Println(db)
 
 	// init router
 

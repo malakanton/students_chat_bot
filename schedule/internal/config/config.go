@@ -9,15 +9,25 @@ import (
 )
 
 type Config struct {
-	Env         string `yaml:"env" env-default: "dev"`
+	Env         string `yaml:"env" env-default:"dev"`
 	StoragePath string `yaml:"storage_path"`
 	HttpServer  `yaml:"http_server"`
+	Storage     StorageConfig `yaml:"storage"`
+}
+
+type StorageConfig struct {
+	Host     string `json:"host"`
+	Port     string `json:"port"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Database string `json:"database"`
+	Attempts int    `json:"attempts"`
 }
 
 type HttpServer struct {
-	Address     string        `yaml:"address" env-default: "localhost:8080"`
-	Timeout     time.Duration `yaml:"timeout" env-default: "4s"`
-	IdleTimeout time.Duration `yaml:"idle_timeout" env-default: "60s"`
+	Address     string        `yaml:"address" env-default:"localhost:8080"`
+	Timeout     time.Duration `yaml:"timeout" env-default:"4s"`
+	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
 }
 
 func MustConfig() *Config {
