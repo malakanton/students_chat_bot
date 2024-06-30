@@ -5,6 +5,6 @@ WORKDIR /app/
 COPY requirements.txt /app
 RUN pip install --upgrade pip &&  python -m pip install -r requirements.txt
 
-COPY . /app
+COPY . /app .env
 
 CMD ["python", "/app/bot.py"]
