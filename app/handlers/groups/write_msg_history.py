@@ -3,7 +3,7 @@ import os
 
 from aiogram import F
 from aiogram.types import Message
-from config import CHATS_HISTORY, MESSAGES_TO_KEEP
+from lib.config.config import cfg
 from handlers.routers import groups_router
 
 
@@ -12,7 +12,7 @@ from handlers.routers import groups_router
 )
 async def write_messages(message: Message):
     chat_id = message.chat.id
-    filepath = CHATS_HISTORY.format(chat_id)
+    filepath = cfg.CHATS_HISTORY.format(chat_id)
     msg_text = await form_msg_text(message)
     if not os.path.exists(filepath):
         await new_chat_write(filepath, msg_text)
@@ -29,7 +29,7 @@ async def process_text_file(filepath: str, add_msg: str) -> None:
     with open(filepath, "r") as file:
         text = file.read()
     messages_list = text.split("<MSG>")[1:]
-    if len(messages_list) >= MESSAGES_TO_KEEP:
+    if len(messages_list) >= cfg.MESSAGES_TO_KEEP:
         messages_list.pop(0)
     messages_list = ["<MSG>" + msg for msg in messages_list]
     messages_list.append(add_msg)

@@ -4,7 +4,6 @@ from aiogram import F
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from aiogram.types.input_file import FSInputFile
-from config import PATH
 from handlers.routers import users_router
 from keyboards.buttons import CancelButt
 from keyboards.callbacks import LibCallback
@@ -13,6 +12,7 @@ from lib.logs import logging_msg
 from lib.misc import prep_markdown
 from lib.models import File
 from loader import bot, db, s3, users, lx
+from lib.config.config import cfg
 from loguru import logger
 
 
@@ -106,7 +106,7 @@ async def get_files_list(user_id: int, callback_data: LibCallback) -> list[File]
 async def send_file_to_chat(file: File, call: CallbackQuery) -> None:
     """Send file to chat"""
     chat_id = call.message.chat.id
-    path_download_to = os.path.join(PATH, file.file_name)
+    path_download_to = os.path.join(cfg.PATH, file.file_name)
 
     if s3.download_file(file.s3_path, path_download_to):
         await bot.send_chat_action(chat_id, "upload_document")

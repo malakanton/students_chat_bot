@@ -2,18 +2,18 @@ import datetime as dt
 from typing import Union
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from config import LESSONS_TIMINGS, LOGS_REPORT_TIME
 from handlers.users.schedule import form_day_schedule_text
 from lib.dicts import NotificationsAdvance
 from lib.logs_report import add_logs_scheduler, send_report
 from lib.misc import get_today, prep_markdown
 from lib.models import Lesson
 from loader import bot, db, lx
+from lib.config.config import cfg
 from loguru import logger
 
 
 def set_scheduler(scheduler: AsyncIOScheduler):
-    add_scheduled_jobs(scheduler, LESSONS_TIMINGS)
+    add_scheduled_jobs(scheduler, cfg.LESSONS_TIMINGS)
     add_report_scheduler(scheduler)
     add_logs_scheduler(scheduler)
     add_daily_push_notification_jobs(scheduler)
@@ -41,7 +41,7 @@ def add_scheduled_jobs(scheduler: AsyncIOScheduler, times: list):
 
 
 def add_report_scheduler(
-    scheduler: AsyncIOScheduler, time: str = LOGS_REPORT_TIME
+    scheduler: AsyncIOScheduler, time: str = cfg.LOGS_REPORT_TIME
 ) -> None:
     hour, minute = list(map(int, time.split(":")))
     date = str(dt.datetime.now().date())

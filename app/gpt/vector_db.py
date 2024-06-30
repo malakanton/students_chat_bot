@@ -1,7 +1,7 @@
 import re
 from typing import List
 
-from config import INFO_COLLECTION, SUBJECTS_COLLECTION
+from loader import cfg
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores.pgvector import PGVector
@@ -23,8 +23,8 @@ class DocumentsHandler:
             chunk_size=256, chunk_overlap=32
         )
         self._collection_dict = {
-            SUBJECTS_COLLECTION: "subjects",
-            INFO_COLLECTION: "subjects_info",
+            cfg.SUBJECTS_COLLECTION: "subjects",
+            cfg.INFO_COLLECTION: "subjects_info",
         }
 
     def _split_documents(self) -> List[str]:

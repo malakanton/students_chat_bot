@@ -2,7 +2,6 @@ import os
 
 from aiogram import F
 from aiogram.types import CallbackQuery, Message
-from config import PATH
 from handlers.filters import UserFilter
 from handlers.routers import users_router
 from keyboards.buttons import Confirm, FileButt, FileTypeButt, SchdUpdButt
@@ -14,6 +13,7 @@ from lib.misc import chat_msg_ids, prep_markdown, valid_schedule_format
 from lib.schedule_parser import ScheduleParser
 from lib.schedule_uploader import upload_schedule
 from loader import bot, db, s3, users, lx
+from lib.config.config import cfg
 from loguru import logger
 
 
@@ -182,7 +182,7 @@ async def dont_save_choice(call: CallbackQuery, callback_data: FileCallback):
 
 async def download_file(tg_file_id: str, file_name: str):
     file = await bot.get_file(tg_file_id)
-    file_path = PATH + file_name
+    file_path = cfg.PATH + file_name
     logger.info(f"Downloaded file path: {file_path}")
     await bot.download_file(file_path=file.file_path, destination=file_path)
     return file_path

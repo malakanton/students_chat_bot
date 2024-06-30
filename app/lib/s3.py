@@ -2,7 +2,7 @@ import os
 
 import boto3
 from botocore.exceptions import ClientError
-from config import S3_BUCKET, S3_ENDPOINT, S3_KEY_ID, S3_SECRET
+from lib.config.config import cfg
 from loguru import logger
 
 
@@ -13,10 +13,10 @@ class S3Client:
     __bucket: str
 
     def __init__(self):
-        self.__endpoint = S3_ENDPOINT
-        self.__bucket = S3_BUCKET
-        self.__secret = S3_SECRET
-        self.__key_id = S3_KEY_ID
+        self.__endpoint = cfg.secrets.S3_ENDPOINT
+        self.__bucket = cfg.secrets.BUCKET
+        self.__secret = cfg.secrets.S3_SECRET
+        self.__key_id = cfg.secrets.S3_KEY_ID
         self.client = boto3.client(
             "s3",
             endpoint_url=self.__endpoint,

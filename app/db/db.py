@@ -125,7 +125,7 @@ class DB:
         teacher_id: int,
         loc: str,
         link: str = None,
-        comment: str = ''
+        comment: str = "",
     ) -> None:
         """Insert a new lesson to a lessons table"""
         query = """
@@ -134,7 +134,19 @@ class DB:
         """
         self._execute_query(
             query,
-            (week_num, day, date, start, end, group_id, subj_id, teacher_id, loc, link, comment),
+            (
+                week_num,
+                day,
+                date,
+                start,
+                end,
+                group_id,
+                subj_id,
+                teacher_id,
+                loc,
+                link,
+                comment,
+            ),
         )
 
     def erase_existing_schedule(self, week_num) -> None:

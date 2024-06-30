@@ -1,4 +1,4 @@
-from config import FORM_ID, SCOPES
+from lib.config.config import cfg
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from lib.misc import get_today
@@ -63,7 +63,9 @@ class GoogleForms:
 
 
 gf = GoogleForms(
-    scopes=SCOPES, creds_path="./studentsbot-414221-88a1d65d3976.json", form_id=FORM_ID
+    scopes=cfg.SCOPES,
+    creds_path="./studentsbot-414221-88a1d65d3976.json",
+    form_id=cfg.FORM_ID,
 )
 
 from pprint import pprint

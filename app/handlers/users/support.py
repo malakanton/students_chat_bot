@@ -3,7 +3,6 @@ import re
 from aiogram import F
 from aiogram.exceptions import TelegramForbiddenError
 from aiogram.types import CallbackQuery, Message
-from config import ADMIN_CHAT
 from handlers.filters import SupportFilter
 from handlers.routers import groups_router, users_router
 from keyboards.buttons import NewsLetter
@@ -12,6 +11,7 @@ from keyboards.universal import send_newsletter_kb
 from lib.logs import logging_msg
 from lib.misc import prep_markdown
 from loader import bot, db, lx
+from lib.config.config import cfg
 from loguru import logger
 
 
@@ -38,12 +38,12 @@ async def support_message(
         group_name=user_group[1],
         text=text,
     )
-    await bot.send_message(text=prep_markdown(msg), chat_id=int(ADMIN_CHAT))
+    await bot.send_message(text=prep_markdown(msg), chat_id=int(cfg.secrets.ADMIN_CHAT))
     await message.reply(prep_markdown(lx.REPLY_SUPPORT))
 
 
 @groups_router.message(
-    F.chat.id == int(ADMIN_CHAT), F.text.startswith("#reply_support")
+    F.chat.id == int(cfg.secrets.ADMIN_CHAT), F.text.startswith("#reply_support")
 )
 async def support_reply(message: Message):
     text = message.text
@@ -60,7 +60,9 @@ async def support_reply(message: Message):
     )
 
 
-@groups_router.message(F.chat.id == int(ADMIN_CHAT), F.text.startswith("#newsletter"))
+@groups_router.message(
+    F.chat.id == int(cfg.secrets.ADMIN_CHAT), F.text.startswith("#newsletter")
+)
 async def send_newsletter(message: Message):
     text = message.text.replace("#newsletter", "").strip()
     text = prep_markdown(text)

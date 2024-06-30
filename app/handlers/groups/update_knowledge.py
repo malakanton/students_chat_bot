@@ -1,29 +1,33 @@
 from aiogram import F
 from aiogram.filters import Command
 from aiogram.types import Message
-from config import ADMIN_CHAT, INFO_COLLECTION, SUBJECTS_COLLECTION
 from gpt.vector_db import DocumentsHandler
 from handlers.routers import groups_router
 from langchain_community.document_loaders import TextLoader
 from lib.misc import prep_markdown
 from loader import bot, conn_str, embeddings, gd, vector_db, lx
+from lib.config.config import cfg
 from loguru import logger
 
 
-@groups_router.message(Command("knowledge_update"), F.chat.id == int(ADMIN_CHAT))
+@groups_router.message(
+    Command("knowledge_update"), F.chat.id == int(cfg.secrets.ADMIN_CHAT)
+)
 async def update_knowlage(message: Message):
     await bot.send_chat_action(message.chat.id, "upload_document")
-    if update_collection(INFO_COLLECTION):
+    if update_collection(cfg.INFO_COLLECTION):
         await message.answer(prep_markdown(lx.COLLECTION_UPDATED))
     else:
         await message.answer(prep_markdown(lx.COLLECTION_NOT_UPDATED))
     await message.delete()
 
 
-@groups_router.message(Command("subjects_update"), F.chat.id == int(ADMIN_CHAT))
+@groups_router.message(
+    Command("subjects_update"), F.chat.id == int(cfg.secrets.ADMIN_CHAT)
+)
 async def update_subjects_triggers(message: Message):
     await bot.send_chat_action(message.chat.id, "upload_document")
-    if update_collection(SUBJECTS_COLLECTION):
+    if update_collection(cfg.SUBJECTS_COLLECTION):
         await message.answer(prep_markdown(lx.SUBJECTS_UPDATED))
     else:
         await message.answer(prep_markdown(lx.COLLECTION_NOT_UPDATED))
