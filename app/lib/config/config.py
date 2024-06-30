@@ -15,7 +15,7 @@ class Secrets:
         attrs_dict = dict()
 
         if not os.path.exists(self._dotenv_path):
-            self._dotenv_path = "./.env"
+            self._dotenv_path = ".env"
 
         for address, dirs, files in os.walk('./'):
             for name in files:
