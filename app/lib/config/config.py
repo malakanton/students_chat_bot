@@ -13,8 +13,11 @@ class Secrets:
 
     def _parse_dotenv(self) -> dict:
         attrs_dict = dict()
+
         if not os.path.exists(self._dotenv_path):
             self._dotenv_path = ".env"
+        print('Dotenv file:', self._dotenv_path)
+        print(os.getcwd())
         with open(self._dotenv_path) as dotenv_file:
             lines = dotenv_file.readlines()
 
