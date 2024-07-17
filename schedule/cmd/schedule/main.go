@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-
 	"schedule/internal/config"
+	"schedule/internal/gglapi"
+	"schedule/internal/gglapi/parser"
 	"schedule/internal/storage"
 )
 
@@ -24,11 +25,20 @@ func main() {
 	logger.Debug("Debug mode is ON")
 
 	db, err := storage.NewClient(context.Background(), cfg.Storage)
+	fmt.Println(db)
 	if err != nil {
 		logger.Error("Failed to init Postgres")
 	}
 	logger.Info("Storage Initialised successfully")
-	fmt.Println(db)
+
+	gs, err := gglapi.NewGglApiClient(cfg.GoogleConfig.GoogleCredsPath)
+	if err != nil {
+		return
+	}
+
+	parser.ParseDocument(gs, cfg)
+
+	// init gglapi sheets client
 
 	// init router
 

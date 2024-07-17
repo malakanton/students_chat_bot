@@ -9,10 +9,16 @@ import (
 )
 
 type Config struct {
-	Env         string `yaml:"env" env-default:"dev"`
-	StoragePath string `yaml:"storage_path"`
-	HttpServer  `yaml:"http_server"`
-	Storage     StorageConfig `yaml:"storage"`
+	Env          string `yaml:"env" env-default:"dev"`
+	StoragePath  string `yaml:"storage_path"`
+	GoogleConfig `yaml:"google_config"`
+	HttpServer   `yaml:"http_server"`
+	Storage      StorageConfig `yaml:"storage"`
+}
+
+type GoogleConfig struct {
+	GoogleCredsPath string `yaml:"google_creds_path"`
+	SpreadSheetId   string `yaml:"spreadsheets_id"`
 }
 
 type StorageConfig struct {
