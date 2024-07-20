@@ -3,7 +3,6 @@ package document
 import (
 	"fmt"
 	"google.golang.org/api/sheets/v4"
-	"log"
 	"strings"
 )
 
@@ -14,63 +13,84 @@ const (
 )
 
 type Document struct {
-	Id           string
-	srv          *sheets.Service
-	DataColumnId int
+	Id              string
+	srv             *sheets.Service
+	SheetsNamesList []string
+	DataRowId       int // a row number where the schedule table starts (with groups list)
+	SpsheetName     string
 }
 
 func NewDocument(id string, srv *sheets.Service) Document {
-	return Document{
+	d := Document{
 		Id:  id,
 		srv: srv,
 	}
+	return d
 }
 
-func (d *Document) GetSheetsList() []*sheets.Sheet {
+func (d *Document) GetDocumentSheetsListAndName() error {
 	shSheetInfo, err := d.srv.Spreadsheets.Get(d.Id).Do()
 	if err != nil {
-		log.Fatalf("fucked up to read a spreadsheet %v", err)
+		return fmt.Errorf("failed to get spreadsheet info %w", err)
 	}
 	sheetsList := shSheetInfo.Sheets
 
-	return sheetsList
+	for _, sheet := range sheetsList {
+		d.SheetsNamesList = append(d.SheetsNamesList, sheet.Properties.Title)
+	}
+
+	d.SpsheetName = shSheetInfo.Properties.Title
+
+	return nil
+}
+
+func (d *Document) GetSheetById(id int) string {
+	switch {
+	case id >= len(d.SheetsNamesList) || id == -1:
+		return d.GetLatestSheet()
+	case id < -1:
+		return d.SheetsNamesList[len(d.SheetsNamesList)+id]
+	default:
+		return d.SheetsNamesList[id]
+	}
 }
 
 func (d *Document) GetLatestSheet() string {
-	sheetsList := d.GetSheetsList()
-	lastSheet := sheetsList[len(sheetsList)-1]
+	lastSheet := d.SheetsNamesList[len(d.SheetsNamesList)-1]
 
-	return lastSheet.Properties.Title
+	return lastSheet
 }
 
-func (d *Document) GetSheetData(sheetName, cellsRange string) [][]interface{} {
+func (d *Document) GetSheetData(sheetName, cellsRange string) ([][]interface{}, error) {
 	readRange := fmt.Sprintf("%s!%s", sheetName, cellsRange)
-	fmt.Println(readRange)
 	data, err := d.srv.Spreadsheets.Values.Get(d.Id, readRange).Do()
 	if err != nil {
-		log.Fatalf("Unable to read sheet data from sheet %s, range: %s", sheetName, cellsRange)
+		err = fmt.Errorf("Unable to read sheet data from sheet %s, range: %s, error: %v", sheetName, cellsRange, err)
+		return nil, err
 	}
-	return data.Values
+	return data.Values, nil
 }
 
-func (d *Document) GetDaysOfweek(sheetName string) (data [][]interface{}) {
-	data = d.GetSheetData(sheetName, daysOfWeekRange)
+func (d *Document) GetDaysOfweek(sheetName string) (data [][]interface{}, err error) {
+	data, err = d.GetSheetData(sheetName, daysOfWeekRange)
+	if err != nil {
+		return nil, err
+	}
 	for i, row := range data {
 		if len(row) > 0 {
 			rowVal := row[0].(string)
 			if strings.Contains(rowVal, "ДНИ") {
-				d.DataColumnId = i
+				d.DataRowId = i
 			}
 		}
-
 	}
-	return data[d.DataColumnId:]
+	return data[d.DataRowId:], nil
 }
 
-func (d *Document) GetLessonsTimings(sheetName string) (data [][]interface{}) {
-	return d.GetSheetData(sheetName, fmt.Sprintf(lessonsTimingsRange, d.DataColumnId))
+func (d *Document) GetLessonsTimings(sheetName string) ([][]interface{}, error) {
+	return d.GetSheetData(sheetName, fmt.Sprintf(lessonsTimingsRange, d.DataRowId+1))
 }
 
-func (d *Document) GetSheduleData(sheetName string) [][]interface{} {
-	return d.GetSheetData(sheetName, fmt.Sprintf(scheduleDataRange, d.DataColumnId))
+func (d *Document) GetSheduleData(sheetName string) ([][]interface{}, error) {
+	return d.GetSheetData(sheetName, fmt.Sprintf(scheduleDataRange, d.DataRowId+1))
 }
