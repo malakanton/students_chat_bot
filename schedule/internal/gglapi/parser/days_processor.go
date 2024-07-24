@@ -25,6 +25,14 @@ func (d *Day) String() string {
 		d.Id, d.RowIdx, d.Date.Format("2006-01-02"), d.Even)
 }
 
+func (d *Day) AddLesson(lessonTime LessonTimeByFilial) {
+	d.Lessons = append(d.Lessons, lessonTime)
+}
+
+func (d *Day) GetLessonTimingsByIdx(idx int) *LessonTimeByFilial {
+	return &d.Lessons[idx-d.RowIdx]
+}
+
 func (d *Day) ParseDatesString() error {
 
 	re, _ := regexp.Compile(`\d{1,2}.\d{1,2}`)

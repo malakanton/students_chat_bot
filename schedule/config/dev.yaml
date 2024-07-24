@@ -12,4 +12,4 @@ storage:
   port: 5432
   database: schedule
   username: postgres
-  password: postgres
+  password: postgres4344

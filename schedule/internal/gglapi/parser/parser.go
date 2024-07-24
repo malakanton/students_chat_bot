@@ -9,8 +9,7 @@ import (
 	"time"
 )
 
-func ParseDocument(gs *sheets.Service, cfg *config.Config, id int) error {
-	var err error
+func ParseDocument(gs *sheets.Service, cfg *config.Config, id int) (err error) {
 	d := document.NewDocument(cfg.GoogleConfig.SpreadSheetId, gs)
 	err = d.GetDocumentSheetsListAndName()
 	if err != nil {
@@ -20,6 +19,7 @@ func ParseDocument(gs *sheets.Service, cfg *config.Config, id int) error {
 	document.GetExcelColumnName(123)
 
 	sheetName := d.GetSheetById(id)
+
 	start := time.Now()
 	startDate, endDate, err := ExtractDatesFromSheetName(sheetName)
 	if err != nil {
@@ -54,9 +54,6 @@ func ParseDocument(gs *sheets.Service, cfg *config.Config, id int) error {
 	if err != nil || !ok {
 		return errors.New("failed validating the dates from sheetname and sheet data")
 	}
-	end := time.Now()
-
-	fmt.Printf("time the schedule preparing took %v\n", end.Sub(start))
 
 	lessonsTimingsData, err := d.GetLessonsTimings(sheetName)
 	if err != nil {
@@ -67,11 +64,35 @@ func ParseDocument(gs *sheets.Service, cfg *config.Config, id int) error {
 		return err
 	}
 
-	fmt.Println(s.String())
+	end := time.Now()
+	fmt.Printf("time the schedule preparing took %v\n", end.Sub(start))
 
-	//data := d.GetSheduleData(latest)
-	//fancy, _ := json.MarshalIndent(data, "", "    ")
-	//fmt.Println(string(fancy))
+	scheduleData, merges, err := d.GetSheduleData(sheetName)
+	if err != nil {
+		return nil
+	}
+
+	mergesMapping := MakeMergesMapping(merges, int64(d.DataRowId), 2)
+	//printOutJson(merges)
+
+	err = s.ParseScheduleData(scheduleData, mergesMapping)
+	if err != nil {
+		return err
+	}
+
+	group := "ОИБ9-222Б"
+	fmt.Printf("group %s\n", group)
+	groupSch, ok := s.GroupsSchedule[group]
+	if ok {
+		for _, lesson := range groupSch {
+			fmt.Println(lesson.String())
+		}
+	}
 
 	return err
 }
+
+//func printOutJson(i interface{}) {
+//	jsn, _ := json.MarshalIndent(i, "", "    ")
+//	fmt.Println(string(jsn))
+//}

@@ -36,6 +36,7 @@ func main() {
 	if err != nil {
 		return
 	}
+
 	err = parser.ParseDocument(gs, cfg, -2)
 	if err != nil {
 		logger.Error("error occured:", errors.Unwrap(err))

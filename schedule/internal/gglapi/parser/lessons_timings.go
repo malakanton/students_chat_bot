@@ -15,14 +15,28 @@ const (
 )
 
 type LessonTimeByFilial struct {
+	RowId     int
 	RawString string
 	Av        LessonTime
 	No        LessonTime
 }
 
+func NewLessonTimeByFilial(s string, i int) LessonTimeByFilial {
+	return LessonTimeByFilial{
+		RowId:     i,
+		RawString: s,
+	}
+}
+
 type LessonTime struct {
 	start time.Time
 	end   time.Time
+}
+
+func (l LessonTime) AddDate(date time.Time) LessonTime {
+	l.start = l.start.AddDate(date.Year(), int(date.Month()), date.Day())
+	l.end = l.end.AddDate(date.Year(), int(date.Month()), date.Day())
+	return l
 }
 
 func (l *LessonTimeByFilial) GetTiming(filial Filial) LessonTime {

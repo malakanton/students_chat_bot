@@ -8,8 +8,9 @@ import (
 )
 
 type Schedule struct {
-	ScheduleDates ScheduleDates
-	Days          []Day
+	ScheduleDates  ScheduleDates
+	Days           []Day
+	GroupsSchedule map[string][]Lesson
 }
 
 func (s *Schedule) String() string {
@@ -36,9 +37,14 @@ func NewSchedule(startDate, endDate time.Time, header string) Schedule {
 			EndDate:   endDate,
 			header:    header,
 		},
-		Days: []Day{},
+		Days:           []Day{},
+		GroupsSchedule: make(map[string][]Lesson),
 	}
 	return s
+}
+
+func (s *Schedule) AddNewLesson(group string, lesson Lesson) {
+	s.GroupsSchedule[group] = append(s.GroupsSchedule[group], lesson)
 }
 
 func (s *Schedule) ValidateDates() (valid bool, err error) {
@@ -85,30 +91,104 @@ func (s *Schedule) ParseDatesFromSlice(data [][]interface{}) (err error) {
 	return nil
 }
 
-func (s *Schedule) ParseLessonsTimings(data [][]interface{}) (err error) {
-	var dayIdx = 0
+func (s *Schedule) GetDayByRowIdx(idx int) *Day {
+	var neededDay *Day
+	for i, day := range s.Days {
+		if idx >= day.RowIdx {
+			neededDay = &s.Days[i]
+		} else {
+			return neededDay
+		}
+	}
+	return neededDay
+}
 
+func (s *Schedule) GetNextDayRowIdx(currDay *Day, dataLength int) int {
+	for i, day := range s.Days {
+		if currDay.RowIdx == day.RowIdx {
+			if i == len(s.Days)-1 {
+				return dataLength
+			}
+			return s.Days[i+1].RowIdx
+		}
+	}
+	return dataLength
+}
+
+func (s *Schedule) ParseLessonsTimings(data [][]interface{}) (err error) {
+	firstDayIdx := s.Days[0].RowIdx
 	for i, row := range data {
-		if len(row) == 0 || i < s.Days[0].RowIdx {
+		if i < firstDayIdx {
 			continue
 		}
 		rowString := row[0].(string)
 
-		if dayIdx+1 < len(s.Days) {
-			if nextDayIdx := s.Days[dayIdx+1].RowIdx; i >= nextDayIdx {
-				dayIdx++
-			}
-		}
+		day := s.GetDayByRowIdx(i)
+		lt := NewLessonTimeByFilial(rowString, i)
 
-		l := LessonTimeByFilial{
-			RawString: rowString,
-		}
-		err = l.ParseRawString()
+		err = lt.ParseRawString()
 		if err != nil {
 			return fmt.Errorf("failed to parse lesson timings from  cell B%d: %w", i, err)
 		}
-		s.Days[dayIdx].Lessons = append(s.Days[dayIdx].Lessons, l)
+		day.AddLesson(lt)
 
+	}
+	return nil
+}
+
+func (s *Schedule) ParseScheduleData(data [][]interface{}, mergesMapping map[string]string) (err error) {
+	var (
+		lessonRawString string
+		l               Lesson
+	)
+
+	groupsIdxMapping := makeGroupdMapping(data[0])
+	firstDayIdx := s.Days[0].RowIdx
+
+	for i, row := range data {
+
+		if i < firstDayIdx {
+			continue
+		}
+
+		day := s.GetDayByRowIdx(i)
+		dateTime := day.GetLessonTimingsByIdx(i)
+
+		for j, cellData := range row {
+			groupName, ok := groupsIdxMapping[j]
+
+			if !ok {
+				continue
+			}
+
+			nextDayIdx := s.GetNextDayRowIdx(day, len(data))
+
+			cellCoord, oneLessonMerged, wholeDayMerged := mergedCellsRanges(i, j, nextDayIdx)
+			endMerge, _ := mergesMapping[cellCoord]
+
+			switch endMerge {
+
+			case oneLessonMerged:
+				lessonRawString = cellData.(string)
+
+			case wholeDayMerged:
+				l = NewFullDayLesson(day, cellData.(string))
+				s.AddNewLesson(groupName, l)
+				continue
+
+			default:
+				lessonRawString = row[j+BoolToInt(day.Even)].(string)
+			}
+
+			if lessonRawString == "" {
+				continue
+			}
+
+			loc, filial := processLocCell(row[j+2].(string), day.Even)
+			l = NewLesson(dateTime.GetTiming(filial), lessonRawString, loc, false, filial)
+
+			s.AddNewLesson(groupName, l)
+		}
 	}
 	return nil
 }

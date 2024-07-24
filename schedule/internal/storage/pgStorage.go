@@ -38,6 +38,6 @@ func NewClient(ctx context.Context, dbcfg config.StorageConfig) (pool *pgxpool.P
 		log.Fatalf("Failed to connect to db: %s", err)
 	}
 
-	return
+	return pool, err
 
 }
