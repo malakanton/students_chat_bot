@@ -2,14 +2,21 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"github.com/go-chi/chi/v5"
 	"log/slog"
+	"net/http"
 	"os"
+	"os/signal"
 	"schedule/internal/config"
 	"schedule/internal/gglapi"
-	"schedule/internal/gglapi/parser"
+	"schedule/internal/http-server/server"
+	"schedule/internal/repositories"
+	"time"
+
+	t "schedule/internal/http-server/handlers/teachers"
 	"schedule/internal/storage"
+	"syscall"
 )
 
 const (
@@ -26,29 +33,70 @@ func main() {
 	logger.Debug("debug mode is ON")
 
 	db, err := storage.NewClient(context.Background(), cfg.Storage)
-	fmt.Println(db)
 	if err != nil {
-		logger.Error("failed to init Postgres")
+		logger.Error("failed to init Postgres:", err.Error())
 	}
 	logger.Info("storage Initialised successfully")
-
+	_ = db
 	gs, err := gglapi.NewGglApiClient(cfg.GoogleConfig.GoogleCredsPath)
 	if err != nil {
 		return
 	}
+	_ = gs
 
-	err = parser.ParseDocument(gs, cfg, -2)
-	if err != nil {
-		logger.Error("error occured:", errors.Unwrap(err))
+	rep := repositories.SetUpRepositories(db, context.Background(), logger)
+
+	//_, err = parser.ParseDocument(gs, cfg, -2)
+	//if err != nil {
+	//	logger.Error("error occured:", err.Error())
+	//}
+
+	r := chi.NewRouter()
+
+	start(r, cfg, logger, rep)
+}
+
+func start(r *chi.Mux, cfg *config.Config, logger *slog.Logger, rep repositories.Repositories) {
+
+	server.SetUpMiddlewares(r)
+	server.SetHealthCheck(r)
+
+	r.Mount("/teachers", t.TeacherRoutes(context.Background(), logger, rep.Teach))
+
+	logger.Info("starting server", slog.String("address", cfg.Address))
+
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	srv := &http.Server{
+		Addr:         cfg.Address,
+		Handler:      r,
+		ReadTimeout:  cfg.HttpServer.Timeout,
+		WriteTimeout: cfg.HttpServer.Timeout,
+		IdleTimeout:  cfg.HttpServer.IdleTimeout,
 	}
 
-	// init gglapi sheets client
+	go func() {
+		if err := srv.ListenAndServe(); err != nil {
+			logger.Error("failed to start server")
+		}
+	}()
 
-	// init router
+	logger.Info("server started")
 
-	// run server
+	<-done
+	logger.Info("stopping server")
 
-	//write business logic
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		logger.Error("failed to stop server", err.Error())
+
+		return
+	}
+
+	logger.Info("server stopped")
 }
 
 func setupLogger(env string) *slog.Logger {

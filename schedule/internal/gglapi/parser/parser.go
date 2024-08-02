@@ -6,81 +6,75 @@ import (
 	"google.golang.org/api/sheets/v4"
 	"schedule/internal/config"
 	"schedule/internal/gglapi/document"
-	"time"
+	pt "schedule/internal/lib/parser-tools"
 )
 
-func ParseDocument(gs *sheets.Service, cfg *config.Config, id int) (err error) {
+func ParseDocument(gs *sheets.Service, cfg *config.Config, id int) (s Schedule, err error) {
 	d := document.NewDocument(cfg.GoogleConfig.SpreadSheetId, gs)
 	err = d.GetDocumentSheetsListAndName()
 	if err != nil {
-		return err
+		return Schedule{}, err
 	}
-
-	document.GetExcelColumnName(123)
 
 	sheetName := d.GetSheetById(id)
 
-	start := time.Now()
-	startDate, endDate, err := ExtractDatesFromSheetName(sheetName)
+	startDate, endDate, err := pt.ExtractDatesFromSheetName(sheetName, layoutDate)
 	if err != nil {
 		err = fmt.Errorf("can not extract dates from sheet name: %w", err)
-		return err
+		return Schedule{}, err
 	}
 
-	s := NewSchedule(startDate, endDate, d.SpsheetName)
+	s = NewSchedule(startDate, endDate, d.SpsheetName)
 
 	err = s.ScheduleDates.SetYear()
 	if err != nil {
-		return err
+		return s, err
 	}
 
 	err = s.ScheduleDates.SetDates()
 	if err != nil {
-		return err
+		return s, err
 	}
 
 	daysColumnData, err := d.GetDaysOfweek(sheetName)
 	if err != nil {
-		return err
+		return s, err
 	}
 
 	err = s.ParseDatesFromSlice(daysColumnData)
 	if err != nil {
-		return err
+		return s, err
 	}
 
 	s.ScheduleDates.SetWeekNum()
 	ok, err := s.ValidateDates()
 	if err != nil || !ok {
-		return errors.New("failed validating the dates from sheetname and sheet data")
+		err = errors.New("failed validating the dates from sheetname and sheet data")
+		return s, err
 	}
 
 	lessonsTimingsData, err := d.GetLessonsTimings(sheetName)
 	if err != nil {
-		return err
+		return s, err
 	}
 	err = s.ParseLessonsTimings(lessonsTimingsData)
 	if err != nil {
-		return err
+		return s, err
 	}
-
-	end := time.Now()
-	fmt.Printf("time the schedule preparing took %v\n", end.Sub(start))
 
 	scheduleData, merges, err := d.GetSheduleData(sheetName)
 	if err != nil {
-		return nil
+		return s, err
 	}
 
-	mergesMapping := MakeMergesMapping(merges, int64(d.DataRowId), 2)
-	//printOutJson(merges)
+	mergesMapping := pt.MakeMergesMapping(merges, int64(d.DataRowId), 2)
 
-	err = s.ParseScheduleData(scheduleData, mergesMapping)
+	err = s.ParseScheduleData(scheduleData, mergesMapping, d.DataRowId)
 	if err != nil {
-		return err
+		return s, err
 	}
 
-	group := "ОИБ9-222Б"
+	group := "ССА9-222В"
 	fmt.Printf("group %s\n", group)
 	groupSch, ok := s.GroupsSchedule[group]
 	if ok {
@@ -89,7 +83,7 @@ func ParseDocument(gs *sheets.Service, cfg *config.Config, id int) (err error) {
 		}
 	}
 
-	return err
+	return s, nil
 }
 
 //func printOutJson(i interface{}) {

@@ -14,6 +14,11 @@ type Config struct {
 	GoogleConfig `yaml:"google_config"`
 	HttpServer   `yaml:"http_server"`
 	Storage      StorageConfig `yaml:"storage"`
+	Settings     Settings      `yaml:"settings"`
+}
+
+type Settings struct {
+	TeacherCodeSize int `yaml:"teacher_code_size"`
 }
 
 type GoogleConfig struct {

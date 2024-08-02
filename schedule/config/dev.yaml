@@ -8,8 +8,11 @@ http_server:
   timeout: 4s
   idle_timeout: 60s
 storage:
+  attempts: 3
   host: localhost
   port: 5432
-  database: schedule
+  database: postgres
   username: postgres
   password: postgres4344
+settings:
+  teacher_code_size: 8

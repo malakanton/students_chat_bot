@@ -4,11 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	p "schedule/internal/lib/parser-tools"
 	"time"
 )
 
 const (
-	layoutDate string = "02.01"
+	layoutDate     string = "02.01"
+	layoutFullDate        = "2006-01-02"
+	layoutTime            = "15:04:05"
 )
 
 type Day struct {
@@ -25,8 +28,17 @@ func (d *Day) String() string {
 		d.Id, d.RowIdx, d.Date.Format("2006-01-02"), d.Even)
 }
 
-func (d *Day) AddLesson(lessonTime LessonTimeByFilial) {
+func (d *Day) AddLessonTimings(lessonTime LessonTimeByFilial) (err error) {
+	err = lessonTime.Av.AddDate(d.Date)
+	if err != nil {
+		return err
+	}
+	err = lessonTime.No.AddDate(d.Date)
+	if err != nil {
+		return err
+	}
 	d.Lessons = append(d.Lessons, lessonTime)
+	return nil
 }
 
 func (d *Day) GetLessonTimingsByIdx(idx int) *LessonTimeByFilial {
@@ -51,7 +63,7 @@ func (d *Day) ParseDatesString() error {
 }
 
 func (d *Day) SetYear(year string) (err error) {
-	d.Date, err = CombineYearAndDate(year, d.Date)
+	d.Date, err = p.CombineYearAndDate(year, layoutDate, d.Date)
 	return err
 }
 

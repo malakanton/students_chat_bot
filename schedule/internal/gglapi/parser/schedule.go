@@ -3,6 +3,7 @@ package parser
 import (
 	"errors"
 	"fmt"
+	p "schedule/internal/lib/parser-tools"
 	"strings"
 	"time"
 )
@@ -130,19 +131,21 @@ func (s *Schedule) ParseLessonsTimings(data [][]interface{}) (err error) {
 		if err != nil {
 			return fmt.Errorf("failed to parse lesson timings from  cell B%d: %w", i, err)
 		}
-		day.AddLesson(lt)
-
+		err = day.AddLessonTimings(lt)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-func (s *Schedule) ParseScheduleData(data [][]interface{}, mergesMapping map[string]string) (err error) {
+func (s *Schedule) ParseScheduleData(data [][]interface{}, mergesMapping map[string]string, strtRow int) (err error) {
 	var (
 		lessonRawString string
 		l               Lesson
 	)
 
-	groupsIdxMapping := makeGroupdMapping(data[0])
+	groupsIdxMapping := p.MakeGroupdMapping(data[0])
 	firstDayIdx := s.Days[0].RowIdx
 
 	for i, row := range data {
@@ -155,6 +158,9 @@ func (s *Schedule) ParseScheduleData(data [][]interface{}, mergesMapping map[str
 		dateTime := day.GetLessonTimingsByIdx(i)
 
 		for j, cellData := range row {
+
+			cellName := fmt.Sprintf("%s%d", p.GetExcelColumnName(j+3), i+strtRow+1)
+
 			groupName, ok := groupsIdxMapping[j]
 
 			if !ok {
@@ -163,32 +169,51 @@ func (s *Schedule) ParseScheduleData(data [][]interface{}, mergesMapping map[str
 
 			nextDayIdx := s.GetNextDayRowIdx(day, len(data))
 
-			cellCoord, oneLessonMerged, wholeDayMerged := mergedCellsRanges(i, j, nextDayIdx)
+			cellCoord, oneLessonMerged, wholeDayMerged := p.MergedCellsRanges(i, j, nextDayIdx)
 			endMerge, _ := mergesMapping[cellCoord]
 
 			switch endMerge {
 
 			case oneLessonMerged:
-				lessonRawString = cellData.(string)
+				lessonRawString = p.PrepareLessonString(cellData)
 
 			case wholeDayMerged:
-				l = NewFullDayLesson(day, cellData.(string))
-				s.AddNewLesson(groupName, l)
+				wholeDay := NewFullDayLesson(day, p.PrepareLessonString(cellData), cellName)
+				//fmt.Println(wholeDay.String())
+				s.AddNewLesson(groupName, wholeDay)
 				continue
 
 			default:
-				lessonRawString = row[j+BoolToInt(day.Even)].(string)
+				lessonRawString = p.PrepareLessonString(row[j+p.BoolToInt(day.Even)])
 			}
 
 			if lessonRawString == "" {
 				continue
 			}
 
-			loc, filial := processLocCell(row[j+2].(string), day.Even)
-			l = NewLesson(dateTime.GetTiming(filial), lessonRawString, loc, false, filial)
+			loc, filial := p.ProcessLocCell(row[j+2].(string), day.Even)
+			l = NewLesson(dateTime.GetTiming(getFilial(filial)), cellName, lessonRawString, loc, false, getFilial(filial))
+
+			modifiedLesson, err := l.ParseRawString()
+			if err != nil {
+				return err
+			}
+			if modifiedLesson != (Lesson{}) {
+				//fmt.Println(modifiedLesson.String())
+				s.AddNewLesson(groupName, modifiedLesson)
+			}
 
 			s.AddNewLesson(groupName, l)
 		}
 	}
 	return nil
+}
+
+func getFilial(f int) Filial {
+	switch f {
+	case 1:
+		return no
+	default:
+		return av
+	}
 }

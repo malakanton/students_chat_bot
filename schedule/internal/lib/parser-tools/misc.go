@@ -1,11 +1,23 @@
-package parser
+package parser_tools
 
 import (
 	"fmt"
+	"google.golang.org/api/sheets/v4"
 	"strings"
 )
 
-func makeGroupdMapping(row []interface{}) map[int]string {
+func MakeMergesMapping(merges []*sheets.GridRange, startRow, startCol int64) map[string]string {
+	var mapping = map[string]string{}
+	for _, grid := range merges {
+		key := fmt.Sprintf("%d-%d", grid.StartRowIndex-startRow, grid.StartColumnIndex-startCol)
+		value := fmt.Sprintf("%d-%d", grid.EndRowIndex-startRow-1, grid.EndColumnIndex-startCol-1)
+		mapping[key] = value
+	}
+
+	return mapping
+}
+
+func MakeGroupdMapping(row []interface{}) map[int]string {
 	groupMapping := make(map[int]string)
 	for i, cell := range row {
 		cellValue := cell.(string)
@@ -17,7 +29,7 @@ func makeGroupdMapping(row []interface{}) map[int]string {
 	return groupMapping
 }
 
-func processLocCell(s string, even bool) (loc string, filial Filial) {
+func ProcessLocCell(s string, even bool) (loc string, filial int) {
 	var whenDoubleIdx int
 	if even {
 		whenDoubleIdx = 1
@@ -41,7 +53,7 @@ func processLocCell(s string, even bool) (loc string, filial Filial) {
 	return loc, filial
 }
 
-func mergedCellsRanges(i, j, nextDayIdx int) (cellCoord, oneLessonMerged, wholeDayMerged string) {
+func MergedCellsRanges(i, j, nextDayIdx int) (cellCoord, oneLessonMerged, wholeDayMerged string) {
 	cellCoord = fmt.Sprintf("%d-%d", i, j)
 	oneLessonMerged = fmt.Sprintf("%d-%d", i, j+1)
 	wholeDayMerged = fmt.Sprintf("%d-%d", nextDayIdx-1, j+1)

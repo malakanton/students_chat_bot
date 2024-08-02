@@ -2,10 +2,10 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 	"schedule/internal/config"
 	"schedule/pkg/utils"
@@ -19,15 +19,17 @@ type Client interface {
 	Begin(ctx context.Context) (pgx.Tx, error)
 }
 
-func NewClient(ctx context.Context, dbcfg config.StorageConfig) (pool *pgxpool.Pool, err error) {
+func NewClient(ctx context.Context, dbcfg config.StorageConfig) (conn *pgx.Conn, err error) {
 	connString := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", dbcfg.Username, dbcfg.Password, dbcfg.Host, dbcfg.Port, dbcfg.Database)
-
+	if dbcfg.Attempts < 1 {
+		err = errors.New("attempts to connect to db are not passed")
+		return nil, err
+	}
 	err = utils.DoWithTries(func() error {
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 
 		defer cancel()
-
-		pool, err = pgxpool.New(ctx, connString)
+		conn, err = pgx.Connect(ctx, connString)
 		if err != nil {
 			return err
 		}
@@ -38,6 +40,6 @@ func NewClient(ctx context.Context, dbcfg config.StorageConfig) (pool *pgxpool.P
 		log.Fatalf("Failed to connect to db: %s", err)
 	}
 
-	return pool, err
+	return conn, err
 
 }
