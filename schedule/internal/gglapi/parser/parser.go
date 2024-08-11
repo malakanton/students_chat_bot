@@ -4,19 +4,37 @@ import (
 	"errors"
 	"fmt"
 	"google.golang.org/api/sheets/v4"
+	"log/slog"
 	"schedule/internal/config"
 	"schedule/internal/gglapi/document"
 	pt "schedule/internal/lib/parser-tools"
 )
 
-func ParseDocument(gs *sheets.Service, cfg *config.Config, id int) (s Schedule, err error) {
-	d := document.NewDocument(cfg.GoogleConfig.SpreadSheetId, gs)
+type DocumentParser struct {
+	gs     *sheets.Service
+	cfg    *config.Config
+	logger *slog.Logger
+}
+
+func NewDocumentParser(gs *sheets.Service, cfg *config.Config, logger *slog.Logger) DocumentParser {
+	return DocumentParser{
+		gs:     gs,
+		cfg:    cfg,
+		logger: logger,
+	}
+}
+
+func (dp *DocumentParser) ParseDocument(id int) (s Schedule, err error) {
+	d := document.NewDocument(dp.cfg.GoogleConfig.SpreadSheetId, dp.gs)
+	dp.logger.Info("start parsing document")
+
 	err = d.GetDocumentSheetsListAndName()
 	if err != nil {
 		return Schedule{}, err
 	}
 
 	sheetName := d.GetSheetById(id)
+	dp.logger.Info(fmt.Sprintf("working on spreadsheet \"%s\"", sheetName))
 
 	startDate, endDate, err := pt.ExtractDatesFromSheetName(sheetName, layoutDate)
 	if err != nil {
@@ -57,6 +75,7 @@ func ParseDocument(gs *sheets.Service, cfg *config.Config, id int) (s Schedule, 
 	if err != nil {
 		return s, err
 	}
+
 	err = s.ParseLessonsTimings(lessonsTimingsData)
 	if err != nil {
 		return s, err
@@ -74,19 +93,8 @@ func ParseDocument(gs *sheets.Service, cfg *config.Config, id int) (s Schedule, 
 		return s, err
 	}
 
-	group := "ССА9-222В"
-	fmt.Printf("group %s\n", group)
-	groupSch, ok := s.GroupsSchedule[group]
-	if ok {
-		for _, lesson := range groupSch {
-			fmt.Println(lesson.String())
-		}
-	}
+	groups, lessons := s.CountGroupsLessons()
+	dp.logger.Info(fmt.Sprintf("finished to parse schedule: dates %s - %s, total groups %d, total lessons %d", s.ScheduleDates.StartDate.Format(layoutFullDate), s.ScheduleDates.EndDate.Format(layoutFullDate), groups, lessons))
 
 	return s, nil
 }
-
-//func printOutJson(i interface{}) {
-//	jsn, _ := json.MarshalIndent(i, "", "    ")
-//	fmt.Println(string(jsn))
-//}

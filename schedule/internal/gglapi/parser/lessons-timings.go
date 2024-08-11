@@ -30,27 +30,27 @@ func NewLessonTimeByFilial(s string, i int) LessonTimeByFilial {
 }
 
 type LessonTime struct {
-	start time.Time
-	end   time.Time
+	Start time.Time
+	End   time.Time
 }
 
 func (l *LessonTimeByFilial) String() string {
 	return fmt.Sprintf(
-		"AV start %s end %s NO start %s end %s\n",
-		l.Av.start.Format("15:04:05"),
-		l.Av.end.Format("15:04:05"),
-		l.No.start.Format("15:04:05"),
-		l.No.end.Format("15:04:05"),
+		"AV Start %s End %s NO Start %s End %s\n",
+		l.Av.Start.Format("15:04:05"),
+		l.Av.End.Format("15:04:05"),
+		l.No.Start.Format("15:04:05"),
+		l.No.End.Format("15:04:05"),
 	)
 }
 
 func (l *LessonTime) AddDate(date time.Time) (err error) {
 	layout := layoutFullDate + " " + layoutTime
-	l.start, err = time.Parse(layout, date.Format(layoutFullDate)+" "+l.start.Format(layoutTime))
+	l.Start, err = time.Parse(layout, date.Format(layoutFullDate)+" "+l.Start.Format(layoutTime))
 	if err != nil {
 		return err
 	}
-	l.end, err = time.Parse(layout, date.Format(layoutFullDate)+" "+l.end.Format(layoutTime))
+	l.End, err = time.Parse(layout, date.Format(layoutFullDate)+" "+l.End.Format(layoutTime))
 	if err != nil {
 		return err
 	}
@@ -73,10 +73,10 @@ func (l *LessonTimeByFilial) ParseRawString() (err error) {
 	splitted := strings.Split(l.RawString, "НО")
 
 	if len(splitted) == 1 {
-		l.Av.start, l.Av.end, err = p.MakeTimeFromString(splitted[0])
+		l.Av.Start, l.Av.End, err = p.MakeTimeFromString(splitted[0])
 	} else if len(splitted) == 2 {
-		l.Av.start, l.Av.end, err = p.MakeTimeFromString(splitted[0])
-		l.No.start, l.No.end, err = p.MakeTimeFromString(splitted[1])
+		l.Av.Start, l.Av.End, err = p.MakeTimeFromString(splitted[0])
+		l.No.Start, l.No.End, err = p.MakeTimeFromString(splitted[1])
 	}
 	return err
 }

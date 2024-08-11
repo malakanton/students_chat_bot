@@ -10,6 +10,7 @@ const (
 	daysOfWeekRange     string = "A1:A100"
 	lessonsTimingsRange string = "B%d:B100"
 	scheduleDataRange   string = "C%d:ZZ100"
+	//scheduleDataRange string = "C%d:E14"
 )
 
 type Document struct {
@@ -94,7 +95,6 @@ func (d *Document) GetLessonsTimings(sheetName string) ([][]interface{}, error) 
 
 func (d *Document) GetSheduleData(sheetName string) ([][]interface{}, []*sheets.GridRange, error) {
 	resp, _ := d.srv.Spreadsheets.Get(d.Id).Ranges(sheetName + "!" + fmt.Sprintf(scheduleDataRange, d.DataRowId+1)).Do()
-	fmt.Printf("Merges sheets length: %d, first spsheet title: %s\n", len(resp.Sheets), resp.Sheets[0].Properties.Title)
 	merges := resp.Sheets[0].Merges
 	values, err := d.GetSheetData(sheetName, fmt.Sprintf(scheduleDataRange, d.DataRowId+1))
 	return values, merges, err

@@ -27,6 +27,7 @@ RETURNING id;
 		}
 		return err
 	}
+	r.logger.Info("new subject created: ", slog.String("code", subject.Code), slog.String("name", subject.Name))
 	return nil
 }
 
@@ -56,14 +57,14 @@ FROM subjects
 	return subjects, nil
 }
 
-func (r *repository) FindOne(ctx context.Context, code string) (*Subject, error) {
+func (r *repository) FindOne(ctx context.Context, name string) (*Subject, error) {
 	q := `
-SELECT id, subject_name
+SELECT id, code
 FROM subjects
-WHERE code = $1
+WHERE subject_name = $1
 `
 	var subj Subject
-	err := r.client.QueryRow(ctx, q, code).Scan(&subj.Id, &subj.Name)
+	err := r.client.QueryRow(ctx, q, name).Scan(&subj.Id, &subj.Code)
 	if err != nil {
 		return &Subject{}, err
 	}

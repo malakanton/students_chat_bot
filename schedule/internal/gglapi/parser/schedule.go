@@ -31,6 +31,15 @@ func (s *Schedule) String() string {
 	return text
 }
 
+func (s *Schedule) CountGroupsLessons() (int, int) {
+	var lessonsCnt, groupsCnt int
+	for _, lessons := range s.GroupsSchedule {
+		groupsCnt++
+		lessonsCnt += len(lessons)
+	}
+	return groupsCnt, lessonsCnt
+}
+
 func NewSchedule(startDate, endDate time.Time, header string) Schedule {
 	s := Schedule{
 		ScheduleDates: ScheduleDates{
@@ -194,13 +203,13 @@ func (s *Schedule) ParseScheduleData(data [][]interface{}, mergesMapping map[str
 			loc, filial := p.ProcessLocCell(row[j+2].(string), day.Even)
 			l = NewLesson(dateTime.GetTiming(getFilial(filial)), cellName, lessonRawString, loc, false, getFilial(filial))
 
-			modifiedLesson, err := l.ParseRawString()
+			subLesson, err := l.ParseRawString()
 			if err != nil {
 				return err
 			}
-			if modifiedLesson != (Lesson{}) {
-				//fmt.Println(modifiedLesson.String())
-				s.AddNewLesson(groupName, modifiedLesson)
+			if subLesson != (Lesson{}) {
+				//fmt.Println(subLesson.String())
+				s.AddNewLesson(groupName, subLesson)
 			}
 
 			s.AddNewLesson(groupName, l)

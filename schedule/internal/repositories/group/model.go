@@ -24,3 +24,8 @@ func (g *Group) SetCourse() error {
 	g.Course = courseInt
 	return nil
 }
+
+func (g *Group) SetIdAndCourse(id, course int) {
+	g.Id = id
+	g.Course = course
+}

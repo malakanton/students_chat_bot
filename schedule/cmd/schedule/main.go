@@ -10,8 +10,10 @@ import (
 	"os/signal"
 	"schedule/internal/config"
 	"schedule/internal/gglapi"
+	"schedule/internal/gglapi/parser"
 	"schedule/internal/http-server/server"
 	"schedule/internal/repositories"
+	"schedule/internal/uploader"
 	"time"
 
 	t "schedule/internal/http-server/handlers/teachers"
@@ -32,24 +34,35 @@ func main() {
 	logger.Info("starting schedule service", slog.String("env", cfg.Env))
 	logger.Debug("debug mode is ON")
 
+	// dataabase
 	db, err := storage.NewClient(context.Background(), cfg.Storage)
 	if err != nil {
 		logger.Error("failed to init Postgres:", err.Error())
 	}
 	logger.Info("storage Initialised successfully")
 	_ = db
+	// google api client
 	gs, err := gglapi.NewGglApiClient(cfg.GoogleConfig.GoogleCredsPath)
 	if err != nil {
 		return
 	}
-	_ = gs
 
-	rep := repositories.SetUpRepositories(db, context.Background(), logger)
+	dp := parser.NewDocumentParser(gs, cfg, logger)
 
-	//_, err = parser.ParseDocument(gs, cfg, -2)
-	//if err != nil {
-	//	logger.Error("error occured:", err.Error())
-	//}
+	//repositories
+	rep := repositories.SetUpRepositories(db, context.Background(), logger, cfg)
+	//_ = rep
+	parsedSchedule, err := dp.ParseDocument(-4)
+	if err != nil {
+		logger.Error("error occured while parsing document", slog.String("suberror", err.Error()))
+	}
+
+	sup := uploader.NewScheduleUploader(parsedSchedule, rep.Gr, rep.Teach, rep.Les, rep.Subj, logger)
+
+	err = sup.UploadSchedule(context.Background())
+	if err != nil {
+		logger.Error("failed to upload schedule:", err.Error())
+	}
 
 	r := chi.NewRouter()
 

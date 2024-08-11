@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"log/slog"
+	"schedule/internal/config"
 	"schedule/internal/repositories/group"
 	"schedule/internal/repositories/lesson"
 	"schedule/internal/repositories/subject"
@@ -18,11 +19,11 @@ type Repositories struct {
 	Subj   subject.Repository
 }
 
-func SetUpRepositories(db storage.Client, ctx context.Context, logger *slog.Logger) (rep Repositories) {
+func SetUpRepositories(db storage.Client, ctx context.Context, logger *slog.Logger, cfg *config.Config) (rep Repositories) {
 	return Repositories{
 		Logger: logger,
 		Gr:     group.NewRepository(db, logger),
-		Teach:  teacher.NewRepository(db, logger),
+		Teach:  teacher.NewRepository(db, logger, cfg),
 		Les:    lesson.NewRepository(db, logger),
 		Subj:   subject.NewRepository(db, logger),
 	}

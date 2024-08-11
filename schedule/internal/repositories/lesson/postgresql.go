@@ -16,11 +16,11 @@ type repository struct {
 
 func (r *repository) Create(ctx context.Context, lesson *Lesson) error {
 	q := `
-INSERT INTO lessons (week_num, start_time, end_time, group_id, subject_id, teacher_id, whole_day, filial, modified, link, special_case) 
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+INSERT INTO lessons (week_num, start_time, end_time, group_id, subject_id, teacher_id, whole_day, loc, filial, modified, link, special_case) 
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 RETURNING id;
 `
-	if _, err := r.client.Exec(ctx, q, lesson.WeekNum, lesson.Start, lesson.End, lesson.Group.Id, lesson.Subject.Id, lesson.Teacher.Id, lesson.WholeDay, lesson.Filial, lesson.Modified, lesson.Link, lesson.SpecialCase); err != nil {
+	if _, err := r.client.Exec(ctx, q, lesson.WeekNum, lesson.Start, lesson.End, lesson.Group.Id, lesson.Subject.Id, lesson.Teacher.Id, lesson.WholeDay, lesson.Loc, lesson.Filial, lesson.Modified, lesson.Link, lesson.SpecialCase); err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok {
 			sqlError := fmt.Errorf("SQL error occurred: %s, Where: %s, details: %s", pgErr.Message, pgErr.Where, pgErr.Detail)
 			r.logger.Error(sqlError.Error())
@@ -28,7 +28,7 @@ RETURNING id;
 		}
 		return err
 	}
-	r.logger.Info("new lesson created for group", lesson.String())
+	r.logger.Info("new lesson created for group", slog.String("lesson", lesson.String()))
 	return nil
 }
 

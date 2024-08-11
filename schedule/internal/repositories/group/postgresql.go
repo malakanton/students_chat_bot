@@ -67,7 +67,7 @@ FROM groups
 WHERE name = $1
 `
 	var gr Group
-	err := r.client.QueryRow(ctx, q, name).Scan(&gr.Id, &gr.Name)
+	err := r.client.QueryRow(ctx, q, name).Scan(&gr.Id, &gr.Name, &gr.Course)
 	if err != nil {
 		return &Group{}, err
 	}

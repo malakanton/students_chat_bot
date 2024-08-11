@@ -14,3 +14,7 @@ type Teacher struct {
 func (t *Teacher) SetCode(size int) {
 	t.Code = random.GenerateCode(size)
 }
+
+func (t *Teacher) SetId(id int) {
+	t.Id = id
+}

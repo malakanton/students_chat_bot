@@ -12,7 +12,7 @@ import (
 type repository struct {
 	client storage.Client
 	logger *slog.Logger
-	cfg    config.Config
+	cfg    *config.Config
 }
 
 func (r *repository) Create(ctx context.Context, teacher *Teacher) error {
@@ -30,14 +30,15 @@ RETURNING id;
 		}
 		return err
 	}
-	r.logger.Info("new teachers created: ", teacher.Name)
+	r.logger.Info("new teacher created: ", slog.String("name", teacher.Name))
 	return nil
 }
 
 func (r *repository) FindAll(ctx context.Context) (t []Teacher, err error) {
 	q := `
-SELECT id, name, tg_id
+SELECT id, name
 FROM teachers
+WHERE tg_id is null
 `
 	rows, err := r.client.Query(ctx, q)
 	if err != nil {
@@ -48,7 +49,7 @@ FROM teachers
 	for rows.Next() {
 		var teach Teacher
 
-		err = rows.Scan(&teach.Id, &teach.Name, &teach.TgId)
+		err = rows.Scan(&teach.Id, &teach.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -62,12 +63,12 @@ FROM teachers
 
 func (r *repository) FindById(ctx context.Context, id int) (Teacher, error) {
 	q := `
-SELECT id, name, code, tg_id
+SELECT id, name, code
 FROM teachers
 WHERE id = $1
 `
 	var teach Teacher
-	err := r.client.QueryRow(ctx, q, id).Scan(&teach.Id, &teach.Name, &teach.Code, &teach.TgId)
+	err := r.client.QueryRow(ctx, q, id).Scan(&teach.Id, &teach.Name, &teach.Code)
 	if err != nil {
 		return Teacher{}, err
 	}
@@ -76,12 +77,12 @@ WHERE id = $1
 
 func (r *repository) FindByName(ctx context.Context, name string) (*Teacher, error) {
 	q := `
-SELECT id, name, code, tg_id
+SELECT id, name, code
 FROM teachers
 WHERE name = $1
 `
 	var teach Teacher
-	err := r.client.QueryRow(ctx, q, name).Scan(&teach.Id, &teach.Name, &teach.Code, &teach.TgId)
+	err := r.client.QueryRow(ctx, q, name).Scan(&teach.Id, &teach.Name, &teach.Code)
 	if err != nil {
 		return &Teacher{}, err
 	}
@@ -123,9 +124,10 @@ func (r *repository) Delete(ctx context.Context, id string) error {
 	panic("implement me")
 }
 
-func NewRepository(client storage.Client, logger *slog.Logger) Repository {
+func NewRepository(client storage.Client, logger *slog.Logger, cfg *config.Config) Repository {
 	return &repository{
 		client: client,
 		logger: logger,
+		cfg:    cfg,
 	}
 }

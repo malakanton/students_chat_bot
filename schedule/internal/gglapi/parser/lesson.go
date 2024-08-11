@@ -11,6 +11,7 @@ import (
 const (
 	BS     string = "Классный час"
 	BsCode string = "BS"
+	NoCode string = "NO_CODE"
 )
 
 type Lesson struct {
@@ -37,16 +38,18 @@ func NewLesson(lessonTime LessonTime, cell, rawString, loc string, wholeDay bool
 		Loc:       loc,
 		WholeDay:  wholeDay,
 		Filial:    filial,
+		Subject:   "NO_SUBJECT",
+		Teacher:   "NO_TEACHER",
 	}
 }
 
-func NewModifiedLesson(l Lesson, subjectCode, rawString string) Lesson {
+func NewSubLesson(l Lesson, subjectCode, rawString string) Lesson {
 	return Lesson{
 		Cell:        l.Cell,
 		DateTime:    l.DateTime,
 		Loc:         l.Loc,
 		Filial:      l.Filial,
-		Modified:    true,
+		Modified:    false,
 		SubjectCode: subjectCode,
 		RawString:   rawString,
 	}
@@ -69,7 +72,7 @@ func NewLessonWithTeacherSwap(l Lesson, teacherName string) Lesson {
 func NewFullDayLesson(day *Day, name, cell string) Lesson {
 	return Lesson{
 		Cell:      cell,
-		DateTime:  LessonTime{start: day.Date},
+		DateTime:  LessonTime{Start: day.Date},
 		RawString: name,
 		Subject:   name,
 		WholeDay:  true,
@@ -81,8 +84,8 @@ func (l *Lesson) String() string {
 	return fmt.Sprintf(
 		"[%s] Lesson date %s -> %s Fullday:%v Filial:%d Loc:%s Teacher:%s (swap:%v) Subject:[%s]%s Modified:%v Cancelled:%v",
 		l.Cell,
-		l.DateTime.start.Format("2006-01-02 [15:04"),
-		l.DateTime.end.Format("15:04]"),
+		l.DateTime.Start.Format("2006-01-02 [15:04"),
+		l.DateTime.End.Format("15:04]"),
 		l.WholeDay,
 		l.Filial,
 		l.Loc,
@@ -98,6 +101,7 @@ func (l *Lesson) String() string {
 func (l *Lesson) checkIfCancelled() error {
 	if strings.Contains(l.RawString, "ОТМЕНА") {
 		l.Cancelled = true
+		l.RawString = strings.ReplaceAll(l.RawString, "ОТМЕНА", "")
 	}
 	return nil
 }
@@ -114,7 +118,8 @@ func (l *Lesson) SetSubjectCode(code string) {
 	l.SubjectCode = code
 }
 
-func (l *Lesson) ParseRawString() (modifiedLesson Lesson, err error) {
+func (l *Lesson) ParseRawString() (subLesson Lesson, err error) {
+	fmt.Println(l.Cell, l.RawString)
 
 	re, _ := regexp.Compile(`\n`)
 	l.RawString = re.ReplaceAllLiteralString(l.RawString, "")
@@ -129,14 +134,18 @@ func (l *Lesson) ParseRawString() (modifiedLesson Lesson, err error) {
 		return Lesson{}, nil
 	}
 
-	modifiedLesson, err = l.parseSubjectCode()
-	if err != nil && err.Error() == "two lessons" {
-		_, err := modifiedLesson.parseTeacher()
-		if err != nil {
-			return Lesson{}, err
-		}
-		err = modifiedLesson.GetSubjectAndCancelled()
-		if err != nil {
+	subLesson, err = l.parseSubjectCode()
+	if err != nil {
+		if err.Error() == "two lessons" {
+			_, err := subLesson.parseTeacher()
+			if err != nil {
+				return Lesson{}, err
+			}
+			err = subLesson.GetSubjectAndCancelled()
+			if err != nil {
+				return Lesson{}, err
+			}
+		} else {
 			return Lesson{}, err
 		}
 	}
@@ -144,48 +153,61 @@ func (l *Lesson) ParseRawString() (modifiedLesson Lesson, err error) {
 	swappedTeacherLesson, err := l.parseTeacher()
 	if err != nil {
 		if err.Error() == "two teachers" {
-			return swappedTeacherLesson, nil
+			err = swappedTeacherLesson.GetSubjectAndCancelled()
+			if err != nil {
+				return Lesson{}, err
+			}
+			subLesson = swappedTeacherLesson
+		} else {
+			return Lesson{}, err
 		}
-		return Lesson{}, err
 	}
 
 	err = l.GetSubjectAndCancelled()
+	if err != nil {
+		return Lesson{}, err
+	}
 
-	_ = l.parseSpecialCase()
+	err = l.parseSpecialCase()
+	if err != nil {
+		return Lesson{}, err
+	}
 
-	return modifiedLesson, nil
+	return subLesson, nil
 }
 
-func (l *Lesson) parseSubjectCode() (modifiedLesson Lesson, err error) {
-	re := regexp.MustCompile(`[А-Я]{2,4}\.\d{2,4}(\.\d{2})?[а-я]?`)
+func (l *Lesson) parseSubjectCode() (subLesson Lesson, err error) {
+	re := regexp.MustCompile(`[А-Я]{2,4}\.\d{2,4}(\.\d{2})?(\.\d{1,2})?[а-я]?`)
 	foundCodes := re.FindAllString(l.RawString, -1)
-	modifiedLesson = Lesson{}
+	subLesson = Lesson{}
 
 	if foundCodes == nil {
-		return modifiedLesson, fmt.Errorf("no subject code found in cell %s, string: %s", l.Cell, l.RawString)
+		l.SubjectCode = NoCode
+		return subLesson, nil // fmt.Errorf("no subject code found in cell %s, string: %s", l.Cell, l.RawString)
 	}
 
 	if len(foundCodes) == 1 {
 		l.SubjectCode = foundCodes[0]
-		return modifiedLesson, nil
+		return subLesson, nil
 	}
 
 	if len(foundCodes) == 2 {
 		twoSubjects := strings.Split(l.RawString, foundCodes[1])
 
 		l.SetModified()
-		l.SetSubjectCode(foundCodes[1])
+		l.SetSubjectCode(foundCodes[0])
+		l.RawString = twoSubjects[0]
 
-		modifiedLesson = NewModifiedLesson(*l, foundCodes[0], twoSubjects[1])
+		subLesson = NewSubLesson(*l, foundCodes[1], twoSubjects[1])
 
-		return modifiedLesson, errors.New("two lessons")
+		return subLesson, errors.New("two lessons")
 	} else {
-		return modifiedLesson, fmt.Errorf("more than 2 lesson code in cell %s, string %s", l.Cell, l.RawString)
+		return subLesson, fmt.Errorf("more than 2 lesson code in cell %s, string %s", l.Cell, l.RawString)
 	}
 }
 
-func (l *Lesson) parseTeacher() (modifiedLesson Lesson, err error) {
-	re := regexp.MustCompile(`([а-яА-Я]\.?-)?[а-яА-Я][а-я]+ ( ?[А-Я]\.?){2}`)
+func (l *Lesson) parseTeacher() (subLesson Lesson, err error) {
+	re := regexp.MustCompile(`([а-яА-Я]\.?-)?[А-Я][а-я]+ ( ?[А-Я]\.?){2}`)
 	foundTeachers := re.FindAllString(l.RawString, -1)
 
 	if foundTeachers == nil {
@@ -201,31 +223,31 @@ func (l *Lesson) parseTeacher() (modifiedLesson Lesson, err error) {
 	}
 
 	if len(foundTeachers) == 1 {
-		l.Teacher = foundTeachers[0]
+		l.Teacher = prepTeacherName(foundTeachers[0])
 		return Lesson{}, nil
 	}
 
 	if len(foundTeachers) == 2 {
 		l.SetModified()
 		l.SetCancelled()
-		l.Teacher = foundTeachers[1]
+		l.Teacher = prepTeacherName(foundTeachers[1])
 
 		l.Subject = p.CleanUpSubjectString(l.RawString, l.SubjectCode, re)
 
-		modifiedLesson = NewLessonWithTeacherSwap(*l, foundTeachers[0])
+		subLesson = NewLessonWithTeacherSwap(*l, prepTeacherName(foundTeachers[0]))
 
-		return modifiedLesson, errors.New("two teachers")
+		return subLesson, errors.New("two teachers")
 	} else {
 		return Lesson{}, fmt.Errorf("more than 2 teachers in cell %s, string %s", l.Cell, l.RawString)
 	}
 }
 
 func (l *Lesson) GetSubjectAndCancelled() (err error) {
-	err = l.parseSubject()
+	err = l.checkIfCancelled()
 	if err != nil {
 		return err
 	}
-	err = l.checkIfCancelled()
+	err = l.parseSubject()
 	if err != nil {
 		return err
 	}
@@ -233,13 +255,23 @@ func (l *Lesson) GetSubjectAndCancelled() (err error) {
 }
 
 func (l *Lesson) parseSubject() error {
-	splitted := strings.Split(l.RawString, l.SubjectCode)
-	if len(splitted) > 1 {
-		subjectNoTeacher := strings.ReplaceAll(splitted[1], l.Teacher, "")
-		l.Subject = strings.TrimSpace(subjectNoTeacher)
+	err := fmt.Errorf("No subject name in string %s, cell %s", l.RawString, l.Cell)
+	reDate := regexp.MustCompile(`\d{2}\.?\d{2}`)
+
+	subjectNoCode := strings.ReplaceAll(l.RawString, l.SubjectCode, "")
+	subjectNoTeacher := strings.Split(subjectNoCode, strings.Split(l.Teacher, " ")[0])
+	if len(subjectNoTeacher) == 0 {
+		return err
+	}
+
+	subjectNoDate := reDate.ReplaceAllLiteralString(subjectNoTeacher[0], "")
+	trimmed := strings.TrimSpace(subjectNoDate)
+	re := regexp.MustCompile(`[а-яА-Я ()/]+`)
+	if re.MatchString(trimmed) {
+		l.Subject = trimmed
 		return nil
 	}
-	return fmt.Errorf("Now subject name in string %s, cell %s", l.RawString, l.Cell)
+	return err
 }
 
 func (l *Lesson) parseSpecialCase() error {
@@ -252,4 +284,9 @@ func (l *Lesson) parseSpecialCase() error {
 		}
 	}
 	return nil
+}
+
+func prepTeacherName(s string) string {
+	s = strings.ReplaceAll(s, ".-", "-")
+	return strings.ReplaceAll(s, ". ", ".")
 }

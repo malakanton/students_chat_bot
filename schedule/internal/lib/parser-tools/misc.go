@@ -37,8 +37,10 @@ func ProcessLocCell(s string, even bool) (loc string, filial int) {
 
 	s = strings.Replace(s, "\n", " ", -1)
 	switch {
-	case strings.Contains(s, "с/з"):
+	case strings.Contains(s, "с/з") || strings.Contains(s, "а/з"):
 		loc = s
+	case strings.Contains(s, "дист"):
+		loc = "дистант"
 	case strings.Contains(s, "/"):
 		loc = strings.Split(s, "/")[whenDoubleIdx]
 	default:
@@ -50,7 +52,7 @@ func ProcessLocCell(s string, even bool) (loc string, filial int) {
 		filial = 1
 	}
 
-	return loc, filial
+	return strings.TrimSpace(loc), filial
 }
 
 func MergedCellsRanges(i, j, nextDayIdx int) (cellCoord, oneLessonMerged, wholeDayMerged string) {

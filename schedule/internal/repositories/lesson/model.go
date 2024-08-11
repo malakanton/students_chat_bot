@@ -2,15 +2,15 @@ package lesson
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 	"schedule/internal/gglapi/parser"
 	"schedule/internal/repositories/group"
 	"schedule/internal/repositories/subject"
 	"schedule/internal/repositories/teacher"
 	"time"
 )
-
-const NoRows string = "no rows in result set"
 
 type Lesson struct {
 	Id          int             `json:"id"`
@@ -32,7 +32,7 @@ type Lesson struct {
 
 func (l *Lesson) String() string {
 	return fmt.Sprintf(
-		"[%s] Lesson date %s -> %s Fullday:%v Filial:%d Loc:%s Teacher:%s (swap:%v) Subject:[%s]%s Modified:%v Cancelled:%v",
+		"[%d] Lesson date %s -> %s Fullday:%v Filial:%d Loc:%s Teacher:%s (swap:%v) Subject:[%s]%s Modified:%v Cancelled:%v",
 		l.Id,
 		l.Start.Format("2006-01-02 [15:04"),
 		l.End.Format("15:04]"),
@@ -40,16 +40,19 @@ func (l *Lesson) String() string {
 		l.Filial,
 		l.Loc,
 		l.Teacher.Name,
+		l.TeacherSwap,
+		l.Subject.Code,
 		l.Subject.Name,
 		l.Modified,
+		l.Cancelled,
 	)
 }
 
 func NewLessonFromParsed(lesson *parser.Lesson, groupName string, weekNum int) Lesson {
 	return Lesson{
 		WeekNum:     weekNum,
-		Start:       time.Time{},
-		End:         time.Time{},
+		Start:       lesson.DateTime.Start,
+		End:         lesson.DateTime.End,
 		Group:       group.Group{Name: groupName},
 		Loc:         lesson.Loc,
 		WholeDay:    lesson.WholeDay,
@@ -64,50 +67,56 @@ func NewLessonFromParsed(lesson *parser.Lesson, groupName string, weekNum int) L
 }
 
 func (l *Lesson) SetTeacher(ctx context.Context, rep teacher.Repository, teacher *teacher.Teacher) (err error) {
-	teach, err := rep.FindByName(ctx, teacher.Name)
+	const op = "lesson.model.set_teacher"
+	existingTeacher, err := rep.FindByName(ctx, teacher.Name)
 	if err != nil {
-		if err.Error() == NoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			err = rep.Create(ctx, teacher)
 			if err != nil {
-				return err
+				return fmt.Errorf("%s: execute statement: %w", op, err)
 			}
 			return nil
 		}
-		return err
+		return fmt.Errorf("%s: execute statement: %w", op, err)
 	}
-	teacher = teach
+	teacher.SetId(existingTeacher.Id)
 	return nil
 }
 
 func (l *Lesson) SetGroup(ctx context.Context, rep group.Repository, group *group.Group) (err error) {
-	gr, err := rep.FindOne(ctx, group.Name)
+	const op = "lesson.model.set_group"
+	existingGroup, err := rep.FindOne(ctx, group.Name)
 	if err != nil {
-		if err.Error() == NoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			err = rep.Create(ctx, group)
 			if err != nil {
-				return err
+				return fmt.Errorf("%s: execute statement: %w", op, err)
 			}
 			return nil
 		}
-		return err
+		return fmt.Errorf("%s: execute statement: %w", op, err)
 	}
-	group = gr
+	group.SetIdAndCourse(existingGroup.Id, existingGroup.Course)
 	return nil
 }
 
 func (l *Lesson) SetSubject(ctx context.Context, rep subject.Repository, subject *subject.Subject) (err error) {
-	subj, err := rep.FindOne(ctx, subject.Code)
+	const op = "lesson.model.set_subject"
+	if subject.Code == "" {
+		subject.Code = "NO_SUBJECT"
+	}
+	existingSubj, err := rep.FindOne(ctx, subject.Name)
 	if err != nil {
-		if err.Error() == NoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			err = rep.Create(ctx, subject)
 			if err != nil {
-				return err
+				return fmt.Errorf("%s: execute statement: %w", op, err)
 			}
 			return nil
 		}
-		return err
+		return fmt.Errorf("%s: execute statement: %w", op, err)
 	}
-	subject = subj
+	subject.SetIdAndCode(existingSubj.Id, existingSubj.Code)
 	return nil
 }
 
