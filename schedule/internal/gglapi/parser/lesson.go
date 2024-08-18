@@ -202,7 +202,7 @@ func (l *Lesson) parseSubjectCode() (subLesson Lesson, err error) {
 
 		return subLesson, errors.New("two lessons")
 	} else {
-		return subLesson, fmt.Errorf("more than 2 lesson code in cell %s, string %s", l.Cell, l.RawString)
+		return subLesson, fmt.Errorf("more than 2 lessons code in cell %s, string %s", l.Cell, l.RawString)
 	}
 }
 

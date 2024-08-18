@@ -15,10 +15,16 @@ type Config struct {
 	HttpServer   `yaml:"http_server"`
 	Storage      StorageConfig `yaml:"storage"`
 	Settings     Settings      `yaml:"settings"`
+	Scheduler    Scheduler     `yaml:"scheduler"`
+}
+
+type Scheduler struct {
+	Jobs []string `yaml:"jobs"`
 }
 
 type Settings struct {
-	TeacherCodeSize int `yaml:"teacher_code_size"`
+	TeacherCodeSize int    `yaml:"teacher_code_size"`
+	TimeZone        string `yaml:"time_zone"`
 }
 
 type GoogleConfig struct {

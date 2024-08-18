@@ -138,7 +138,7 @@ func (s *Schedule) ParseLessonsTimings(data [][]interface{}) (err error) {
 
 		err = lt.ParseRawString()
 		if err != nil {
-			return fmt.Errorf("failed to parse lesson timings from  cell B%d: %w", i, err)
+			return fmt.Errorf("failed to parse lessons timings from  cell B%d: %w", i, err)
 		}
 		err = day.AddLessonTimings(lt)
 		if err != nil {

@@ -16,3 +16,7 @@ storage:
   password: postgres4344
 settings:
   teacher_code_size: 8
+  time_zone: Europe/Moscow
+scheduler:
+  jobs:
+    - "@every 00h00m15s"

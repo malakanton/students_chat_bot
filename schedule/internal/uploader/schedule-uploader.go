@@ -54,7 +54,7 @@ func (sup *ScheduleUploader) UploadSchedule(ctx context.Context) (err error) {
 			if err != nil {
 				return err
 			}
-			// if lesson doesn't exist -> create a new lesson in db
+			// if lessons doesn't exist -> create a new lessons in db
 			existingLesson, err := sup.les.FindOne(ctx, l.Group.Name, l.Start)
 			if err != nil {
 				if errors.Is(err, pgx.ErrNoRows) {
@@ -62,12 +62,12 @@ func (sup *ScheduleUploader) UploadSchedule(ctx context.Context) (err error) {
 					if err != nil {
 						return err
 					}
-					sup.logger.Info("new lesson uploaded", slog.String("lesson", l.String()))
+					sup.logger.Info("new lessons uploaded", slog.String("lessons", l.String()))
 					continue
 				}
 				return err
 			}
-			// if new lesson equals to an existing lesson -> pass through
+			// if new lessons equals to an existing lessons -> pass through
 			if l.Equals(&existingLesson) {
 				continue
 			}

@@ -21,7 +21,7 @@ type Lesson struct {
 	Loc         string          `json:"loc,omitempty"`
 	WholeDay    bool            `json:"whole_day"`
 	Filial      parser.Filial   `json:"filial,omitempty"`
-	Teacher     teacher.Teacher `json:"teachers,omitempty"`
+	Teacher     teacher.Teacher `json:"teacher,omitempty"`
 	Subject     subject.Subject `json:"subject,omitempty"`
 	Modified    bool            `json:"modified,omitempty"`
 	Cancelled   bool            `json:"cancelled"`
@@ -67,7 +67,7 @@ func NewLessonFromParsed(lesson *parser.Lesson, groupName string, weekNum int) L
 }
 
 func (l *Lesson) SetTeacher(ctx context.Context, rep teacher.Repository, teacher *teacher.Teacher) (err error) {
-	const op = "lesson.model.set_teacher"
+	const op = "lessons.model.set_teacher"
 	existingTeacher, err := rep.FindByName(ctx, teacher.Name)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -84,7 +84,7 @@ func (l *Lesson) SetTeacher(ctx context.Context, rep teacher.Repository, teacher
 }
 
 func (l *Lesson) SetGroup(ctx context.Context, rep group.Repository, group *group.Group) (err error) {
-	const op = "lesson.model.set_group"
+	const op = "lessons.model.set_group"
 	existingGroup, err := rep.FindOne(ctx, group.Name)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -101,7 +101,7 @@ func (l *Lesson) SetGroup(ctx context.Context, rep group.Repository, group *grou
 }
 
 func (l *Lesson) SetSubject(ctx context.Context, rep subject.Repository, subject *subject.Subject) (err error) {
-	const op = "lesson.model.set_subject"
+	const op = "lessons.model.set_subject"
 	if subject.Code == "" {
 		subject.Code = "NO_SUBJECT"
 	}

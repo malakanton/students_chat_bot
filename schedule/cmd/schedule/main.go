@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/go-chi/chi/v5"
+	"schedule/internal/gglapi/drive"
+
 	"log/slog"
 	"net/http"
 	"os"
@@ -13,9 +14,10 @@ import (
 	"schedule/internal/gglapi/parser"
 	"schedule/internal/http-server/server"
 	"schedule/internal/repositories"
-	"schedule/internal/uploader"
+	"schedule/internal/scheduler"
 	"time"
 
+	l "schedule/internal/http-server/handlers/lessons"
 	t "schedule/internal/http-server/handlers/teachers"
 	"schedule/internal/storage"
 	"syscall"
@@ -28,13 +30,14 @@ const (
 
 func main() {
 	cfg := config.MustConfig()
-	fmt.Println(cfg)
 	logger := setupLogger(cfg.Env)
 
 	logger.Info("starting schedule service", slog.String("env", cfg.Env))
 	logger.Debug("debug mode is ON")
 
-	// dataabase
+	CheckDate := time.Now().Format(drive.DateLayout)
+
+	// database
 	db, err := storage.NewClient(context.Background(), cfg.Storage)
 	if err != nil {
 		logger.Error("failed to init Postgres:", err.Error())
@@ -42,27 +45,26 @@ func main() {
 	logger.Info("storage Initialised successfully")
 	_ = db
 	// google api client
-	gs, err := gglapi.NewGglApiClient(cfg.GoogleConfig.GoogleCredsPath)
+	gs, err := gglapi.NewGoogleApi(cfg.GoogleConfig.GoogleCredsPath)
 	if err != nil {
 		return
 	}
-
-	dp := parser.NewDocumentParser(gs, cfg, logger)
+	// schedule parser
+	dp := parser.NewDocumentParser(gs.SheetsService, cfg, logger)
 
 	//repositories
 	rep := repositories.SetUpRepositories(db, context.Background(), logger, cfg)
-	//_ = rep
-	parsedSchedule, err := dp.ParseDocument(-4)
+
+	sch := scheduler.NewScheduler(cfg.Settings.TimeZone)
+	defer sch.Stop()
+
+	err = scheduler.AddScheduledJobs(sch, cfg, logger, dp, rep, gs, &CheckDate)
 	if err != nil {
-		logger.Error("error occured while parsing document", slog.String("suberror", err.Error()))
+		logger.Error("failed to set up scheduled jobs", slog.String("err", err.Error()))
+		return
 	}
 
-	sup := uploader.NewScheduleUploader(parsedSchedule, rep.Gr, rep.Teach, rep.Les, rep.Subj, logger)
-
-	err = sup.UploadSchedule(context.Background())
-	if err != nil {
-		logger.Error("failed to upload schedule:", err.Error())
-	}
+	go sch.Start()
 
 	r := chi.NewRouter()
 
@@ -75,6 +77,7 @@ func start(r *chi.Mux, cfg *config.Config, logger *slog.Logger, rep repositories
 	server.SetHealthCheck(r)
 
 	r.Mount("/teachers", t.TeacherRoutes(context.Background(), logger, rep.Teach))
+	r.Mount("/lessons", l.LessonsRoutes(context.Background(), logger, rep.Les))
 
 	logger.Info("starting server", slog.String("address", cfg.Address))
 

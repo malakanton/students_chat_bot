@@ -30,10 +30,10 @@ type TeacherGetter interface {
 func GetTeacher(ctx context.Context, log *slog.Logger, tg TeacherGetter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		id_str := chi.URLParam(r, "id")
+		idStr := chi.URLParam(r, "id")
 		var err error
 
-		id, err := strconv.Atoi(id_str)
+		id, err := strconv.Atoi(idStr)
 		if err != nil {
 			log.Error("invalid id", err.Error())
 			render.JSON(w, r, resp.Error("invalid id"))

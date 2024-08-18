@@ -12,20 +12,20 @@ import (
 
 type DocumentParser struct {
 	gs     *sheets.Service
-	cfg    *config.Config
+	Cfg    *config.Config
 	logger *slog.Logger
 }
 
 func NewDocumentParser(gs *sheets.Service, cfg *config.Config, logger *slog.Logger) DocumentParser {
 	return DocumentParser{
 		gs:     gs,
-		cfg:    cfg,
+		Cfg:    cfg,
 		logger: logger,
 	}
 }
 
 func (dp *DocumentParser) ParseDocument(id int) (s Schedule, err error) {
-	d := document.NewDocument(dp.cfg.GoogleConfig.SpreadSheetId, dp.gs)
+	d := document.NewDocument(dp.Cfg.GoogleConfig.SpreadSheetId, dp.gs)
 	dp.logger.Info("start parsing document")
 
 	err = d.GetDocumentSheetsListAndName()

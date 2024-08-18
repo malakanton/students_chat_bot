@@ -14,6 +14,16 @@ type repository struct {
 	logger *slog.Logger
 }
 
+func (r *repository) Update(ctx context.Context, lesson Lesson) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r *repository) Delete(ctx context.Context, id string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (r *repository) Create(ctx context.Context, lesson *Lesson) error {
 	q := `
 INSERT INTO lessons (week_num, start_time, end_time, group_id, subject_id, teacher_id, whole_day, loc, filial, modified, link, special_case) 
@@ -28,7 +38,7 @@ RETURNING id;
 		}
 		return err
 	}
-	r.logger.Info("new lesson created for group", slog.String("lesson", lesson.String()))
+	r.logger.Info("new lessons created for group", slog.String("lessons", lesson.String()))
 	return nil
 }
 
@@ -53,14 +63,157 @@ AND l.start_time = $2
 	return l, nil
 }
 
-func (r *repository) Update(ctx context.Context, lesson Lesson) error {
-	//TODO implement me
-	panic("implement me")
+func (r *repository) FindWeeklyForTeacher(ctx context.Context, id, weekNum int) (lessons []Lesson, err error) {
+	q := `
+SELECT 
+    l.start_time, 
+    l.end_time,
+    l.loc,
+    g.name,
+    s.subject_name,
+    l.filial,
+    l.cancelled,
+    l.special_case
+FROM lessons l 
+	LEFT JOIN groups g ON g.id = l.group_id
+	LEFT JOIN subjects s ON s.id = l.subject_id
+WHERE l.teacher_id = $1
+AND l.week_num = $2
+`
+	rows, err := r.client.Query(ctx, q, id, weekNum)
+	if err != nil {
+		return nil, err
+	}
+
+	lessons = make([]Lesson, 0)
+	for rows.Next() {
+		var l Lesson
+
+		err = rows.Scan(&l.Start, &l.End, &l.Loc, &l.Group.Name, &l.Subject.Name, &l.Filial, &l.Cancelled, &l.SpecialCase)
+		if err != nil {
+			return nil, err
+		}
+		lessons = append(lessons, l)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return lessons, nil
 }
 
-func (r *repository) Delete(ctx context.Context, id string) error {
-	//TODO implement me
-	panic("implement me")
+func (r *repository) FindDailyForTeacher(ctx context.Context, id int, date string) (lessons []Lesson, err error) {
+	q := `
+SELECT 
+    l.start_time, 
+    l.end_time,
+    l.loc,
+    g.name,
+    s.subject_name,
+    l.filial,
+    l.cancelled,
+    l.special_case
+FROM lessons l 
+	LEFT JOIN groups g ON g.id = l.group_id
+	LEFT JOIN subjects s ON s.id = l.subject_id
+WHERE l.teacher_id = $1
+AND to_char(start_time, 'yyyy-mm-dd') = $2
+`
+	rows, err := r.client.Query(ctx, q, id, date)
+	if err != nil {
+		return nil, err
+	}
+
+	lessons = make([]Lesson, 0)
+	for rows.Next() {
+		var l Lesson
+
+		err = rows.Scan(&l.Start, &l.End, &l.Loc, &l.Group.Name, &l.Subject.Name, &l.Filial, &l.Cancelled, &l.SpecialCase)
+		if err != nil {
+			return nil, err
+		}
+		lessons = append(lessons, l)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return lessons, nil
+}
+
+func (r *repository) FindGroupWeeklySchedule(ctx context.Context, id, weekNum int) (lessons []Lesson, err error) {
+	q := `
+SELECT 
+    l.start_time, 
+    l.end_time,
+    l.loc,
+    t.name,
+    s.subject_name,
+    l.filial,
+    l.cancelled,
+    l.special_case
+FROM lessons l 
+	LEFT JOIN groups g ON g.id = l.group_id
+    LEFT JOIN teachers t on t.id = l.teacher_id
+	LEFT JOIN subjects s ON s.id = l.subject_id
+WHERE l.teacher_id = $1
+AND l.week_num = $2
+`
+	rows, err := r.client.Query(ctx, q, id, weekNum)
+	if err != nil {
+		return nil, err
+	}
+
+	lessons = make([]Lesson, 0)
+	for rows.Next() {
+		var l Lesson
+
+		err = rows.Scan(&l.Start, &l.End, &l.Loc, &l.Teacher.Name, &l.Subject.Name, &l.Filial, &l.Cancelled, &l.SpecialCase)
+		if err != nil {
+			return nil, err
+		}
+		lessons = append(lessons, l)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return lessons, nil
+}
+
+func (r *repository) FindGroupDailySchedule(ctx context.Context, id int, date string) (lessons []Lesson, err error) {
+	q := `
+SELECT 
+    l.start_time, 
+    l.end_time,
+    l.loc,
+    t.name,
+    s.subject_name,
+    l.filial,
+    l.cancelled,
+    l.special_case
+FROM lessons l 
+    LEFT JOIN teachers t on t.id = l.teacher_id
+	LEFT JOIN subjects s ON s.id = l.subject_id
+WHERE l.group_id = $1
+AND to_char(start_time, 'yyyy-mm-dd') = $2
+`
+	rows, err := r.client.Query(ctx, q, id, date)
+	if err != nil {
+		return nil, err
+	}
+
+	lessons = make([]Lesson, 0)
+	for rows.Next() {
+		var l Lesson
+
+		err = rows.Scan(&l.Start, &l.End, &l.Loc, &l.Teacher.Name, &l.Subject.Name, &l.Filial, &l.Cancelled, &l.SpecialCase)
+		if err != nil {
+			return nil, err
+		}
+		lessons = append(lessons, l)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return lessons, nil
 }
 
 func NewRepository(client storage.Client, logger *slog.Logger) Repository {
