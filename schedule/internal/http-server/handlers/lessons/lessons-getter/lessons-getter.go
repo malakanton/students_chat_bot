@@ -74,7 +74,7 @@ func TeacherDailySchedule(ctx context.Context, log *slog.Logger, lg LessonsGette
 
 		l, err := lg.FindDailyForTeacher(ctx, id, date)
 		if err != nil {
-			log.Error("no daily schedule for date", err.Error())
+			log.Error("no daily schedule for date", slog.String("error", err.Error()))
 			render.JSON(w, r, resp.Error(fmt.Sprintf("no lessons for day %s for teacher %d, ", date, id)))
 			return
 		}
@@ -91,7 +91,7 @@ func GroupWeeklySchedule(ctx context.Context, log *slog.Logger, lg LessonsGetter
 
 		id, err := strconv.Atoi(idStr)
 		if err != nil {
-			log.Error("invalid group id", err.Error())
+			log.Error("invalid group id", slog.String("error", err.Error()))
 			render.JSON(w, r, resp.Error("invalid group id"))
 			return
 		}

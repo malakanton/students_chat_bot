@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"log/slog"
 	"schedule/internal/gglapi/parser"
+	"schedule/internal/repositories"
 	"schedule/internal/repositories/group"
 	"schedule/internal/repositories/lesson"
 	"schedule/internal/repositories/subject"
@@ -22,14 +23,14 @@ type ScheduleUploader struct {
 	subj   subject.Repository
 }
 
-func NewScheduleUploader(sc parser.Schedule, gr group.Repository, teach teacher.Repository, les lesson.Repository, subj subject.Repository, logger *slog.Logger) ScheduleUploader {
+func NewScheduleUploader(sc parser.Schedule, rep repositories.Repositories, logger *slog.Logger) ScheduleUploader {
 	return ScheduleUploader{
 		logger: logger,
 		sc:     sc,
-		gr:     gr,
-		teach:  teach,
-		les:    les,
-		subj:   subj,
+		gr:     rep.Gr,
+		teach:  rep.Teach,
+		les:    rep.Les,
+		subj:   rep.Subj,
 	}
 }
 

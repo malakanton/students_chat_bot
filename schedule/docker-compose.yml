@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+  schedule:
+    image: schedule-app:local
+    container_name: schd-app
+    networks:
+      - prod_network
+    depends_on:
+      - schd-db
+    expose:
+      - 8080
+    ports:
+      - "8080:8080"
+
+  schd-db:
+    image: postgres:16
+    container_name: schd-db
+    volumes:
+      - ./schd-db:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres4344
+      - POSTGRES_DB=schedule
+    ports:
+      - "5432:5432"
+    networks:
+      - prod_network
+
+networks:
+  prod_network:

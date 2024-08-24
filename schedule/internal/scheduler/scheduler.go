@@ -1,60 +1,29 @@
 package scheduler
 
 import (
-	"context"
 	cron "github.com/robfig/cron/v3"
 	"log/slog"
-	"schedule/internal/config"
-	"schedule/internal/gglapi"
-	"schedule/internal/gglapi/drive"
-	"schedule/internal/gglapi/parser"
-	"schedule/internal/repositories"
-	"schedule/internal/uploader"
+	pupl "schedule/internal/parser-uploader"
 	"time"
+	_ "time/tzdata"
 )
 
-func NewScheduler(timeZone string) *cron.Cron {
-	moscowTime, _ := time.LoadLocation(timeZone)
+func NewScheduler(timeZone string) (*cron.Cron, error) {
+	moscowTime, err := time.LoadLocation(timeZone)
+	if err != nil {
+		return cron.New(), err
+	}
 	schd := cron.New(cron.WithLocation(moscowTime))
-	return schd
+	return schd, err
 }
 
-func AddScheduledJobs(s *cron.Cron, cfg *config.Config, logger *slog.Logger, dp parser.DocumentParser, rep repositories.Repositories, gs *gglapi.GoogleApi, checkDate *string) error {
-	for _, job := range cfg.Scheduler.Jobs {
-		_, err := s.AddFunc(job, func() { ParseSchedule(logger, dp, rep, gs, checkDate) })
+func AddScheduledJobs(s *cron.Cron, pu *pupl.ParserUploader) error {
+	for _, job := range pu.Cfg.Scheduler.Jobs {
+		_, err := s.AddFunc(job, func() { pu.ParseAndUploadSchedule(false, -1) })
 		if err != nil {
 			return err
 		}
-		logger.Info("scheduler job added", slog.String("job", job))
+		pu.Logger.Info("scheduler job added", slog.String("job", job))
 	}
 	return nil
-}
-
-func ParseSchedule(logger *slog.Logger, dp parser.DocumentParser, rep repositories.Repositories, gs *gglapi.GoogleApi, checkDate *string) {
-	logger.Info("scheduled job started")
-
-	lastModifiedDate, err := drive.GetLastModifiedDate(gs.DriveService, dp.Cfg.SpreadSheetId, dp.Cfg.Settings.TimeZone)
-
-	if err != nil {
-		logger.Error("failed to get last modified date", slog.String("err", err.Error()))
-	}
-	if lastModifiedDate <= *checkDate {
-		return
-	}
-
-	logger.Info("spreadsheet was modified", slog.String("at", lastModifiedDate))
-
-	parsedSchedule, err := dp.ParseDocument(-1)
-	if err != nil {
-		logger.Error("error occured while parsing document", slog.String("err", err.Error()))
-	}
-
-	sup := uploader.NewScheduleUploader(parsedSchedule, rep.Gr, rep.Teach, rep.Les, rep.Subj, logger)
-
-	err = sup.UploadSchedule(context.Background())
-	if err != nil {
-		logger.Error("failed to upload schedule:", err.Error())
-	}
-
-	checkDate = &lastModifiedDate
 }

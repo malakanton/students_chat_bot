@@ -37,7 +37,7 @@ func NewClient(ctx context.Context, dbcfg config.StorageConfig) (conn *pgx.Conn,
 	}, dbcfg.Attempts, 5*time.Second)
 
 	if err != nil {
-		log.Fatalf("Failed to connect to db: %s", err)
+		log.Fatalf("failed to connect to db: %s", err)
 	}
 
 	return conn, err

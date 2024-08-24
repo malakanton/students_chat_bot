@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"github.com/go-chi/chi/v5"
-	"schedule/internal/gglapi/drive"
 
 	"log/slog"
 	"net/http"
@@ -18,7 +17,9 @@ import (
 	"time"
 
 	l "schedule/internal/http-server/handlers/lessons"
+	schd "schedule/internal/http-server/handlers/schedule"
 	t "schedule/internal/http-server/handlers/teachers"
+	pupl "schedule/internal/parser-uploader"
 	"schedule/internal/storage"
 	"syscall"
 )
@@ -35,8 +36,6 @@ func main() {
 	logger.Info("starting schedule service", slog.String("env", cfg.Env))
 	logger.Debug("debug mode is ON")
 
-	CheckDate := time.Now().Format(drive.DateLayout)
-
 	// database
 	db, err := storage.NewClient(context.Background(), cfg.Storage)
 	if err != nil {
@@ -49,16 +48,23 @@ func main() {
 	if err != nil {
 		return
 	}
-	// schedule parser
+	// schedule parser-handler
 	dp := parser.NewDocumentParser(gs.SheetsService, cfg, logger)
 
 	//repositories
 	rep := repositories.SetUpRepositories(db, context.Background(), logger, cfg)
 
-	sch := scheduler.NewScheduler(cfg.Settings.TimeZone)
+	sch, err := scheduler.NewScheduler(cfg.Settings.TimeZone)
+	if err != nil {
+		logger.Error("failed to init scheduler", err.Error())
+		return
+	}
+
+	pu := pupl.NewParserUploader(cfg, logger, &rep, &dp, gs)
+
 	defer sch.Stop()
 
-	err = scheduler.AddScheduledJobs(sch, cfg, logger, dp, rep, gs, &CheckDate)
+	err = scheduler.AddScheduledJobs(sch, pu)
 	if err != nil {
 		logger.Error("failed to set up scheduled jobs", slog.String("err", err.Error()))
 		return
@@ -68,16 +74,17 @@ func main() {
 
 	r := chi.NewRouter()
 
-	start(r, cfg, logger, rep)
+	start(r, cfg, logger, rep, pu)
 }
 
-func start(r *chi.Mux, cfg *config.Config, logger *slog.Logger, rep repositories.Repositories) {
+func start(r *chi.Mux, cfg *config.Config, logger *slog.Logger, rep repositories.Repositories, pu *pupl.ParserUploader) {
 
 	server.SetUpMiddlewares(r)
 	server.SetHealthCheck(r)
 
 	r.Mount("/teachers", t.TeacherRoutes(context.Background(), logger, rep.Teach))
 	r.Mount("/lessons", l.LessonsRoutes(context.Background(), logger, rep.Les))
+	r.Mount("/schedule", schd.ScheduleRoutes(context.Background(), pu))
 
 	logger.Info("starting server", slog.String("address", cfg.Address))
 
