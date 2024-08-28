@@ -4,7 +4,7 @@ import re
 import pandas as pd
 import numpy as np
 import pdfplumber
-from lib.models import Group
+from lib.models.group import Group
 from loguru import logger
 
 

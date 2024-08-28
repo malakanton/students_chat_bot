@@ -7,7 +7,9 @@ from google_api.google_drive import GoogleDriver
 from langchain.vectorstores.pgvector import PGVector
 from langchain_openai import OpenAIEmbeddings
 from lib.misc import Lexicon
-from lib.models import Groups, Users
+from lib.models.group import Groups
+from lib.models.users import Users
+from lib.schedule.schedule_client import ScheduleClient
 from lib.s3 import S3Client
 from loguru import logger
 from openai import OpenAI
@@ -76,3 +78,6 @@ s3 = S3Client()
 logger.success("S3 Client initialized successfully")
 
 lx = Lexicon("lexicon.yml")
+
+schd = ScheduleClient(cfg.SCHEDULE_HOST, cfg.SCHEDULE_PORT)
+logger.success("Schedule client initialised_successfully")

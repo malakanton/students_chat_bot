@@ -1,10 +1,13 @@
 from aiogram.filters.callback_data import CallbackData
+from typing import Optional
 
 
 class StartCallback(CallbackData, prefix="start"):
-    course: int
-    group_id: str
-    confirm: str
+    course: Optional[int]
+    form: Optional[int]
+    confirm: Optional[str]
+    group_id: Optional[int]
+    group_name: Optional[str]
 
 
 class FileCallback(CallbackData, prefix="file"):
@@ -40,3 +43,7 @@ class NotificationMenu(CallbackData, prefix="notif_menu"):
 
 class ConfirmCallback(CallbackData, prefix="confirm"):
     cnf: str
+
+
+class TeachersCallback(CallbackData, prefix="teacher"):
+    id: int

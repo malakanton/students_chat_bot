@@ -10,7 +10,7 @@ from keyboards.schedule import schedule_kb
 from lib.dicts import LESSONS_DICT, MONTHS
 from lib.logs import logging_msg
 from lib.misc import chat_msg_ids, get_today, prep_markdown, test_users_dates
-from lib.models import DayOfWeek, Week
+from lib.models.lessons import DayOfWeek, Week
 from loader import bot, db, logger, lx
 from lib.config.config import cfg
 

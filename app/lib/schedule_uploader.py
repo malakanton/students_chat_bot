@@ -1,6 +1,6 @@
 from google_api.google_calendar import GoogleCalendar
 from lib.dicts import PERMANENT_LINKS, RU_DAYS
-from lib.models import Group
+from lib.models.group import Group
 from lib.schedule_parser import ScheduleFilter, ScheduleParser
 from loader import db, gc
 from loguru import logger

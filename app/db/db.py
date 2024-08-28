@@ -1,8 +1,11 @@
 import datetime as dt
-from typing import Union
+from typing import Union, Optional
 
 import psycopg2
-from lib.models import File, Group, Lesson, Week
+from lib.models.files import File
+from lib.models.lessons import Lesson, Week
+from lib.models.users import User
+from lib.models.group import Group
 from psycopg2.extras import execute_values
 
 
@@ -90,17 +93,13 @@ class DB:
         return self.get_teachers()
 
     def add_user(
-        self, user_id: int, group_id: int, name: str, tg_login: str, type: str = None
+        self, user: User
     ) -> tuple:
         """Add new user to a users table
-        returns a new users id, group name, google calendar link"""
-        if type:
-            query = """insert into users (user_id, group_id, name, tg_login, user_type) values(%s, %s, %s, %s, %s)"""
-            self._execute_query(query, (user_id, group_id, name, tg_login, type))
-        else:
-            query = """insert into users (user_id, group_id, name, tg_login) values(%s, %s, %s, %s)"""
-            self._execute_query(query, (user_id, group_id, name, tg_login))
-        return self.get_user_group(user_id)
+        returns a new users id, group name"""
+        query = """insert into users (user_id, group_id, name, tg_login, user_type, ext_teacher_id, int_teacher_id) values(%s, %s, %s, %s, %s, %s, %s)"""
+        self._execute_query(query, (user.id, user.group_id, user.name, user.tg_login, user.role, user.ext_teacher_id, user.int_teacher_id))
+        return
 
     def get_weeks(self) -> dict:
         """Get all weeks presented from lessons table"""
@@ -425,6 +424,16 @@ class DB:
         self.cur.execute(query, (user_id,))
         return [File(*row) for row in self.cur.fetchall()]
 
+    def get_user(self, user_id: int) -> Optional[User]:
+        q = """
+        select user_id, name, tg_login, user_type, notifications, group_id, ext_teacher_id, int_teacher_id 
+        from users
+        where user_id = %s
+        """
+        self.cur.execute(q, (user_id,))
+        res = self.cur.fetchone()
+        if res:
+            return User(*res)
 
 # from config import HOST_LOCAL, USER, PG_PASS, DB_NAME, PORT_LOCAL
 # db = DB(host=HOST_LOCAL, user=USER, pg_pass=PG_PASS, db_name=DB_NAME, port=PORT_LOCAL)

@@ -3,7 +3,7 @@ import yaml
 
 from aiogram import types
 
-from .models import Today
+from .models.lessons import Today
 
 test_users_dates = {}
 

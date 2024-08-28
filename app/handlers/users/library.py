@@ -10,7 +10,7 @@ from keyboards.callbacks import LibCallback
 from keyboards.library import choose_file_kb, lib_type_kb, subjects_kb
 from lib.logs import logging_msg
 from lib.misc import prep_markdown
-from lib.models import File
+from lib.models.files import File
 from loader import bot, db, s3, users, lx
 from lib.config.config import cfg
 from loguru import logger

@@ -6,7 +6,7 @@ from handlers.users.schedule import form_day_schedule_text
 from lib.dicts import NotificationsAdvance
 from lib.logs_report import add_logs_scheduler, send_report
 from lib.misc import get_today, prep_markdown
-from lib.models import Lesson
+from lib.models.lessons import Lesson
 from loader import bot, db, lx
 from lib.config.config import cfg
 from loguru import logger

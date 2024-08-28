@@ -3,7 +3,7 @@ import asyncio
 from handlers.routers import groups_router, users_router
 from lib.logs import setup_logging
 from lib.notifications import set_scheduler
-from loader import bot, dp, scheduler
+from loader import bot, dp, scheduler, cfg
 from loguru import logger
 from main_menu import set_menu
 import uvicorn
@@ -29,7 +29,7 @@ async def start_bot():
 async def start_fastapi():
     log_config = uvicorn.config.LOGGING_CONFIG
     log_config["formatters"]["access"]["fmt"] = "%(asctime)s | %(levelname)s | %(message)s"
-    config = uvicorn.Config(http_app, host="127.0.0.1", port=8000, log_level="info", log_config=log_config)
+    config = uvicorn.Config(http_app, host=cfg.SELF_HOST, port=cfg.SELF_PORT, log_level="info", log_config=log_config)
     server = uvicorn.Server(config)
     logger.success("Uvicorn start server")
     await server.serve()

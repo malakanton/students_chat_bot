@@ -1,6 +1,16 @@
 from enum import Enum
 
-COURSES = {1: "1️⃣", 2: "2️⃣", 3: "3️⃣"}
+COURSES = {1: "1️⃣", 2: "2️⃣", 3: "3️⃣", 4: "4️⃣"}
+
+
+class Start(Enum):
+    TEACHER = 'Преподаватель'
+    STUDENT = 'Студент'
+
+
+class StudyFormKb(Enum):
+    INTRAMURAL = "Очная"
+    EXTRAMURAL = "Заочная"
 
 
 class Confirm(Enum):

@@ -2,7 +2,7 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from keyboards.buttons import CancelButt, Confirm, FileTypeButt
 from keyboards.callbacks import LibCallback
-from lib.models import File
+from lib.models.files import File
 
 
 async def subjects_kb(subjects: dict, file_id: int = -1):
