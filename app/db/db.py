@@ -97,8 +97,8 @@ class DB:
     ) -> tuple:
         """Add new user to a users table
         returns a new users id, group name"""
-        query = """insert into users (user_id, group_id, name, tg_login, user_type, ext_teacher_id, int_teacher_id) values(%s, %s, %s, %s, %s, %s, %s)"""
-        self._execute_query(query, (user.id, user.group_id, user.name, user.tg_login, user.role, user.ext_teacher_id, user.int_teacher_id))
+        query = """insert into users (user_id, group_id, name, tg_login, user_type, teacher_id) values(%s, %s, %s, %s, %s, %s)"""
+        self._execute_query(query, (user.id, user.group_id, user.name, user.tg_login, user.role, user.teacher_id))
         return
 
     def get_weeks(self) -> dict:
@@ -426,7 +426,7 @@ class DB:
 
     def get_user(self, user_id: int) -> Optional[User]:
         q = """
-        select user_id, name, tg_login, user_type, notifications, group_id, ext_teacher_id, int_teacher_id 
+        select user_id, name, tg_login, user_type, notifications, group_id, teacher_id 
         from users
         where user_id = %s
         """

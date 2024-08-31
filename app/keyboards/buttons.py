@@ -1,6 +1,6 @@
 from enum import Enum
 
-COURSES = {1: "1️⃣", 2: "2️⃣", 3: "3️⃣", 4: "4️⃣"}
+COURSES = {1: "1️⃣", 2: "2️⃣", 3: "3️⃣", 4: "4️⃣", 5: "5️⃣"}
 
 
 class Start(Enum):

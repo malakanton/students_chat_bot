@@ -57,14 +57,13 @@ subjects_vector_db = PGVector.from_existing_index(
 gpt_client = OpenAI(api_key=cfg.secrets.OPEN_AI_API_KEY, base_url=cfg.OPEN_AI_URL)
 logger.success("OpenAI stuff initialized successfully")
 
-gr = Groups(db.get_groups())
-
 scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
 users = Users(
     admins=db.get_users_ids("admin"),
     heads=db.get_users_ids("head"),
     regular=db.get_users_ids("regular"),
     unreg=db.get_users_ids("unreg"),
+    teachers=db.get_users_ids("teacher"),
     allowed=db.get_users_ids("allowed"),
 )
 

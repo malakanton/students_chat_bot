@@ -15,6 +15,7 @@ class Group:
     id: int
     name: str
     course: int
+    study_form: int
     chat_id: Optional[int] = Field(default=None)
     gc_linc: Optional[str] = Field(default=None)
 
@@ -27,7 +28,18 @@ class Groups:
 
     def __post_init__(self):
         self.groups = sorted(self.groups, key=lambda group: group.id)
+        self._set_chats()
+        self._set_courses()
+
+    def _set_chats(self):
         self.chats = set(
             [group.chat_id for group in self.groups if group.chat_id]
         ) | set([int(cfg.secrets.ADMIN_CHAT)])
+
+    def _set_courses(self):
         self.courses = sorted(list(set([group.course for group in self.groups])))
+
+    def filter_study_type(self, form: int):
+        self.groups = [g for g in self.groups if g.study_form == form]
+        self._set_courses()
+        self._set_courses()

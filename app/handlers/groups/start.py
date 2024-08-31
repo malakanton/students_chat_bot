@@ -10,7 +10,7 @@ from keyboards.callbacks import StartCallback
 from keyboards.start import confirm_kb, course_kb, groups_kb
 from lib.misc import chat_msg_ids, prep_markdown
 from lib.models.group import Groups
-from loader import bot, db, lx, gr
+from loader import bot, db, lx
 from lib.config.config import cfg
 from loguru import logger
 

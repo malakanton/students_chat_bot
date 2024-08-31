@@ -20,8 +20,7 @@ class User:
     role: str
     notifications: Optional[int] = Field(default=None)
     group_id: Optional[int] = Field(default=None)
-    ext_teacher_id:  Optional[int] = Field(default=None)
-    int_teacher_id: Optional[int] = Field(default=None)
+    teacher_id:  Optional[int] = Field(default=None)
 
     def is_teacher(self):
         return self.teacher_id is not None

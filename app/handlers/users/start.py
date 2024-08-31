@@ -46,9 +46,9 @@ async def start(message: Message, state: FSMContext):
 
     await message.delete()
 
+
 @users_router.callback_query(StateFilter(StartUser.choose_role))
 async def choose_role(callback: CallbackQuery, state: FSMContext):
-    print(callback.data)
     if callback.data == Start.STUDENT.name:
         await callback.message.edit_text(
             text=lx.STUDY_FORM_CHOICE,
@@ -76,7 +76,7 @@ async def check_code(message: Message, state: FSMContext):
         await register_teacher_user(message, state, resp)
 
     else:
-        logger.error(f'failed teachers code validation, service responce: {resp}')
+        logger.error(f'failed teachers code validation attempt 1, service responce: {resp}')
 
 
 @users_router.message(StateFilter(StartUser.input_teachers_code_attempt_2))
@@ -91,21 +91,19 @@ async def check_code_second_attempt(message: Message, state: FSMContext):
         await register_teacher_user(message, state, resp)
 
     else:
-        logger.error(f'failed teachers code validation, service responce: {resp}')
+        logger.error(f'failed teachers code validation attempt 2, service responce: {resp}')
 
 
 async def register_teacher_user(message: Message, state: FSMContext, teacher: Teacher) -> None:
     name, login = get_name_login(message)
 
     text = lx.CORRECT_CODE.format(name)
-    ext_teachers = db.get_teachers()
     u = User(
         id=message.chat.id,
         name=name,
         tg_login=login,
         role='teacher',
-        int_teacher_id=teacher.id,
-        ext_teacher_id=ext_teachers.get(teacher.name)
+        teacher_id=teacher.id,
     )
     db.add_user(u)
 
@@ -125,18 +123,18 @@ async def register_teacher_user(message: Message, state: FSMContext, teacher: Te
 @users_router.callback_query(StateFilter(StartUser.choose_study_form))
 async def chose_study_form(callback: CallbackQuery, state: FSMContext):
     form = StudyForm.INT
-    print(callback.data)
+    groups = schd.get_groups()
+    if not isinstance(groups, Groups):
+        logger.error(f'failed to get groups list from schedule service: {groups}')
+        return
+
     if callback.data == StudyFormKb.EXTRAMURAL.name:
-        groups = Groups(groups=db.get_groups())
         form = StudyForm.EXT
-    else:
-        groups = schd.get_groups()
-        if not isinstance(groups, Groups):
-            logger.error(f'failed to get groups list from schedule service: {groups}')
-            return
+
+    groups.filter_study_type(form.value)
 
     markup = await course_kb(groups.courses, form)
-    await callback.message.answer(
+    await callback.message.edit_text(
         text=lx.COURSE_CHOICE,
         reply_markup=markup
     )
@@ -149,13 +147,11 @@ async def choose_group(callback: CallbackQuery, state: FSMContext):
     course = callback_data.course
     form = callback_data.form
 
-    if form == StudyForm.EXT.value:
-        groups = Groups(groups=db.get_groups())
-    else:
-        groups = schd.get_groups()
+    groups = schd.get_groups()
+    groups.filter_study_type(form)
 
     markup = await groups_kb(groups, course, form)
-    await callback.message.answer(
+    await callback.message.edit_text(
         text=lx.GROUP_CHOICE,
         reply_markup=markup
     )
@@ -169,7 +165,7 @@ async def confirm_group(callback: CallbackQuery, state: FSMContext):
     group_name = callback_data.group_name
 
     markup = await confirm_kb(group_id, group_name)
-    await callback.message.answer(
+    await callback.message.edit_text(
         text=prep_markdown(lx.GROUP_CONFIRM.format(group_name)),
         reply_markup=markup
     )
@@ -183,7 +179,7 @@ async def confirmed(callback: CallbackQuery, state: FSMContext):
     group_name = callback_data.group_name
     confirm = callback_data.confirm
     await state.clear()
-    print(confirm)
+
     if confirm == Confirm.OK.name:
         role = get_role(group_id)
 
@@ -198,9 +194,10 @@ async def confirmed(callback: CallbackQuery, state: FSMContext):
 
         db.add_user(u)
         logger.info(f"New user added: {callback.message.chat.id} - {group_name}")
-        await callback.message.answer(
+        await callback.message.edit_text(
             text=prep_markdown(lx.ADDED_TO_GROUP.format(u.name, group_name))
         )
+
 
         await bot.send_message(
             cfg.secrets.ADMIN_ID,
