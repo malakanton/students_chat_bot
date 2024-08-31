@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"github.com/go-chi/chi/v5"
-
 	"log/slog"
 	"net/http"
 	"os"
@@ -16,6 +15,7 @@ import (
 	"schedule/internal/scheduler"
 	"time"
 
+	"schedule/internal/http-server/handlers/groups"
 	l "schedule/internal/http-server/handlers/lessons"
 	schd "schedule/internal/http-server/handlers/schedule"
 	t "schedule/internal/http-server/handlers/teachers"
@@ -85,6 +85,7 @@ func start(r *chi.Mux, cfg *config.Config, logger *slog.Logger, rep repositories
 	r.Mount("/teachers", t.TeacherRoutes(context.Background(), logger, rep.Teach))
 	r.Mount("/lessons", l.LessonsRoutes(context.Background(), logger, rep.Les))
 	r.Mount("/schedule", schd.ScheduleRoutes(context.Background(), pu))
+	r.Mount("/groups", groups.GroupsRouter(context.Background(), logger, rep.Gr))
 
 	logger.Info("starting server", slog.String("address", cfg.Address))
 

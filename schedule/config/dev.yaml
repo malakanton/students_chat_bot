@@ -1,17 +1,17 @@
 env : "dev"
 storage_path: ./storage/schedule.db
 google_config:
-#  google_creds_path: schedule/internal/gglapi/studentsbot-414221-88a1d65d3976.json
-  google_creds_path: ./studentsbot-414221-88a1d65d3976.json
-  spreadsheets_id: 1tOJucauaVM3FnNpSHx9CiW01-YC3xITRsrTrQSahbCU
+  google_creds_path: schedule/internal/gglapi/studentsbot-414221-88a1d65d3976.json
+#  google_creds_path: ./studentsbot-414221-88a1d65d3976.json
+  spreadsheets_id: 1pUIKtzl80DNWOnR50_fQH1wlazMBS-HNYsYJG3A5f6c
 http_server:
   address: "0.0.0.0:8080"
   timeout: 4s
   idle_timeout: 60s
 storage:
   attempts: 3
-#  host: 0.0.0.0
-  host: schd-db
+  host: 0.0.0.0
+#  host: schd-db
   port: 5432
   database: schedule
   username: postgres

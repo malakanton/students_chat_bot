@@ -76,7 +76,7 @@ func (dp *DocumentParser) ParseDocument(id int) (s Schedule, err error) {
 		return s, err
 	}
 
-	err = s.ParseLessonsTimings(lessonsTimingsData)
+	err = s.ParseLessonsTimings(lessonsTimingsData, 0)
 	if err != nil {
 		return s, err
 	}

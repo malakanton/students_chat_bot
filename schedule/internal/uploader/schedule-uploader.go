@@ -39,7 +39,9 @@ func (sup *ScheduleUploader) UploadSchedule(ctx context.Context) (err error) {
 
 		for _, parsedLesson := range lessons {
 			fmt.Println(parsedLesson.String())
-			l := lesson.NewLessonFromParsed(&parsedLesson, groupName, sup.sc.ScheduleDates.WeekNum)
+			gr := sup.sc.GetGroupByName(groupName)
+
+			l := lesson.NewLessonFromParsed(&parsedLesson, gr, sup.sc.ScheduleDates.WeekNum)
 
 			err = l.SetTeacher(ctx, sup.teach, &l.Teacher)
 			if err != nil {

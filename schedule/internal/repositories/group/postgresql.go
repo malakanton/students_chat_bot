@@ -15,15 +15,15 @@ type repository struct {
 
 func (r *repository) Create(ctx context.Context, group *Group) error {
 	q := `
-INSERT INTO groups (name, course) 
-VALUES ($1, $2)
+INSERT INTO groups (name, course, study_form) 
+VALUES ($1, $2, $3)
 RETURNING id;
 `
 	if err := group.SetCourse(); err != nil {
 		return err
 	}
 
-	if err := r.client.QueryRow(ctx, q, group.Name, group.Course).Scan(&group.Id); err != nil {
+	if err := r.client.QueryRow(ctx, q, group.Name, group.Course, group.StudyForm).Scan(&group.Id); err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok {
 			sqlError := fmt.Errorf("SQL error occurred: %s, Where: %s, details: %s", pgErr.Message, pgErr.Where, pgErr.Detail)
 			r.logger.Error(sqlError.Error())
@@ -34,9 +34,9 @@ RETURNING id;
 	return nil
 }
 
-func (r *repository) FindAll(ctx context.Context) (s []Group, err error) {
+func (r *repository) FindAll(ctx context.Context) (g []Group, err error) {
 	q := `
-SELECT id, name, course
+SELECT id, name, course, study_form
 FROM groups
 `
 	rows, err := r.client.Query(ctx, q)
@@ -44,30 +44,30 @@ FROM groups
 		return nil, err
 	}
 
-	subjects := make([]Group, 0)
+	groups := make([]Group, 0)
 	for rows.Next() {
 		var gr Group
 
-		err = rows.Scan(&gr.Id, &gr.Name, &gr.Course)
+		err = rows.Scan(&gr.Id, &gr.Name, &gr.Course, &gr.StudyForm)
 		if err != nil {
 			return nil, err
 		}
-		subjects = append(subjects, gr)
+		groups = append(groups, gr)
 	}
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
-	return subjects, nil
+	return groups, nil
 }
 
 func (r *repository) FindOne(ctx context.Context, name string) (*Group, error) {
 	q := `
-SELECT id, name, course
+SELECT id, name, course, study_form
 FROM groups
 WHERE name = $1
 `
 	var gr Group
-	err := r.client.QueryRow(ctx, q, name).Scan(&gr.Id, &gr.Name, &gr.Course)
+	err := r.client.QueryRow(ctx, q, name).Scan(&gr.Id, &gr.Name, &gr.Course, &gr.StudyForm)
 	if err != nil {
 		return &Group{}, err
 	}

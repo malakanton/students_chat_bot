@@ -58,8 +58,12 @@ func (d *Day) ParseDatesString() error {
 		return err
 	}
 
-	d.Date = dateParsed
+	d.SetDate(dateParsed)
 	return nil
+}
+
+func (d *Day) SetDate(date time.Time) {
+	d.Date = date
 }
 
 func (d *Day) SetYear(year string) (err error) {

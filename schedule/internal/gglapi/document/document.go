@@ -8,8 +8,8 @@ import (
 
 const (
 	daysOfWeekRange     string = "A1:A100"
-	lessonsTimingsRange string = "B%d:B100"
-	scheduleDataRange   string = "C%d:ZZ100"
+	lessonsTimingsRange string = "C%d:C100"
+	scheduleDataRange   string = "D%d:ZZ100"
 	//scheduleDataRange string = "C%d:E14"
 )
 
@@ -82,7 +82,7 @@ func (d *Document) GetDaysOfweek(sheetName string) (data [][]interface{}, err er
 		if len(row) > 0 {
 			rowVal := row[0].(string)
 			if strings.Contains(rowVal, "ДНИ") {
-				d.DataRowId = i
+				d.DataRowId = i + 1
 			}
 		}
 	}

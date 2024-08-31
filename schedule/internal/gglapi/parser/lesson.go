@@ -137,10 +137,10 @@ func (l *Lesson) ParseRawString() (subLesson Lesson, err error) {
 	subLesson, err = l.parseSubjectCode()
 	if err != nil {
 		if err.Error() == "two lessons" {
-			_, err := subLesson.parseTeacher()
-			if err != nil {
-				return Lesson{}, err
-			}
+			_, _ = subLesson.parseTeacher()
+			//if err != nil {
+			//	return Lesson{}, err
+			//}
 			err = subLesson.GetSubjectAndCancelled()
 			if err != nil {
 				return Lesson{}, err

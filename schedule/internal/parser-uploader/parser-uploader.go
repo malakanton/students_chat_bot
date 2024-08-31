@@ -2,6 +2,7 @@ package parser_uploader
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"schedule/internal/config"
 	"schedule/internal/gglapi"
@@ -34,7 +35,7 @@ type ParserUploader struct {
 	LastDate *string
 }
 
-func (pu *ParserUploader) ParseAndUploadSchedule(scheduled bool, id int) {
+func (pu *ParserUploader) ParseAndUploadSchedule(scheduled bool, id int) (err error) {
 	var lastModifiedDate string
 
 	if scheduled {
@@ -44,9 +45,10 @@ func (pu *ParserUploader) ParseAndUploadSchedule(scheduled bool, id int) {
 
 		if err != nil {
 			pu.Logger.Error("failed to get last modified date", slog.String("err", err.Error()))
+			return fmt.Errorf("failed to get last modified date %s", err.Error())
 		}
 		if lastModifiedDate <= *pu.LastDate {
-			return
+			return fmt.Errorf("the spradsheet wasnt modified, last modification date is %s", lastModifiedDate)
 		}
 
 		pu.Logger.Info("spreadsheet was modified", slog.String("at", lastModifiedDate))
@@ -55,6 +57,7 @@ func (pu *ParserUploader) ParseAndUploadSchedule(scheduled bool, id int) {
 	parsedSchedule, err := pu.Dp.ParseDocument(id)
 	if err != nil {
 		pu.Logger.Error("error occured while parsing document", slog.String("err", err.Error()))
+		return fmt.Errorf("error occured while parsing document: %s", err.Error())
 	}
 
 	sup := uploader.NewScheduleUploader(parsedSchedule, *pu.Rep, pu.Logger)
@@ -62,9 +65,11 @@ func (pu *ParserUploader) ParseAndUploadSchedule(scheduled bool, id int) {
 	err = sup.UploadSchedule(context.Background())
 	if err != nil {
 		pu.Logger.Error("failed to upload schedule:", err.Error())
+		return fmt.Errorf("failed to upload schedule: %s", err.Error())
 	}
 
 	if scheduled {
 		pu.LastDate = &lastModifiedDate
 	}
+	return nil
 }

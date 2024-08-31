@@ -35,14 +35,14 @@ func GetTeacher(ctx context.Context, log *slog.Logger, tg TeacherGetter) http.Ha
 
 		id, err := strconv.Atoi(idStr)
 		if err != nil {
-			log.Error("invalid id", err.Error())
+			log.Error("invalid id", slog.String("error", err.Error()))
 			render.JSON(w, r, resp.Error("invalid id"))
 			return
 		}
 
 		t, err := tg.FindById(ctx, id)
 		if err != nil {
-			log.Error("teacher doesnt exists", err.Error())
+			log.Error("teacher doesnt exists", slog.String("error", err.Error()))
 			render.JSON(w, r, resp.Error(fmt.Sprintf("teachers with id %d not found", id)))
 			return
 		}

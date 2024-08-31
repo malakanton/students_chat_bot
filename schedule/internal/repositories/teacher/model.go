@@ -18,3 +18,7 @@ func (t *Teacher) SetCode(size int) {
 func (t *Teacher) SetId(id int) {
 	t.Id = id
 }
+
+func (t *Teacher) SetTgId(tgId int64) {
+	t.TgId = tgId
+}

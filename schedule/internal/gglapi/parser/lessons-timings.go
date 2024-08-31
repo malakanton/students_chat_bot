@@ -11,13 +11,15 @@ import (
 type Filial int
 
 const (
-	av Filial = iota
+	ext Filial = iota
+	av
 	no
 )
 
 type LessonTimeByFilial struct {
 	RowId     int
 	RawString string
+	Ext       LessonTime
 	Av        LessonTime
 	No        LessonTime
 }
@@ -59,6 +61,8 @@ func (l *LessonTime) AddDate(date time.Time) (err error) {
 
 func (l *LessonTimeByFilial) GetTiming(filial Filial) LessonTime {
 	switch filial {
+	case ext:
+		return l.Ext
 	case av:
 		return l.Av
 	case no:
@@ -68,15 +72,19 @@ func (l *LessonTimeByFilial) GetTiming(filial Filial) LessonTime {
 	}
 }
 
-func (l *LessonTimeByFilial) ParseRawString() (err error) {
+func (l *LessonTimeByFilial) ParseRawString(ext bool) (err error) {
+	if !ext {
+		splitted := strings.Split(l.RawString, "НО")
 
-	splitted := strings.Split(l.RawString, "НО")
-
-	if len(splitted) == 1 {
-		l.Av.Start, l.Av.End, err = p.MakeTimeFromString(splitted[0])
-	} else if len(splitted) == 2 {
-		l.Av.Start, l.Av.End, err = p.MakeTimeFromString(splitted[0])
-		l.No.Start, l.No.End, err = p.MakeTimeFromString(splitted[1])
+		if len(splitted) == 1 {
+			l.Av.Start, l.Av.End, err = p.MakeTimeFromString(splitted[0])
+		} else if len(splitted) == 2 {
+			l.Av.Start, l.Av.End, err = p.MakeTimeFromString(splitted[0])
+			l.No.Start, l.No.End, err = p.MakeTimeFromString(splitted[1])
+		}
+		return err
+	} else {
+		l.Ext.Start, l.Ext.End, err = p.MakeTimeFromString(l.RawString)
+		return err
 	}
-	return err
 }

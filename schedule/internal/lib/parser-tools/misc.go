@@ -17,20 +17,9 @@ func MakeMergesMapping(merges []*sheets.GridRange, startRow, startCol int64) map
 	return mapping
 }
 
-func MakeGroupdMapping(row []interface{}) map[int]string {
-	groupMapping := make(map[int]string)
-	for i, cell := range row {
-		cellValue := cell.(string)
-		if cellValue == "" || strings.Contains(cellValue, "ауд") || strings.Contains(cellValue, "ГРУППА") || strings.Contains(cellValue, "ДНИ") {
-			continue
-		}
-		groupMapping[i] = strings.Trim(cellValue, " ")
-	}
-	return groupMapping
-}
-
 func ProcessLocCell(s string, even bool) (loc string, filial int) {
 	var whenDoubleIdx int
+	filial = 1
 	if even {
 		whenDoubleIdx = 1
 	}
@@ -49,7 +38,7 @@ func ProcessLocCell(s string, even bool) (loc string, filial int) {
 	if strings.Contains(loc, "НО") || strings.Contains(loc, "АМ") {
 		loc = strings.Trim(loc, "НО")
 		loc = strings.Trim(loc, "АМ")
-		filial = 1
+		filial = 2
 	}
 
 	return strings.TrimSpace(loc), filial

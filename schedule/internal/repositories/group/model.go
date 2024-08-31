@@ -1,11 +1,15 @@
 package group
 
-import "strconv"
+import (
+	"schedule/internal/gglapi/parser"
+	"strconv"
+)
 
 type Group struct {
-	Id     int    `json:"id"`
-	Name   string `json:"name"`
-	Course int    `json:"course"`
+	Id        int              `json:"id"`
+	Name      string           `json:"name"`
+	Course    int              `json:"course"`
+	StudyForm parser.StudyForm `json:"study_form"`
 }
 
 func (g *Group) SetCourse() error {

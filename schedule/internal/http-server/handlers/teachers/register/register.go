@@ -13,7 +13,7 @@ import (
 )
 
 type Request struct {
-	TgId string `json:"tg_id"`
+	TgId int64  `json:"tg_id"`
 	Code string `json:"code"`
 }
 
@@ -39,7 +39,7 @@ func RegTeacher(ctx context.Context, log *slog.Logger, reg Register) http.Handle
 		}
 
 		if err != nil {
-			log.Error("failed to decode request body", err.Error())
+			log.Error("failed to decode request body", slog.String("error", err.Error()))
 
 			render.JSON(w, r, resp.Error("failed to decode request"))
 
@@ -51,10 +51,16 @@ func RegTeacher(ctx context.Context, log *slog.Logger, reg Register) http.Handle
 		t, err := reg.FindByCode(ctx, req.Code)
 		if err != nil {
 			render.JSON(w, r, resp.Error("invalid code"))
+
+			return
 		}
+		t.SetTgId(req.TgId)
+
 		err = reg.UpdateTgId(ctx, t)
 		if err != nil {
 			render.JSON(w, r, resp.Error("failed to update teachers id"))
+
+			return
 		}
 
 		responseOK(w, r, t)
