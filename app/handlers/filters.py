@@ -53,12 +53,20 @@ class IsAdmin(BaseFilter):
         return message.from_user.id in self.admin_ids
 
 
+class IsTeacher(BaseFilter):
+    def __init__(self, teachers_ids: list[str]) -> None:
+        self.teachers_ids = list(map(int, teachers_ids))
+
+    async def __call__(self, message: Message) -> bool:
+        return message.from_user.id in self.teachers_ids
+
+
 class UnRegisteredUser(BaseFilter):
     def __init__(self) -> None:
         pass
 
     async def __call__(self, message: Message) -> bool:
-        return db.get_user_group(message.from_user.id) is None
+        return db.get_user(message.from_user.id) is None
 
 
 class LessonLinkFilter(BaseFilter):

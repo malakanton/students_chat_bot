@@ -5,10 +5,11 @@ import (
 )
 
 type Teacher struct {
-	Id   int    `json:"id"`
-	Name string `json:"name"`
-	TgId int64  `json:"tg_id"`
-	Code string `json:"code"`
+	Id       int    `json:"id"`
+	Name     string `json:"name"`
+	FullName string `json:"full_name"`
+	TgId     int64  `json:"tg_id"`
+	Code     string `json:"code"`
 }
 
 func (t *Teacher) SetCode(size int) {

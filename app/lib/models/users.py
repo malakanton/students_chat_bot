@@ -11,6 +11,7 @@ class Users:
     regular: set[int] = Field(default=set())
     unreg: set[int] = Field(default=set())
     allowed: set[int] = Field(default=set())
+    teachers: set[int] = Field(default=set())
 
 @dataclass
 class User:

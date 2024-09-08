@@ -434,6 +434,7 @@ class DB:
         res = self.cur.fetchone()
         if res:
             return User(*res)
+        return None
 
 # from config import HOST_LOCAL, USER, PG_PASS, DB_NAME, PORT_LOCAL
 # db = DB(host=HOST_LOCAL, user=USER, pg_pass=PG_PASS, db_name=DB_NAME, port=PORT_LOCAL)

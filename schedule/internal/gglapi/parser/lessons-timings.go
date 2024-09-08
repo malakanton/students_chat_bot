@@ -19,9 +19,9 @@ const (
 type LessonTimeByFilial struct {
 	RowId     int
 	RawString string
-	Ext       LessonTime
 	Av        LessonTime
 	No        LessonTime
+	Ext       LessonTime
 }
 
 func NewLessonTimeByFilial(s string, i int) LessonTimeByFilial {
@@ -32,17 +32,24 @@ func NewLessonTimeByFilial(s string, i int) LessonTimeByFilial {
 }
 
 type LessonTime struct {
+	Num   int
 	Start time.Time
 	End   time.Time
 }
 
 func (l *LessonTimeByFilial) String() string {
 	return fmt.Sprintf(
-		"AV Start %s End %s NO Start %s End %s\n",
-		l.Av.Start.Format("15:04:05"),
-		l.Av.End.Format("15:04:05"),
-		l.No.Start.Format("15:04:05"),
-		l.No.End.Format("15:04:05"),
+		"Date %s AV #%d Start %s End %s NO #%d Start %s End %s\n EXT #%d Start %s End %s\n",
+		l.Av.Start.Format(layoutFullDate),
+		l.Av.Num,
+		l.Av.Start.Format(layoutTime),
+		l.Av.End.Format(layoutTime),
+		l.No.Num,
+		l.No.Start.Format(layoutTime),
+		l.No.End.Format(layoutTime),
+		l.Ext.Num,
+		l.Ext.Start.Format(layoutTime),
+		l.Ext.End.Format(layoutTime),
 	)
 }
 
@@ -53,6 +60,39 @@ func (l *LessonTime) AddDate(date time.Time) (err error) {
 		return err
 	}
 	l.End, err = time.Parse(layout, date.Format(layoutFullDate)+" "+l.End.Format(layoutTime))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (l *LessonTimeByFilial) AddDateToTime(date time.Time) (err error) {
+	err = l.Av.AddDate(date)
+	if err != nil {
+		return err
+	}
+	err = l.No.AddDate(date)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (l *LessonTimeByFilial) AddDateToTimeExt(date time.Time) (err error) {
+	err = l.Ext.AddDate(date)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (l *LessonTimeByFilial) AddExternalDateFromString(s string, lessonNum int) (err error) {
+	l.Ext.Start, l.Ext.End, err = p.MakeTimeFromString(s)
+	if err != nil {
+		return err
+	}
+	l.Ext.Num = lessonNum
+	err = l.AddDateToTimeExt(l.Av.Start)
 	if err != nil {
 		return err
 	}
@@ -72,6 +112,13 @@ func (l *LessonTimeByFilial) GetTiming(filial Filial) LessonTime {
 	}
 }
 
+func (lt *LessonTimeByFilial) AddExtDateToTime(date time.Time) error {
+	if err := lt.Ext.AddDate(date); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (l *LessonTimeByFilial) ParseRawString(ext bool) (err error) {
 	if !ext {
 		splitted := strings.Split(l.RawString, "НО")
@@ -87,4 +134,9 @@ func (l *LessonTimeByFilial) ParseRawString(ext bool) (err error) {
 		l.Ext.Start, l.Ext.End, err = p.MakeTimeFromString(l.RawString)
 		return err
 	}
+}
+
+func (l *LessonTimeByFilial) SetLessonNum(num int) {
+	l.Av.Num = num
+	l.No.Num = num
 }

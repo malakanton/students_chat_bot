@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const numberOfAllowedMistakes = 3
+
 type Lesson struct {
 	Id          int             `json:"id"`
 	WeekNum     int             `json:"week_num"`
@@ -32,7 +34,7 @@ type Lesson struct {
 
 func (l *Lesson) String() string {
 	return fmt.Sprintf(
-		"[%d] Lesson date %s -> %s Fullday:%v Filial:%d Loc:%s Teacher:%s (swap:%v) Subject:[%s]%s Modified:%v Cancelled:%v",
+		"[%d] Lesson date %s -> %s Fullday:%v Filial:%d Loc:%s Teacher:%s (swap:%v) Subject:[%s]%s Modified:%v Cancelled:%v, GroupId %d",
 		l.Id,
 		l.Start.Format("2006-01-02 [15:04"),
 		l.End.Format("15:04]"),
@@ -45,6 +47,7 @@ func (l *Lesson) String() string {
 		l.Subject.Name,
 		l.Modified,
 		l.Cancelled,
+		l.Group.Id,
 	)
 }
 
@@ -66,20 +69,38 @@ func NewLessonFromParsed(lesson *parser.Lesson, gr *parser.Group, weekNum int) L
 	}
 }
 
-func (l *Lesson) SetTeacher(ctx context.Context, rep teacher.Repository, teacher *teacher.Teacher) (err error) {
+func (l *Lesson) SetTeacher(ctx context.Context, rep teacher.Repository, t *teacher.Teacher) (err error) {
 	const op = "lessons.model.set_teacher"
-	existingTeacher, err := rep.FindByName(ctx, teacher.Name)
+	var (
+		existingTeacher *teacher.Teacher
+		found           bool
+	)
+	existingTeacher, err = rep.FindByName(ctx, t.Name)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			err = rep.Create(ctx, teacher)
+
+			allTeachers, err := rep.FindAll(ctx)
 			if err != nil {
 				return fmt.Errorf("%s: execute statement: %w", op, err)
 			}
+
+			existingTeacher, found, err = findMistakenTeacher(t, allTeachers)
+			if err != nil || !found {
+				err = rep.Create(ctx, t)
+				if err != nil {
+					return fmt.Errorf("%s: execute statement: %w", op, err)
+				}
+				return nil
+			}
+
+			t.SetId(existingTeacher.Id)
 			return nil
 		}
+
 		return fmt.Errorf("%s: execute statement: %w", op, err)
 	}
-	teacher.SetId(existingTeacher.Id)
+
+	t.SetId(existingTeacher.Id)
 	return nil
 }
 
@@ -125,4 +146,29 @@ func (l *Lesson) Equals(l2 *Lesson) bool {
 		l.Subject.Id == l2.Subject.Id &&
 		l.Loc == l2.Loc &&
 		l.Modified == l2.Modified
+}
+
+func findMistakenTeacher(t *teacher.Teacher, allTeachers []teacher.Teacher) (existingTeacher *teacher.Teacher, found bool, err error) {
+	for _, teacherCandidate := range allTeachers {
+		if same := compareTwoTeachers(t.Name, teacherCandidate.Name); same {
+			return t, true, nil
+		}
+	}
+	return &teacher.Teacher{}, false, nil
+}
+
+func compareTwoTeachers(t1, t2 string) bool {
+	rune1 := []rune(t1)
+	rune2 := []rune(t2)
+
+	var mistakes int
+	for i, j := 0, 0; i < len(rune1) && j < len(rune2); j++ {
+		if rune1[i] == rune2[j] {
+			i++
+			continue
+		}
+
+		mistakes++
+	}
+	return mistakes <= numberOfAllowedMistakes
 }

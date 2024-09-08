@@ -43,3 +43,8 @@ class Groups:
         self.groups = [g for g in self.groups if g.study_form == form]
         self._set_courses()
         self._set_courses()
+
+    def get_group_by_id(self, id: int) -> Optional[Group]:
+        for group in self.groups:
+            if group.id == id:
+                return group

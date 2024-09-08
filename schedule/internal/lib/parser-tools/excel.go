@@ -1,6 +1,7 @@
 package parser_tools
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -27,6 +28,10 @@ func GetExcelColumnName(n int) string {
 	}
 	revertedRes := revertSlice(res)
 	return sliceToStr(revertedRes)
+}
+
+func CellName(colIdx, rowIdx int) string {
+	return fmt.Sprintf("%s%d", GetExcelColumnName(colIdx+1), rowIdx)
 }
 
 func sliceToStr(sl []string) string {

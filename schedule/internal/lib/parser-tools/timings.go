@@ -12,7 +12,7 @@ func MakeTimeFromString(s string) (strt, end time.Time, err error) {
 	timePeriods := reTimes.FindAllString(s, -1)
 	switch len(timePeriods) {
 	case 0:
-		err = fmt.Errorf("No date string found in string %s", s)
+		err = fmt.Errorf("no time found in string %s", s)
 		return strt, end, err
 	case 1:
 		times := strings.Split(timePeriods[0], "-")

@@ -48,6 +48,11 @@ class ScheduleButt(Enum):
     FORW = "➡️"
 
 
+class TeachersButt(Enum):
+    LEFT = "⬅️"
+    RIGHT = "➡️"
+
+
 class SwitchNotif(Enum):
     ON = "⏰{}'"
     OFF = "🟥OFF"

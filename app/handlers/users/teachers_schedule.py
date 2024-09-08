@@ -9,23 +9,24 @@ from keyboards.callbacks import ScheduleCallback
 from keyboards.schedule import schedule_kb
 from lib.dicts import LESSONS_DICT, MONTHS
 from lib.logs import logging_msg
-from lib.misc import chat_msg_ids, get_today, prep_markdown, test_users_dates
+from lib.misc import chat_msg_ids, get_today, prep_markdown
 from lib.models.lessons import DayOfWeek, Week
 from loader import bot, db, logger, lx, schd, users
 from lib.config.config import cfg
-from handlers.filters import UserFilter
+from handlers.filters import IsTeacher
+
+from pprint import pprint
 
 
-@users_router.message(Command("schedule"), ~UserFilter(users.teachers))
+@users_router.message(Command("schedule"), IsTeacher(users.teachers))
 async def schedule_commands(message: Message):
-    logger.info(logging_msg(message, "schedule command in private chat"))
+    logger.info(logging_msg(message, "teacher schedule command in private chat"))
     user = db.get_user(message.from_user.id)
     today = get_today()
 
     week_num = today.week
     day_of_week = today.day_of_week
-
-    week = schd.get_group_weekly_lessons(user.group_id, week_num)
+    week = schd.get_teacher_weekly_lessons(user.teacher_id, week_num)
 
     if not week:
         await message.answer(prep_markdown(lx.NO_SCHEDULE))
@@ -50,14 +51,15 @@ async def schedule_commands(message: Message):
 
 # если выбрал день
 @users_router.callback_query(
-    ScheduleCallback.filter(~F.command.in_(ScheduleButt._member_names_))
+    ScheduleCallback.filter(~F.command.in_(ScheduleButt._member_names_)),
+    IsTeacher(users.teachers)
 )
 async def day_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     await call.answer()
     logger.info(logging_msg(call))
     user_id, msg_id = chat_msg_ids(call)
     user = db.get_user(user_id)
-    week = schd.get_group_weekly_lessons(user.group_id, callback_data.week)
+    week = schd.get_teacher_weekly_lessons(user.teacher_id, callback_data.week)
     day_num = int(callback_data.command)
     text = await form_day_schedule_text(week.get_day(day_num))
     await call.message.edit_text(
@@ -69,14 +71,15 @@ async def day_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
 
 # если выбрал всю неделю
 @users_router.callback_query(
-    ScheduleCallback.filter(F.command == ScheduleButt.WEEK.name)
+    ScheduleCallback.filter(F.command == ScheduleButt.WEEK.name),
+    IsTeacher(users.teachers)
 )
 async def week_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     await call.answer()
     logger.info(logging_msg(call))
     user_id, msg_id = chat_msg_ids(call)
     user = db.get_user(user_id)
-    week = schd.get_group_weekly_lessons(user.group_id, callback_data.week)
+    week = schd.get_teacher_weekly_lessons(user.teacher_id, callback_data.week)
     text = await form_week_schedule_text(week)
     await call.message.edit_text(
         text=text,
@@ -89,25 +92,26 @@ async def week_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
 @users_router.callback_query(
     ScheduleCallback.filter(
         F.command.in_({ScheduleButt.BACK.name, ScheduleButt.FORW.name})
-    )
+    ),
+    IsTeacher(users.teachers)
 )
 async def change_week(call: CallbackQuery, callback_data: ScheduleCallback):
     user_id, msg_id = chat_msg_ids(call)
     user = db.get_user(user_id)
     logger.info(logging_msg(call))
     if callback_data.command == ScheduleButt.BACK.name:
-        week = schd.get_group_weekly_lessons(user.group_id, callback_data.week - 1)
+        week = schd.get_teacher_weekly_lessons(user.teacher_id, callback_data.week - 1)
         if not week:
             await call.answer(lx.NO_PREV_SCHEDULE, show_alert=True)
             return
     elif callback_data.command == ScheduleButt.FORW.name:
-        week = schd.get_group_weekly_lessons(user.group_id, callback_data.week + 1)
+        week = schd.get_teacher_weekly_lessons(user.teacher_id, callback_data.week + 1)
         if not week:
             await call.answer(lx.NO_NEXT_SCHEDULE, show_alert=True)
             return
     else:
         await call.answer()
-        week = schd.get_group_weekly_lessons(user.group_id, callback_data.week)
+        week = schd.get_teacher_weekly_lessons(user.teacher_id, callback_data.week)
     text = await form_week_schedule_text(week)
     await call.message.edit_text(
         text=text,
@@ -148,11 +152,11 @@ async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
             end_time = lesson.end.strftime("%H:%M")
             if lesson.comment:
                 text += f"❗️**{lesson.comment.upper()}**❗️\n"
-            text += f"*{start_time}*-*{end_time}* **{lesson.subj}**, {lesson.teacher} "
-            if lesson.link and day.id != 6:
-                text += f"📺️[LINK]<LINK>({lesson.link}<LINK>)\n"
-            else:
-                text += f"({lesson.loc})\n"
+            text += f"*{start_time}*-*{end_time}* **{lesson.subj}**, {lesson.group_name} "
+            if lesson.loc:
+                text += f"({lesson.loc})"
+            text += '\n'
+
     if single:
         text = prep_markdown(text)
     return text

@@ -151,6 +151,7 @@ func (s *Schedule) ParseLessonsTimings(data [][]interface{}, idx int) (err error
 		}
 
 		day := s.GetDayByRowIdx(i)
+		fmt.Println(day.String())
 		if !externalTimings {
 			lt := NewLessonTimeByFilial(rowString, i)
 			err = lt.ParseRawString(externalTimings)
@@ -166,9 +167,14 @@ func (s *Schedule) ParseLessonsTimings(data [][]interface{}, idx int) (err error
 
 		} else {
 			lt := day.GetLessonTimingsByIdx(i)
+			lt.RawString = rowString
 			err = lt.ParseRawString(externalTimings)
 			if err != nil {
 				return fmt.Errorf("%s failed to parse external lesson timings from cell %s%d: %w", op, cellPrefix, i, err)
+			}
+			err = lt.AddExtDateToTime(day.Date)
+			if err != nil {
+				return err
 			}
 		}
 
@@ -184,7 +190,7 @@ func (s *Schedule) ParseScheduleData(data [][]interface{}, mergesMapping map[str
 	)
 
 	groupsIdxMapping, extFormTimingsIdx := MakeGroupsMapping(data[0])
-
+	fmt.Printf("external timings col number %d\n", extFormTimingsIdx)
 	err = s.ParseLessonsTimings(data, extFormTimingsIdx)
 	if err != nil {
 		return fmt.Errorf("%s %w", op, err)
@@ -193,6 +199,14 @@ func (s *Schedule) ParseScheduleData(data [][]interface{}, mergesMapping map[str
 	s.SetGroups(groupsIdxMapping)
 
 	firstDayIdx := s.Days[0].RowIdx
+
+	//for _, day := range s.Days {
+	//	fmt.Println(day.String())
+	//	for _, l := range day.Lessons {
+	//		fmt.Println(l.String())
+	//	}
+	//}
+	//return
 
 	for i, row := range data {
 
@@ -237,20 +251,7 @@ func (s *Schedule) ParseScheduleData(data [][]interface{}, mergesMapping map[str
 				continue
 			}
 
-			var (
-				loc    string
-				filial int
-			)
-			if maxIdx := len(row) - 1; maxIdx >= j+2 {
-				locIdx := j + 2
-				val := row[locIdx].(string)
-				if len([]rune(val)) > 10 {
-					val = row[locIdx-1].(string)
-				}
-				loc, filial = p.ProcessLocCell(val, day.Even)
-			} else {
-				loc, filial = "", 1
-			}
+			loc, filial := getLocAndFilial(j, row, day)
 
 			if group.StudyForm == Ex {
 				filial = 0
@@ -292,11 +293,26 @@ func (s *Schedule) GetGroupByName(groupName string) *Group {
 	return &Group{}
 }
 
+func getLocAndFilial(colIdx int, row []interface{}, day *Day) (loc string, filial int) {
+
+	locIdx := colIdx + 2
+	if p.GetExcelColumnName(colIdx+4) == "CP" {
+		locIdx = colIdx + 1
+	}
+
+	if locIdx >= len(row) {
+		loc, filial = "", 1
+	} else {
+		loc, filial = p.ProcessLocCell(row[locIdx].(string), day.Even)
+	}
+	return loc, filial
+}
+
 func getFilial(f int) Filial {
 	switch f {
 	case 0:
 		return ext
-	case 1:
+	case 2:
 		return no
 	default:
 		return av

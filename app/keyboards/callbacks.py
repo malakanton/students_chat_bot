@@ -47,3 +47,5 @@ class ConfirmCallback(CallbackData, prefix="confirm"):
 
 class TeachersCallback(CallbackData, prefix="teacher"):
     id: int
+    paginate: Optional[str]
+    index: int

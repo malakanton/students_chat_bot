@@ -11,7 +11,7 @@ import (
 const (
 	layoutDate     string = "02.01"
 	layoutFullDate        = "2006-01-02"
-	layoutTime            = "15:04:05"
+	layoutTime            = "15:04"
 )
 
 type Day struct {

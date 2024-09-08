@@ -1,26 +1,22 @@
 from aiogram import F
 from aiogram.filters import Command
 from aiogram.types import Message
-from gpt.vector_db import DocumentsHandler
 from handlers.routers import users_router
-from langchain_community.document_loaders import TextLoader
 from lib.misc import prep_markdown
-from loader import bot, conn_str, embeddings, gd, vector_db, lx, schd
+from loader import bot, lx, schd
 from lib.config.config import cfg
-from loguru import logger
-from keyboards.teachers import teachers_list_kb
+from keyboards.teachers import teachers_list_kb, TEACHERS_PER_PAGE
 from keyboards.callbacks import TeachersCallback
+from keyboards.buttons import TeachersButt
 from aiogram.types import CallbackQuery
-
 
 
 @users_router.message(
     Command("teachers_code"), F.chat.id == int(cfg.secrets.ADMIN_ID)
 )
 async def get_teachers_list(message: Message):
-    teachers = schd.get_teachers()
-
-    markup = await teachers_list_kb(teachers)
+    teachers = sorted(schd.get_teachers(), key=lambda teacher: teacher.name)
+    markup = await teachers_list_kb(teachers, 0)
     await message.answer(
         text=lx.TEACHERS_LIST,
         reply_markup=markup
@@ -28,7 +24,27 @@ async def get_teachers_list(message: Message):
     await message.delete()
 
 
-@users_router.callback_query(TeachersCallback.filter())
+@users_router.callback_query(TeachersCallback.filter(F.id < 0))
+async def paginate(callback: CallbackQuery, callback_data: TeachersCallback):
+    await callback.answer()
+    teachers = sorted(schd.get_teachers(), key=lambda teacher: teacher.name)
+    index = callback_data.index
+    if callback_data.paginate == TeachersButt.RIGHT.name:
+        if index + TEACHERS_PER_PAGE < len(teachers):
+            index += TEACHERS_PER_PAGE
+
+    if callback_data.paginate == TeachersButt.LEFT.name:
+        if index - TEACHERS_PER_PAGE >= 0:
+            index -= TEACHERS_PER_PAGE
+
+    markup = await teachers_list_kb(teachers, index)
+
+    await callback.message.edit_reply_markup(
+        reply_markup=markup
+    )
+
+
+@users_router.callback_query(TeachersCallback.filter(F.id > 0))
 async def teacher_choosen(call: CallbackQuery, callback_data: TeachersCallback):
     await call.answer()
 

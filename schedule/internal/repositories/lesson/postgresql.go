@@ -63,7 +63,7 @@ AND l.start_time = $2
 	return l, nil
 }
 
-func (r *repository) FindWeeklyForTeacher(ctx context.Context, id, weekNum int) (lessons []Lesson, err error) {
+func (r *repository) FindWeeklyForTeacher(ctx context.Context, id, weekNum int) (lessons []TeacherLessonDto, err error) {
 	q := `
 SELECT 
     l.start_time, 
@@ -85,7 +85,7 @@ AND l.week_num = $2
 		return nil, err
 	}
 
-	lessons = make([]Lesson, 0)
+	lessons = make([]TeacherLessonDto, 0)
 	for rows.Next() {
 		var l Lesson
 
@@ -93,7 +93,8 @@ AND l.week_num = $2
 		if err != nil {
 			return nil, err
 		}
-		lessons = append(lessons, l)
+		dto := NewTeacherLessonDto(&l)
+		lessons = append(lessons, dto)
 	}
 	if err = rows.Err(); err != nil {
 		return nil, err
@@ -101,7 +102,7 @@ AND l.week_num = $2
 	return lessons, nil
 }
 
-func (r *repository) FindDailyForTeacher(ctx context.Context, id int, date string) (lessons []Lesson, err error) {
+func (r *repository) FindDailyForTeacher(ctx context.Context, id int, date string) (lessons []TeacherLessonDto, err error) {
 	q := `
 SELECT 
     l.start_time, 
@@ -123,7 +124,7 @@ AND to_char(start_time, 'yyyy-mm-dd') = $2
 		return nil, err
 	}
 
-	lessons = make([]Lesson, 0)
+	lessons = make([]TeacherLessonDto, 0)
 	for rows.Next() {
 		var l Lesson
 
@@ -131,7 +132,8 @@ AND to_char(start_time, 'yyyy-mm-dd') = $2
 		if err != nil {
 			return nil, err
 		}
-		lessons = append(lessons, l)
+		dto := NewTeacherLessonDto(&l)
+		lessons = append(lessons, dto)
 	}
 	if err = rows.Err(); err != nil {
 		return nil, err
@@ -139,7 +141,7 @@ AND to_char(start_time, 'yyyy-mm-dd') = $2
 	return lessons, nil
 }
 
-func (r *repository) FindGroupWeeklySchedule(ctx context.Context, id, weekNum int) (lessons []Lesson, err error) {
+func (r *repository) FindGroupWeeklySchedule(ctx context.Context, id, weekNum int) (lessons []GroupLessonDto, err error) {
 	q := `
 SELECT 
     l.start_time, 
@@ -149,12 +151,13 @@ SELECT
     s.subject_name,
     l.filial,
     l.cancelled,
-    l.special_case
+    l.special_case,
+    l.link
 FROM lessons l 
 	LEFT JOIN groups g ON g.id = l.group_id
     LEFT JOIN teachers t on t.id = l.teacher_id
 	LEFT JOIN subjects s ON s.id = l.subject_id
-WHERE l.teacher_id = $1
+WHERE l.group_id = $1
 AND l.week_num = $2
 `
 	rows, err := r.client.Query(ctx, q, id, weekNum)
@@ -162,15 +165,16 @@ AND l.week_num = $2
 		return nil, err
 	}
 
-	lessons = make([]Lesson, 0)
+	lessons = make([]GroupLessonDto, 0)
 	for rows.Next() {
 		var l Lesson
 
-		err = rows.Scan(&l.Start, &l.End, &l.Loc, &l.Teacher.Name, &l.Subject.Name, &l.Filial, &l.Cancelled, &l.SpecialCase)
+		err = rows.Scan(&l.Start, &l.End, &l.Loc, &l.Teacher.Name, &l.Subject.Name, &l.Filial, &l.Cancelled, &l.SpecialCase, &l.Link)
 		if err != nil {
 			return nil, err
 		}
-		lessons = append(lessons, l)
+		dto := NewGroupLessonDto(&l)
+		lessons = append(lessons, dto)
 	}
 	if err = rows.Err(); err != nil {
 		return nil, err
@@ -178,7 +182,7 @@ AND l.week_num = $2
 	return lessons, nil
 }
 
-func (r *repository) FindGroupDailySchedule(ctx context.Context, id int, date string) (lessons []Lesson, err error) {
+func (r *repository) FindGroupDailySchedule(ctx context.Context, id int, date string) (lessons []GroupLessonDto, err error) {
 	q := `
 SELECT 
     l.start_time, 
@@ -188,7 +192,8 @@ SELECT
     s.subject_name,
     l.filial,
     l.cancelled,
-    l.special_case
+    l.special_case,
+    l.link
 FROM lessons l 
     LEFT JOIN teachers t on t.id = l.teacher_id
 	LEFT JOIN subjects s ON s.id = l.subject_id
@@ -200,15 +205,16 @@ AND to_char(start_time, 'yyyy-mm-dd') = $2
 		return nil, err
 	}
 
-	lessons = make([]Lesson, 0)
+	lessons = make([]GroupLessonDto, 0)
 	for rows.Next() {
 		var l Lesson
 
-		err = rows.Scan(&l.Start, &l.End, &l.Loc, &l.Teacher.Name, &l.Subject.Name, &l.Filial, &l.Cancelled, &l.SpecialCase)
+		err = rows.Scan(&l.Start, &l.End, &l.Loc, &l.Teacher.Name, &l.Subject.Name, &l.Filial, &l.Cancelled, &l.SpecialCase, &l.Link)
 		if err != nil {
 			return nil, err
 		}
-		lessons = append(lessons, l)
+		dto := NewGroupLessonDto(&l)
+		lessons = append(lessons, dto)
 	}
 	if err = rows.Err(); err != nil {
 		return nil, err

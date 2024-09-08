@@ -11,12 +11,15 @@ from lib.dicts import RU_DAYS, RU_DAYS_INV
 @dataclass
 class Lesson:
     subj: str
-    start: dt.time
-    end: dt.time
-    teacher: str
+    start: dt.datetime
+    end: dt.datetime
     loc: str
+    teacher: str = Field(default='')
+    group_name: Optional[str] = Field(default=None)
     link: Optional[str] = Field(default=None)
     comment: Optional[str] = Field(default=None)
+    special_case: Optional[str] = Field(default=None)
+    whole_day: Optional[bool] = Field(default=False)
 
 
 @dataclass
@@ -32,7 +35,10 @@ class DayOfWeek:
 @dataclass
 class Week:
     num: int
-    days: list = Field(default_factory=lambda: list())
+    days: List[Optional[DayOfWeek]] = Field(default_factory=list)
+
+    def __init__(self, num: int):
+        self.num = num
 
     def __post_init__(self):
         for day, i in RU_DAYS.items():
@@ -45,6 +51,19 @@ class Week:
 
     def get_day(self, day_id: int):
         return self.days[day_id - 1]
+
+    def map_lessons(self, lessons: List[Lesson]):
+        lessons_map = {}
+
+        for l in lessons:
+            day_num = l.start.isocalendar()[2]
+            lessons_map[day_num] = lessons_map.get(day_num, []) + [l]
+
+        for day in self.days:
+            day_lessons = lessons_map.get(day.id, [])
+            if day_lessons:
+                day.schedule = day_lessons
+                day.free = False
 
 
 @dataclass

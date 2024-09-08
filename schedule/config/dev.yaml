@@ -3,7 +3,7 @@ storage_path: ./storage/schedule.db
 google_config:
   google_creds_path: schedule/internal/gglapi/studentsbot-414221-88a1d65d3976.json
 #  google_creds_path: ./studentsbot-414221-88a1d65d3976.json
-  spreadsheets_id: 1pUIKtzl80DNWOnR50_fQH1wlazMBS-HNYsYJG3A5f6c
+  spreadsheets_id: 1GJpAJjU8_8-XXjR5VFFkvK2MoYsv5Nl6
 http_server:
   address: "0.0.0.0:8080"
   timeout: 4s

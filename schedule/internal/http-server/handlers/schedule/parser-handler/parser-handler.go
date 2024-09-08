@@ -28,7 +28,7 @@ func ParseSchedule(ctx context.Context, pu *pupl.ParserUploader) http.HandlerFun
 			return
 		}
 
-		err = pu.ParseAndUploadSchedule(false, id)
+		err = pu.ParseAndUploadScheduleFromExcel(false, id)
 		if err != nil {
 			render.JSON(w, r, resp.Error(err.Error()))
 			return

@@ -35,10 +35,29 @@ services:
       - prod_network
 
   schedule:
-    image: schedule:local
-    container_name: sch_cont
+    build: ./schedule
+#    image: schedule-app:local
+    container_name: schd-app
+    networks:
+      - prod_network
     depends_on:
-      - bot_db
+      - schedule_db
+    expose:
+      - 8080
+    ports:
+      - "8080:8080"
+
+  schedule_db:
+    image: postgres:16
+    container_name: schd-db
+    volumes:
+      - ./schd-db:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres4344
+      - POSTGRES_DB=schedule
+    ports:
+      - "5432:5432"
     networks:
       - prod_network
 
@@ -48,7 +67,8 @@ services:
     env_file:
       - .env
     depends_on:
-      - db
+      - schedule_db
+      - bot_db
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PG_ADMIN_LOGIN}
       - PGADMIN_DEFAULT_PASSWORD=${PG_ADMIN_PASS}
@@ -59,4 +79,3 @@ services:
 
 networks:
   prod_network:
-    external: true

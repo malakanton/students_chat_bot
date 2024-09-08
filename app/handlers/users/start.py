@@ -11,7 +11,7 @@ from aiogram.fsm.context import FSMContext
 from lib.misc import prep_markdown
 from lib.models.group import Groups, StudyForm
 from lib.models.users import User, Teacher
-from loader import bot, db, lx, schd
+from loader import bot, db, lx, schd, users
 from lib.config.config import cfg
 from loguru import logger
 from typing import Tuple
@@ -32,13 +32,13 @@ async def start(message: Message, state: FSMContext):
     logger.info(logging_msg(message, "start command in private chat"))
     existing_user = db.get_user(message.chat.id)
 
-    if existing_user or not existing_user:
+    if not existing_user:
         hello_msg = prep_markdown(lx.HELLO.format(message.from_user.first_name) + lx.ROLE_CHOICE)
         await message.answer(text=hello_msg, reply_markup=await role_selector_kb())
 
         await state.set_state(StartUser.choose_role)
 
-    elif existing_user:
+    else:
         await message.answer(
             text=prep_markdown(lx.YOURE_REGISTERED)
         )
@@ -112,6 +112,7 @@ async def register_teacher_user(message: Message, state: FSMContext, teacher: Te
         text=f"New user added: @{login} {name} {message.chat.id} - teacher: {teacher.name}",
         parse_mode="HTML",
     )
+    users.teachers.add(message.chat.id)
 
     await message.reply(prep_markdown(text))
     await message.delete()
@@ -198,7 +199,6 @@ async def confirmed(callback: CallbackQuery, state: FSMContext):
             text=prep_markdown(lx.ADDED_TO_GROUP.format(u.name, group_name))
         )
 
-
         await bot.send_message(
             cfg.secrets.ADMIN_ID,
             text=f"New user added: @{login} {name} {callback.message.chat.id} - group: {group_name}",
@@ -217,18 +217,12 @@ async def unregistered_user(message: Message):
 
 
 def get_role(group_id: int) -> str:
-    if group_id // 1000 > 0:
+    groups = schd.get_groups()
+    group = groups.get_group_by_id(group_id)
+    if group.study_form == 1:
         return 'intramural'
 
-    groups = db.get_groups()
-
-    for group in groups:
-        if group.id == group_id:
-
-            if group.chat_id:
-                return 'regular'
-
-            return 'unreg'
+    return 'unreg'
 
 
 def get_name_login(message: Message) -> Tuple[str, str]:

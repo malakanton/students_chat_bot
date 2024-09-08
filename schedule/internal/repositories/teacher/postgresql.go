@@ -36,7 +36,7 @@ RETURNING id;
 
 func (r *repository) FindAll(ctx context.Context) (t []Teacher, err error) {
 	q := `
-SELECT id, name
+SELECT id, name, full_name
 FROM teachers
 WHERE tg_id is null
 `
@@ -49,7 +49,7 @@ WHERE tg_id is null
 	for rows.Next() {
 		var teach Teacher
 
-		err = rows.Scan(&teach.Id, &teach.Name)
+		err = rows.Scan(&teach.Id, &teach.Name, &teach.FullName)
 		if err != nil {
 			return nil, err
 		}
@@ -63,12 +63,12 @@ WHERE tg_id is null
 
 func (r *repository) FindById(ctx context.Context, id int) (Teacher, error) {
 	q := `
-SELECT id, name, code
+SELECT id, name, full_name, code
 FROM teachers
 WHERE id = $1
 `
 	var teach Teacher
-	err := r.client.QueryRow(ctx, q, id).Scan(&teach.Id, &teach.Name, &teach.Code)
+	err := r.client.QueryRow(ctx, q, id).Scan(&teach.Id, &teach.Name, &teach.FullName, &teach.Code)
 	if err != nil {
 		return Teacher{}, err
 	}

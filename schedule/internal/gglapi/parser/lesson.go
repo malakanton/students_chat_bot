@@ -288,5 +288,9 @@ func (l *Lesson) parseSpecialCase() error {
 
 func prepTeacherName(s string) string {
 	s = strings.ReplaceAll(s, ".-", "-")
-	return strings.ReplaceAll(s, ". ", ".")
+	s = strings.ReplaceAll(s, ". ", ".")
+	if !strings.HasSuffix(s, ".") {
+		s = s + "."
+	}
+	return s
 }

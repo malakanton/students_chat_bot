@@ -16,6 +16,14 @@ type ScheduleDates struct {
 	header    string
 }
 
+func NewScheduleDates(start, end time.Time, header string) *ScheduleDates {
+	return &ScheduleDates{
+		StartDate: start,
+		EndDate:   end,
+		header:    header,
+	}
+}
+
 func (s *ScheduleDates) SetYear() error {
 	if s.header == "" {
 		return errors.New("spreadsheet header is empty")
@@ -44,4 +52,14 @@ func (s *ScheduleDates) SetDates() (err error) {
 
 func (s *ScheduleDates) SetWeekNum() {
 	_, s.WeekNum = s.StartDate.ISOWeek()
+}
+
+func (s *ScheduleDates) String() string {
+	return fmt.Sprintf(
+		"Schedule dates: Year=%s StartDate=%s EndDate=%s WeekNum=%d",
+		s.Year,
+		s.StartDate.Format(layoutDate),
+		s.EndDate.Format(layoutDate),
+		s.WeekNum,
+	)
 }

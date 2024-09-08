@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -34,4 +35,19 @@ func CombineYearAndDate(year, layout string, date time.Time) (full time.Time, er
 	fullString := year + "." + date.Format(layout)
 	full, err = time.Parse("2006.02.01", fullString)
 	return full, err
+}
+
+func ExtractDateFromString(s, layout string, year string) (date time.Time, err error) {
+	re := regexp.MustCompile(`\d{1,2}\.\d{2}`)
+	found := re.FindAllString(s, -1)
+	if len(found) == 0 {
+		return time.Now(), fmt.Errorf("no date in string %s", s)
+	}
+
+	date, err = time.Parse(layout, strings.Trim(found[0], " "))
+	yearInt, _ := strconv.Atoi(year)
+
+	date = date.AddDate(yearInt, 0, 0)
+
+	return date, err
 }

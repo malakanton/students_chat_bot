@@ -12,16 +12,21 @@ import (
 	"strconv"
 )
 
-type Response struct {
+type ResponseTeacher struct {
 	resp.Response
-	Lessons []lesson.Lesson `json:"lesson,omitempty"`
+	Lessons []lesson.TeacherLessonDto `json:"lessons,omitempty"`
+}
+
+type ResponseGroup struct {
+	resp.Response
+	Lessons []lesson.GroupLessonDto `json:"lessons,omitempty"`
 }
 
 type LessonsGetter interface {
-	FindWeeklyForTeacher(ctx context.Context, id, weekNum int) (lessons []lesson.Lesson, err error)
-	FindDailyForTeacher(ctx context.Context, id int, date string) (lessons []lesson.Lesson, err error)
-	FindGroupWeeklySchedule(ctx context.Context, id, weekNum int) (lessons []lesson.Lesson, err error)
-	FindGroupDailySchedule(ctx context.Context, id int, date string) (lessons []lesson.Lesson, err error)
+	FindWeeklyForTeacher(ctx context.Context, id, weekNum int) (lessons []lesson.TeacherLessonDto, err error)
+	FindDailyForTeacher(ctx context.Context, id int, date string) (lessons []lesson.TeacherLessonDto, err error)
+	FindGroupWeeklySchedule(ctx context.Context, id, weekNum int) (lessons []lesson.GroupLessonDto, err error)
+	FindGroupDailySchedule(ctx context.Context, id int, date string) (lessons []lesson.GroupLessonDto, err error)
 }
 
 func TeacherWeeklySchedule(ctx context.Context, log *slog.Logger, lg LessonsGetter) http.HandlerFunc {
@@ -46,14 +51,14 @@ func TeacherWeeklySchedule(ctx context.Context, log *slog.Logger, lg LessonsGett
 			return
 		}
 
-		t, err := lg.FindWeeklyForTeacher(ctx, id, weekNum)
+		l, err := lg.FindWeeklyForTeacher(ctx, id, weekNum)
 		if err != nil {
 			log.Error("no weekly schedule for week", err.Error())
 			render.JSON(w, r, resp.Error(fmt.Sprintf("no lessons in week %d for teacher %d, ", weekNum, id)))
 			return
 		}
 
-		responseOK(w, r, t)
+		responseOkTeacher(w, r, l)
 	}
 }
 
@@ -79,7 +84,7 @@ func TeacherDailySchedule(ctx context.Context, log *slog.Logger, lg LessonsGette
 			return
 		}
 
-		responseOK(w, r, l)
+		responseOkTeacher(w, r, l)
 	}
 }
 
@@ -105,14 +110,14 @@ func GroupWeeklySchedule(ctx context.Context, log *slog.Logger, lg LessonsGetter
 			return
 		}
 
-		t, err := lg.FindWeeklyForTeacher(ctx, id, weekNum)
+		t, err := lg.FindGroupWeeklySchedule(ctx, id, weekNum)
 		if err != nil {
 			log.Error("no weekly schedule for week", err.Error())
 			render.JSON(w, r, resp.Error(fmt.Sprintf("no lessons in week %d for group %d, ", weekNum, id)))
 			return
 		}
 
-		responseOK(w, r, t)
+		responseOkGroup(w, r, t)
 	}
 }
 
@@ -131,19 +136,26 @@ func GroupDailySchedule(ctx context.Context, log *slog.Logger, lg LessonsGetter)
 
 		date := chi.URLParam(r, "date")
 
-		l, err := lg.FindDailyForTeacher(ctx, id, date)
+		l, err := lg.FindGroupDailySchedule(ctx, id, date)
 		if err != nil {
 			log.Error("no daily schedule for date", err.Error())
 			render.JSON(w, r, resp.Error(fmt.Sprintf("no lessons in for day %s for group %d, ", date, id)))
 			return
 		}
 
-		responseOK(w, r, l)
+		responseOkGroup(w, r, l)
 	}
 }
 
-func responseOK(w http.ResponseWriter, r *http.Request, l []lesson.Lesson) {
-	render.JSON(w, r, Response{
+func responseOkTeacher(w http.ResponseWriter, r *http.Request, l []lesson.TeacherLessonDto) {
+	render.JSON(w, r, ResponseTeacher{
+		Response: resp.OK(),
+		Lessons:  l,
+	})
+}
+
+func responseOkGroup(w http.ResponseWriter, r *http.Request, l []lesson.GroupLessonDto) {
+	render.JSON(w, r, ResponseGroup{
 		Response: resp.OK(),
 		Lessons:  l,
 	})
