@@ -4,8 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/xuri/excelize/v2"
+	"log/slog"
 	"regexp"
 	"schedule/internal/gglapi/parser"
+	"schedule/internal/gglapi/parser/timings"
 	pt "schedule/internal/lib/parser-tools"
 	"slices"
 	"strconv"
@@ -23,9 +25,11 @@ const (
 func NewExcelDocument(filePath string) *ExcelDocument {
 
 	return &ExcelDocument{
-		filePath:      filePath,
-		LessonTimings: make(map[int]*parser.LessonTimeByFilial),
-		GroupsIdxMap:  make(map[int]parser.Group),
+		filePath:       filePath,
+		LessonTimings:  make(map[int]*timings.LessonTimeByFilial),
+		GroupsIdxMap:   make(map[int]parser.Group),
+		MegresMapping:  make(map[string]string),
+		GroupsSchedule: make(map[string][]parser.Lesson),
 	}
 }
 
@@ -36,10 +40,12 @@ type ExcelDocument struct {
 	GroupsNamesIdx        int
 	SheetsMap             map[int]string
 	SheetRows             [][]string
-	ScheduleDates         *parser.ScheduleDates
-	LessonTimings         map[int]*parser.LessonTimeByFilial
+	ScheduleDates         *timings.ScheduleDates
+	LessonTimings         map[int]*timings.LessonTimeByFilial
 	GroupsIdxMap          map[int]parser.Group
+	MegresMapping         map[string]string
 	ExternalLessonsColIdx int
+	GroupsSchedule        map[string][]parser.Lesson
 }
 
 func (ed *ExcelDocument) ReadExcelFile() error {
@@ -98,11 +104,165 @@ func (ed *ExcelDocument) ParseSheetData(id int) (err error) {
 		return err
 	}
 
-	fmt.Println(ed.LessonTimings)
+	err = ed.MakeMergesMapping(sheetName)
+	if err != nil {
+		return fmt.Errorf("failed to make merges mapping: %s", err.Error())
+	}
 
-	fmt.Println(ed.GroupsIdxMap)
+	//fmt.Println(ed.MegresMapping)
 
 	return err
+}
+
+func (ed *ExcelDocument) ParseLessonsData(logger *slog.Logger) (err error) {
+	for i, row := range ed.SheetRows {
+
+		lessonTimings, ok := ed.LessonTimings[i]
+		if !ok {
+			continue
+		}
+
+		if i == 20 {
+			break
+		}
+
+		for j, cell := range row {
+			cellName := pt.CellName(j, i)
+			if cell == "" {
+				print()
+				continue
+			}
+
+			group, ok := ed.GroupsIdxMap[j]
+			if !ok {
+				continue
+			}
+
+			lessonRawString, fullDay, err := ed.CheckCellMergesAndGetCellVal(i, j, row, cellName, lessonTimings.Even)
+			if err != nil {
+				return fmt.Errorf("%s: failed to check merges: %s", cellName, err.Error)
+			}
+
+			if fullDay {
+				l := parser.NewFullDayLesson(lessonTimings.Av.Start, lessonRawString, cellName)
+				fmt.Println(l.String())
+				ed.AddNewLesson(group.Name, l)
+				continue
+			}
+
+			loc, filial := ed.GetLocAndFilial(j, row, lessonTimings.Even)
+			lessonTime := lessonTimings.GetTiming(filial)
+			l := parser.NewLesson(lessonTime, cellName, lessonRawString, loc, false, filial)
+
+			subLesson, err := l.ParseRawString()
+			if err != nil {
+				logger.Error(fmt.Sprintf("cell: %s error occured while parsing lesson ", cellName), slog.String("err", err.Error()))
+				continue
+			}
+			if subLesson != (parser.Lesson{}) {
+				fmt.Println(subLesson.String())
+				ed.AddNewLesson(group.Name, subLesson)
+			}
+
+			fmt.Println(l.String())
+
+			ed.AddNewLesson(group.Name, l)
+
+			//TODO: stop trying extract teachers name from full day lesson
+			//TODO: if full day lesson not covering all cells - stil skip
+			// if no teacher found - fill wuth NO_TEACHER value
+
+		}
+	}
+	return nil
+}
+
+func (ed *ExcelDocument) CheckCellMergesAndGetCellVal(i, j int, row []string, cellName string, even bool) (lessonRawString string, fullDay bool, err error) {
+	onelessonMergeCell := pt.CellName(j+1, i)
+	nextDayIdx := ed.NextDayIdx(i) - 1
+	fullDayMergeCell := pt.CellName(j+1, nextDayIdx)
+
+	if foundMerge, ok := ed.MegresMapping[cellName]; ok {
+
+		switch foundMerge {
+		case onelessonMergeCell:
+			lessonRawString = row[j]
+
+		case fullDayMergeCell:
+			lessonRawString = row[j]
+			fullDay = true
+		}
+	} else {
+		lessonRawString = row[j+pt.BoolToInt(even)]
+	}
+
+	lessonRawString = pt.PrepareLessonString(lessonRawString)
+	return
+}
+
+func (ed *ExcelDocument) AddNewLesson(groupName string, lesson parser.Lesson) {
+	ed.GroupsSchedule[groupName] = append(ed.GroupsSchedule[groupName], lesson)
+}
+
+func (ed *ExcelDocument) GetLocAndFilial(colIdx int, row []string, even bool) (loc string, filial timings.Filial) {
+
+	locIdx := colIdx + 2
+	if pt.GetExcelColumnName(colIdx) == "CP" {
+		locIdx = colIdx + 1
+	}
+
+	if colIdx < ed.ExternalLessonsColIdx {
+		filial = timings.AV
+	} else {
+		filial = timings.EXT
+	}
+
+	if locIdx >= len(row) {
+		loc = ""
+	} else {
+		loc, filial = ed.ProcessLocCell(row[locIdx], even, filial)
+	}
+	return loc, filial
+}
+
+func (ed *ExcelDocument) ProcessLocCell(s string, even bool, filial timings.Filial) (loc string, resFilial timings.Filial) {
+	var whenDoubleIdx int
+	if even {
+		whenDoubleIdx = 1
+	}
+	resFilial = filial
+	s = strings.Replace(s, "\n", " ", -1)
+	switch {
+	case strings.Contains(s, "с/з") || strings.Contains(s, "а/з"):
+		loc = s
+	case strings.Contains(s, "дист"):
+		loc = "дистант"
+	case strings.Contains(s, "/"):
+		loc = strings.Split(s, "/")[whenDoubleIdx]
+	default:
+		loc = s
+	}
+	if strings.Contains(loc, "НО") || strings.Contains(loc, "АМ") {
+		loc = strings.Trim(loc, "НО")
+		loc = strings.Trim(loc, "АМ")
+		resFilial = timings.NO
+	}
+
+	return strings.TrimSpace(loc), resFilial
+}
+
+func (ed *ExcelDocument) NextDayIdx(currDayIdx int) (nextDayIdx int) {
+	currDate := ed.LessonTimings[currDayIdx].Av.Start
+	nextDayIdx = currDayIdx
+
+	for i := currDayIdx; i < len(ed.LessonTimings); i++ {
+
+		if compareDates(currDate, ed.LessonTimings[i].Av.Start) {
+			nextDayIdx = i
+			return nextDayIdx
+		}
+	}
+	return currDayIdx
 }
 
 func (ed *ExcelDocument) GetSheetsMap() {
@@ -123,6 +283,25 @@ func (ed *ExcelDocument) GetSheetNameByIdx(idx int) (sheetName string, err error
 	latestIdx := len(sheetsList) + idx
 
 	return sheetsList[latestIdx], err
+}
+
+func (ed *ExcelDocument) MakeMergesMapping(sheetName string) (err error) {
+	merges, err := ed.file.GetMergeCells(sheetName)
+	if err != nil {
+		return err
+	}
+	for _, merge := range merges {
+		cellsRange := merge[0]
+		value := merge[1]
+		if value == "" {
+			continue
+		}
+		splitted := strings.Split(cellsRange, ":")
+		startCell := splitted[0]
+		endCell := splitted[1]
+		ed.MegresMapping[startCell] = endCell
+	}
+	return nil
 }
 
 func (ed *ExcelDocument) GetRowsData(sheetName string) error {
@@ -156,6 +335,16 @@ func (ed *ExcelDocument) FindIndexes() (err error) {
 	if ed.DataStartIdx == 0 {
 		return errors.New("data start index not found")
 	}
+
+	for i, cell := range ed.SheetRows[ed.GroupsNamesIdx-1] {
+		if strings.Contains(cell, "ЗАОЧН") {
+			ed.ExternalLessonsColIdx = i
+		}
+	}
+	if ed.ExternalLessonsColIdx == 0 {
+		return errors.New("external groups timings not found")
+	}
+
 	return nil
 }
 
@@ -176,7 +365,7 @@ func (ed *ExcelDocument) SetScheduleDates(startDate, endDate time.Time) (err err
 		return errors.New("didnt manage to find schedule header to parse year")
 	}
 
-	scheduleDates := parser.NewScheduleDates(startDate, endDate, header)
+	scheduleDates := timings.NewScheduleDates(startDate, endDate, header)
 
 	err = scheduleDates.SetYear()
 	if err != nil {
@@ -191,7 +380,7 @@ func (ed *ExcelDocument) SetScheduleDates(startDate, endDate time.Time) (err err
 	scheduleDates.SetWeekNum()
 
 	ed.ScheduleDates = scheduleDates
-	fmt.Println(scheduleDates.String())
+	//fmt.Println(scheduleDates.String())
 	return nil
 }
 
@@ -221,7 +410,7 @@ func (ed *ExcelDocument) ParseLessonTimings() (err error) {
 			lessonNum++
 		}
 
-		timings := parser.NewLessonTimeByFilial(row[2], i)
+		timings := timings.NewLessonTimeByFilial(row[2], i)
 		err = timings.ParseRawString(false)
 		if err != nil {
 			cellName := pt.CellName(2, i)
@@ -231,6 +420,11 @@ func (ed *ExcelDocument) ParseLessonTimings() (err error) {
 
 		timings.SetLessonNum(lessonNum)
 		err = timings.AddDateToTime(currDate)
+		if err != nil {
+			return err
+		}
+
+		err = timings.SetEvenOdd()
 		if err != nil {
 			return err
 		}
@@ -246,8 +440,7 @@ func (ed *ExcelDocument) GetGroupsMapping() error {
 	studyForm := parser.In
 
 	for i, cell := range groupsRow {
-		if strings.Contains(cell, "ЗАОЧНО") {
-			ed.ExternalLessonsColIdx = i
+		if i == ed.ExternalLessonsColIdx {
 			studyForm = parser.Ex
 		}
 
@@ -272,6 +465,8 @@ func (ed *ExcelDocument) ParseExternalLessonsTimings() (err error) {
 	lessonNum := 1
 	currDate := ed.ScheduleDates.StartDate
 	for i, row := range ed.SheetRows {
+		cell := pt.CellName(ed.ExternalLessonsColIdx, i)
+
 		if i < ed.DataStartIdx || ed.ExternalLessonsColIdx >= len(row) {
 			continue
 		}
@@ -290,7 +485,7 @@ func (ed *ExcelDocument) ParseExternalLessonsTimings() (err error) {
 
 		err = l.AddExternalDateFromString(externalLessonTimeCell, lessonNum)
 		if err != nil {
-			return err
+			return fmt.Errorf("cell %s: %s", cell, err.Error())
 		}
 		lessonNum++
 	}
@@ -301,6 +496,6 @@ func compareDates(d1, d2 time.Time) bool {
 	oneDay := 24 * time.Hour
 	d1 = d1.Truncate(oneDay)
 	d2 = d2.Truncate(oneDay)
-	fmt.Println(d1, d2, d1.After(d2))
+	//fmt.Println(d1, d2, d1.After(d2))
 	return d1.After(d2)
 }

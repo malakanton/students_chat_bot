@@ -4,8 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"schedule/internal/gglapi/parser/timings"
 	p "schedule/internal/lib/parser-tools"
 	"strings"
+	"time"
 )
 
 const (
@@ -15,12 +17,12 @@ const (
 )
 
 type Lesson struct {
-	DateTime    LessonTime
+	DateTime    timings.LessonTime
 	Cell        string
 	RawString   string
 	Loc         string
 	WholeDay    bool
-	Filial      Filial
+	Filial      timings.Filial
 	Teacher     string
 	Subject     string
 	SubjectCode string
@@ -30,7 +32,7 @@ type Lesson struct {
 	Modified    bool
 }
 
-func NewLesson(lessonTime LessonTime, cell, rawString, loc string, wholeDay bool, filial Filial) Lesson {
+func NewLesson(lessonTime timings.LessonTime, cell, rawString, loc string, wholeDay bool, filial timings.Filial) Lesson {
 	return Lesson{
 		Cell:      cell,
 		DateTime:  lessonTime,
@@ -69,10 +71,10 @@ func NewLessonWithTeacherSwap(l Lesson, teacherName string) Lesson {
 	}
 }
 
-func NewFullDayLesson(day *Day, name, cell string) Lesson {
+func NewFullDayLesson(date time.Time, name, cell string) Lesson {
 	return Lesson{
 		Cell:      cell,
-		DateTime:  LessonTime{Start: day.Date},
+		DateTime:  timings.LessonTime{Start: date},
 		RawString: name,
 		Subject:   name,
 		WholeDay:  true,
@@ -119,7 +121,7 @@ func (l *Lesson) SetSubjectCode(code string) {
 }
 
 func (l *Lesson) ParseRawString() (subLesson Lesson, err error) {
-	fmt.Println(l.Cell, l.RawString)
+	fmt.Printf("cell:%s, raw string: %s\n", l.Cell, l.RawString)
 
 	re, _ := regexp.Compile(`\n`)
 	l.RawString = re.ReplaceAllLiteralString(l.RawString, "")

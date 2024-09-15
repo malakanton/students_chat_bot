@@ -1,4 +1,4 @@
-package parser
+package timings
 
 import (
 	"errors"
@@ -13,24 +13,24 @@ type ScheduleDates struct {
 	StartDate time.Time
 	EndDate   time.Time
 	WeekNum   int
-	header    string
+	Header    string
 }
 
 func NewScheduleDates(start, end time.Time, header string) *ScheduleDates {
 	return &ScheduleDates{
 		StartDate: start,
 		EndDate:   end,
-		header:    header,
+		Header:    header,
 	}
 }
 
 func (s *ScheduleDates) SetYear() error {
-	if s.header == "" {
+	if s.Header == "" {
 		return errors.New("spreadsheet header is empty")
 	}
 
 	re, _ := regexp.Compile(`\d{4}`)
-	found := re.FindAllString(s.header, -1)
+	found := re.FindAllString(s.Header, -1)
 	if len(found) != 2 {
 		return fmt.Errorf("no years found in header")
 	}
@@ -45,8 +45,8 @@ func (s *ScheduleDates) SetYear() error {
 }
 
 func (s *ScheduleDates) SetDates() (err error) {
-	s.StartDate, err = p.CombineYearAndDate(s.Year, layoutDate, s.StartDate)
-	s.EndDate, err = p.CombineYearAndDate(s.Year, layoutDate, s.EndDate)
+	s.StartDate, err = p.CombineYearAndDate(s.Year, LayoutDate, s.StartDate)
+	s.EndDate, err = p.CombineYearAndDate(s.Year, LayoutDate, s.EndDate)
 	return err
 }
 
@@ -58,8 +58,8 @@ func (s *ScheduleDates) String() string {
 	return fmt.Sprintf(
 		"Schedule dates: Year=%s StartDate=%s EndDate=%s WeekNum=%d",
 		s.Year,
-		s.StartDate.Format(layoutDate),
-		s.EndDate.Format(layoutDate),
+		s.StartDate.Format(LayoutDate),
+		s.EndDate.Format(LayoutDate),
 		s.WeekNum,
 	)
 }

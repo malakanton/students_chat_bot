@@ -31,7 +31,7 @@ func GetExcelColumnName(n int) string {
 }
 
 func CellName(colIdx, rowIdx int) string {
-	return fmt.Sprintf("%s%d", GetExcelColumnName(colIdx+1), rowIdx)
+	return fmt.Sprintf("%s%d", GetExcelColumnName(colIdx+1), rowIdx+1)
 }
 
 func sliceToStr(sl []string) string {

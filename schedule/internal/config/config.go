@@ -16,10 +16,15 @@ type Config struct {
 	Storage      StorageConfig `yaml:"storage"`
 	Settings     Settings      `yaml:"settings"`
 	Scheduler    Scheduler     `yaml:"scheduler"`
+	Files        Files         `yaml:"files"`
 }
 
 type Scheduler struct {
 	Jobs []string `yaml:"jobs"`
+}
+
+type Files struct {
+	TeachersListFileId string `yaml:"teachers_list_file_id"`
 }
 
 type Settings struct {

@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"regexp"
+	"schedule/internal/gglapi/parser/timings"
 	p "schedule/internal/lib/parser-tools"
 	"strings"
 	"time"
@@ -11,8 +12,8 @@ import (
 var BadWords = []string{"инейка", "САМОСТОЯТЕЛЬНОЙ"}
 
 type Schedule struct {
-	ScheduleDates  ScheduleDates
-	Days           []Day
+	ScheduleDates  timings.ScheduleDates
+	Days           []timings.Day
 	Groups         []Group
 	GroupsSchedule map[string][]Lesson
 }
@@ -45,12 +46,12 @@ func (s *Schedule) CountGroupsLessons() (int, int) {
 
 func NewSchedule(startDate, endDate time.Time, header string) Schedule {
 	s := Schedule{
-		ScheduleDates: ScheduleDates{
+		ScheduleDates: timings.ScheduleDates{
 			StartDate: startDate,
 			EndDate:   endDate,
-			header:    header,
+			Header:    header,
 		},
-		Days:           []Day{},
+		Days:           []timings.Day{},
 		GroupsSchedule: make(map[string][]Lesson),
 	}
 	return s
@@ -81,10 +82,10 @@ func (s *Schedule) ParseDatesFromSlice(data [][]interface{}) (err error) {
 			rowS := row[0].(string)
 
 			if rowS != "" && !strings.Contains(rowS, "ДНИ") {
-				d := Day{
+				d := timings.Day{
 					RowIdx: i,
 					Even:   true,
-					raw:    rowS,
+					Raw:    rowS,
 				}
 				err = d.ParseDatesString()
 				if err != nil {
@@ -110,8 +111,8 @@ func (s *Schedule) ParseDatesFromSlice(data [][]interface{}) (err error) {
 	return nil
 }
 
-func (s *Schedule) GetDayByRowIdx(idx int) *Day {
-	var neededDay *Day
+func (s *Schedule) GetDayByRowIdx(idx int) *timings.Day {
+	var neededDay *timings.Day
 	for i, day := range s.Days {
 		if idx >= day.RowIdx {
 			neededDay = &s.Days[i]
@@ -122,7 +123,7 @@ func (s *Schedule) GetDayByRowIdx(idx int) *Day {
 	return neededDay
 }
 
-func (s *Schedule) GetNextDayRowIdx(currDay *Day, dataLength int) int {
+func (s *Schedule) GetNextDayRowIdx(currDay *timings.Day, dataLength int) int {
 	for i, day := range s.Days {
 		if currDay.RowIdx == day.RowIdx {
 			if i == len(s.Days)-1 {
@@ -153,7 +154,7 @@ func (s *Schedule) ParseLessonsTimings(data [][]interface{}, idx int) (err error
 		day := s.GetDayByRowIdx(i)
 		fmt.Println(day.String())
 		if !externalTimings {
-			lt := NewLessonTimeByFilial(rowString, i)
+			lt := timings.NewLessonTimeByFilial(rowString, i)
 			err = lt.ParseRawString(externalTimings)
 
 			if err != nil {
@@ -238,7 +239,7 @@ func (s *Schedule) ParseScheduleData(data [][]interface{}, mergesMapping map[str
 				lessonRawString = p.PrepareLessonString(cellData)
 
 			case wholeDayMerged:
-				wholeDay := NewFullDayLesson(day, p.PrepareLessonString(cellData), cellName)
+				wholeDay := NewFullDayLesson(day.Date, p.PrepareLessonString(cellData), cellName)
 				//fmt.Println(wholeDay.String())
 				s.AddNewLesson(groupName, wholeDay)
 				continue
@@ -251,13 +252,13 @@ func (s *Schedule) ParseScheduleData(data [][]interface{}, mergesMapping map[str
 				continue
 			}
 
-			loc, filial := getLocAndFilial(j, row, day)
+			loc, filial := GetLocAndFilial(j, row, day)
 
 			if group.StudyForm == Ex {
 				filial = 0
 			}
 
-			l = NewLesson(dateTime.GetTiming(getFilial(filial)), cellName, lessonRawString, loc, false, getFilial(filial))
+			l = NewLesson(dateTime.GetTiming(filial), cellName, lessonRawString, loc, false, filial)
 
 			subLesson, err := l.ParseRawString()
 			if err != nil {
@@ -293,8 +294,8 @@ func (s *Schedule) GetGroupByName(groupName string) *Group {
 	return &Group{}
 }
 
-func getLocAndFilial(colIdx int, row []interface{}, day *Day) (loc string, filial int) {
-
+func GetLocAndFilial(colIdx int, row []interface{}, day *timings.Day) (loc string, filial timings.Filial) {
+	filial = timings.AV
 	locIdx := colIdx + 2
 	if p.GetExcelColumnName(colIdx+4) == "CP" {
 		locIdx = colIdx + 1
@@ -303,19 +304,45 @@ func getLocAndFilial(colIdx int, row []interface{}, day *Day) (loc string, filia
 	if locIdx >= len(row) {
 		loc, filial = "", 1
 	} else {
-		loc, filial = p.ProcessLocCell(row[locIdx].(string), day.Even)
+		loc, filial = ProcessLocCell(row[locIdx].(string), day.Even, filial)
 	}
 	return loc, filial
 }
 
-func getFilial(f int) Filial {
+func ProcessLocCell(s string, even bool, filial timings.Filial) (loc string, resFilial timings.Filial) {
+	var whenDoubleIdx int
+	if even {
+		whenDoubleIdx = 1
+	}
+	resFilial = filial
+	s = strings.Replace(s, "\n", " ", -1)
+	switch {
+	case strings.Contains(s, "с/з") || strings.Contains(s, "а/з"):
+		loc = s
+	case strings.Contains(s, "дист"):
+		loc = "дистант"
+	case strings.Contains(s, "/"):
+		loc = strings.Split(s, "/")[whenDoubleIdx]
+	default:
+		loc = s
+	}
+	if strings.Contains(loc, "НО") || strings.Contains(loc, "АМ") {
+		loc = strings.Trim(loc, "НО")
+		loc = strings.Trim(loc, "АМ")
+		resFilial = 2
+	}
+
+	return strings.TrimSpace(loc), resFilial
+}
+
+func getFilial(f int) timings.Filial {
 	switch f {
 	case 0:
-		return ext
+		return timings.EXT
 	case 2:
-		return no
+		return timings.NO
 	default:
-		return av
+		return timings.AV
 	}
 }
 

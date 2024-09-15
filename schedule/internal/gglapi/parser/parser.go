@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"schedule/internal/config"
 	"schedule/internal/gglapi/document"
+	"schedule/internal/gglapi/parser/timings"
 	pt "schedule/internal/lib/parser-tools"
 )
 
@@ -36,7 +37,7 @@ func (dp *DocumentParser) ParseDocument(id int) (s Schedule, err error) {
 	sheetName := d.GetSheetById(id)
 	dp.logger.Info(fmt.Sprintf("working on spreadsheet \"%s\"", sheetName))
 
-	startDate, endDate, err := pt.ExtractDatesFromSheetName(sheetName, layoutDate)
+	startDate, endDate, err := pt.ExtractDatesFromSheetName(sheetName, timings.LayoutDate)
 	if err != nil {
 		err = fmt.Errorf("can not extract dates from sheet name: %w", err)
 		return Schedule{}, err
@@ -94,7 +95,13 @@ func (dp *DocumentParser) ParseDocument(id int) (s Schedule, err error) {
 	}
 
 	groups, lessons := s.CountGroupsLessons()
-	dp.logger.Info(fmt.Sprintf("finished to parse schedule: dates %s - %s, total groups %d, total lessons %d", s.ScheduleDates.StartDate.Format(layoutFullDate), s.ScheduleDates.EndDate.Format(layoutFullDate), groups, lessons))
+	dp.logger.Info(fmt.Sprintf("finished to parse schedule: dates %s - %s, total groups %d, total lessons %d",
+		s.ScheduleDates.StartDate.Format(timings.LayoutFullDate),
+		s.ScheduleDates.EndDate.Format(timings.LayoutFullDate),
+		groups,
+		lessons,
+	),
+	)
 
 	return s, nil
 }

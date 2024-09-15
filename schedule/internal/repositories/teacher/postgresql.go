@@ -15,14 +15,14 @@ type repository struct {
 	cfg    *config.Config
 }
 
-func (r *repository) Create(ctx context.Context, teacher *Teacher) error {
+func (r *repository) Create(ctx context.Context, t *Teacher) error {
 	q := `
-INSERT INTO teachers (name, code) 
-VALUES ($1, $2)
+INSERT INTO teachers (last_name, first_name, fathers_name, initials, code) 
+VALUES ($1, $2, $3, $4, $5)
 RETURNING id;
 `
-	teacher.SetCode(r.cfg.Settings.TeacherCodeSize)
-	if err := r.client.QueryRow(ctx, q, teacher.Name, teacher.Code).Scan(&teacher.Id); err != nil {
+	t.SetCode(r.cfg.Settings.TeacherCodeSize)
+	if err := r.client.QueryRow(ctx, q, t.LastName, t.FirstName, t.FathersName, t.Initials, t.Code).Scan(&t.Id); err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok {
 			sqlError := fmt.Errorf("SQL error occurred: %s, Where: %s, details: %s, constraint: %s", pgErr.Message, pgErr.Where, pgErr.Detail, pgErr.ConstraintName)
 			r.logger.Error(sqlError.Error())
@@ -30,13 +30,13 @@ RETURNING id;
 		}
 		return err
 	}
-	r.logger.Info("new teacher created: ", slog.String("name", teacher.Name))
+	r.logger.Info("new teacher created: ", slog.String("name", fmt.Sprintf("%s %s", t.LastName, t.Initials)))
 	return nil
 }
 
-func (r *repository) FindAll(ctx context.Context) (t []Teacher, err error) {
+func (r *repository) FindAll(ctx context.Context) (teachers []Teacher, err error) {
 	q := `
-SELECT id, name, full_name
+SELECT id, last_name, first_name, fathers_name, initials
 FROM teachers
 WHERE tg_id is null
 `
@@ -45,15 +45,15 @@ WHERE tg_id is null
 		return nil, err
 	}
 
-	teachers := make([]Teacher, 0)
+	teachers = make([]Teacher, 0)
 	for rows.Next() {
-		var teach Teacher
+		var t Teacher
 
-		err = rows.Scan(&teach.Id, &teach.Name, &teach.FullName)
+		err = rows.Scan(&t.Id, &t.LastName, &t.FirstName, &t.FathersName, &t.Initials)
 		if err != nil {
 			return nil, err
 		}
-		teachers = append(teachers, teach)
+		teachers = append(teachers, t)
 	}
 	if err = rows.Err(); err != nil {
 		return nil, err
@@ -63,44 +63,44 @@ WHERE tg_id is null
 
 func (r *repository) FindById(ctx context.Context, id int) (Teacher, error) {
 	q := `
-SELECT id, name, full_name, code
+SELECT id, last_name, first_name, fathers_name, initials
 FROM teachers
 WHERE id = $1
 `
-	var teach Teacher
-	err := r.client.QueryRow(ctx, q, id).Scan(&teach.Id, &teach.Name, &teach.FullName, &teach.Code)
+	var t Teacher
+	err := r.client.QueryRow(ctx, q, id).Scan(&t.Id, &t.LastName, &t.FirstName, &t.FathersName, &t.Initials)
 	if err != nil {
 		return Teacher{}, err
 	}
-	return teach, nil
+	return t, nil
 }
 
-func (r *repository) FindByName(ctx context.Context, name string) (*Teacher, error) {
+func (r *repository) FindByLastName(ctx context.Context, name string) (*Teacher, error) {
 	q := `
-SELECT id, name, code
+SELECT id, last_name, first_name, fathers_name, initials
 FROM teachers
-WHERE name = $1
+WHERE last_name = $1
 `
-	var teach Teacher
-	err := r.client.QueryRow(ctx, q, name).Scan(&teach.Id, &teach.Name, &teach.Code)
+	var t Teacher
+	err := r.client.QueryRow(ctx, q, name).Scan(&t.Id, &t.LastName, &t.FirstName, &t.FathersName, &t.Initials)
 	if err != nil {
 		return &Teacher{}, err
 	}
-	return &teach, nil
+	return &t, nil
 }
 
 func (r *repository) FindByCode(ctx context.Context, code string) (Teacher, error) {
 	q := `
-SELECT id, name
+SELECT id, last_name, initials
 FROM teachers
 WHERE code = $1
 `
-	var teach Teacher
-	err := r.client.QueryRow(ctx, q, code).Scan(&teach.Id, &teach.Name)
+	var t Teacher
+	err := r.client.QueryRow(ctx, q, code).Scan(&t.Id, &t.LastName, &t.Initials)
 	if err != nil {
 		return Teacher{}, err
 	}
-	return teach, nil
+	return t, nil
 }
 
 func (r *repository) UpdateTgId(ctx context.Context, teacher Teacher) error {

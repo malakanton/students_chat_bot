@@ -147,7 +147,8 @@ SELECT
     l.start_time, 
     l.end_time,
     l.loc,
-    t.name,
+    t.last_name,
+    t.initials,
     s.subject_name,
     l.filial,
     l.cancelled,
@@ -169,7 +170,7 @@ AND l.week_num = $2
 	for rows.Next() {
 		var l Lesson
 
-		err = rows.Scan(&l.Start, &l.End, &l.Loc, &l.Teacher.Name, &l.Subject.Name, &l.Filial, &l.Cancelled, &l.SpecialCase, &l.Link)
+		err = rows.Scan(&l.Start, &l.End, &l.Loc, &l.Teacher.LastName, &l.Teacher.Initials, &l.Subject.Name, &l.Filial, &l.Cancelled, &l.SpecialCase, &l.Link)
 		if err != nil {
 			return nil, err
 		}
@@ -188,7 +189,8 @@ SELECT
     l.start_time, 
     l.end_time,
     l.loc,
-    t.name,
+    t.last_name,
+    t.initials,
     s.subject_name,
     l.filial,
     l.cancelled,
@@ -209,7 +211,7 @@ AND to_char(start_time, 'yyyy-mm-dd') = $2
 	for rows.Next() {
 		var l Lesson
 
-		err = rows.Scan(&l.Start, &l.End, &l.Loc, &l.Teacher.Name, &l.Subject.Name, &l.Filial, &l.Cancelled, &l.SpecialCase, &l.Link)
+		err = rows.Scan(&l.Start, &l.End, &l.Loc, &l.Teacher.LastName, &l.Teacher.Initials, &l.Subject.Name, &l.Filial, &l.Cancelled, &l.SpecialCase, &l.Link)
 		if err != nil {
 			return nil, err
 		}

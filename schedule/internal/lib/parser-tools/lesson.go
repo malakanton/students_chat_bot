@@ -6,10 +6,11 @@ import (
 )
 
 func PrepareLessonString(cellData interface{}) string {
-	cellDataString := cellData.(string)
+	cellDataString := strings.TrimSpace(cellData.(string))
 	noNewLines := strings.ReplaceAll(cellDataString, "\n", " ")
 	noDoubleSpace := strings.Join(strings.Fields(noNewLines), " ")
-	return strings.TrimSpace(noDoubleSpace)
+	//return strings.TrimSpace(noDoubleSpace)
+	return noDoubleSpace
 }
 
 func CleanUpSubjectString(s, subjectCode string, re *regexp.Regexp) string {

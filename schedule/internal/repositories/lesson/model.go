@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"schedule/internal/gglapi/parser"
+	"schedule/internal/gglapi/parser/timings"
 	"schedule/internal/repositories/group"
 	"schedule/internal/repositories/subject"
 	"schedule/internal/repositories/teacher"
@@ -22,7 +23,7 @@ type Lesson struct {
 	Group       group.Group     `json:"group"`
 	Loc         string          `json:"loc,omitempty"`
 	WholeDay    bool            `json:"whole_day"`
-	Filial      parser.Filial   `json:"filial,omitempty"`
+	Filial      timings.Filial  `json:"filial,omitempty"`
 	Teacher     teacher.Teacher `json:"teacher,omitempty"`
 	Subject     subject.Subject `json:"subject,omitempty"`
 	Modified    bool            `json:"modified,omitempty"`
@@ -34,14 +35,15 @@ type Lesson struct {
 
 func (l *Lesson) String() string {
 	return fmt.Sprintf(
-		"[%d] Lesson date %s -> %s Fullday:%v Filial:%d Loc:%s Teacher:%s (swap:%v) Subject:[%s]%s Modified:%v Cancelled:%v, GroupId %d",
+		"[%d] Lesson date %s -> %s Fullday:%v Filial:%d Loc:%s Teacher:%s %s (swap:%v) Subject:[%s]%s Modified:%v Cancelled:%v, GroupId %d",
 		l.Id,
 		l.Start.Format("2006-01-02 [15:04"),
 		l.End.Format("15:04]"),
 		l.WholeDay,
 		l.Filial,
 		l.Loc,
-		l.Teacher.Name,
+		l.Teacher.LastName,
+		l.Teacher.Initials,
 		l.TeacherSwap,
 		l.Subject.Code,
 		l.Subject.Name,
@@ -60,7 +62,7 @@ func NewLessonFromParsed(lesson *parser.Lesson, gr *parser.Group, weekNum int) L
 		Loc:         lesson.Loc,
 		WholeDay:    lesson.WholeDay,
 		Filial:      lesson.Filial,
-		Teacher:     teacher.Teacher{Name: lesson.Teacher},
+		Teacher:     teacher.Teacher{LastName: lesson.Teacher},
 		Subject:     subject.Subject{Name: lesson.Subject, Code: lesson.SubjectCode},
 		Modified:    lesson.Modified,
 		SpecialCase: lesson.SpecialCase,
@@ -75,7 +77,7 @@ func (l *Lesson) SetTeacher(ctx context.Context, rep teacher.Repository, t *teac
 		existingTeacher *teacher.Teacher
 		found           bool
 	)
-	existingTeacher, err = rep.FindByName(ctx, t.Name)
+	existingTeacher, err = rep.FindByLastName(ctx, t.LastName)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 
@@ -150,7 +152,7 @@ func (l *Lesson) Equals(l2 *Lesson) bool {
 
 func findMistakenTeacher(t *teacher.Teacher, allTeachers []teacher.Teacher) (existingTeacher *teacher.Teacher, found bool, err error) {
 	for _, teacherCandidate := range allTeachers {
-		if same := compareTwoTeachers(t.Name, teacherCandidate.Name); same {
+		if same := compareTwoTeachers(t.LastName, teacherCandidate.LastName); same {
 			return t, true, nil
 		}
 	}

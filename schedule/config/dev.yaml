@@ -3,7 +3,8 @@ storage_path: ./storage/schedule.db
 google_config:
   google_creds_path: schedule/internal/gglapi/studentsbot-414221-88a1d65d3976.json
 #  google_creds_path: ./studentsbot-414221-88a1d65d3976.json
-  spreadsheets_id: 1GJpAJjU8_8-XXjR5VFFkvK2MoYsv5Nl6
+#  spreadsheets_id: 1GJpAJjU8_8-XXjR5VFFkvK2MoYsv5Nl6
+  spreadsheets_id: 1S3kj0zo_QDERJu7O2QU1J4gMRx-K381m
 http_server:
   address: "0.0.0.0:8080"
   timeout: 4s
@@ -11,7 +12,7 @@ http_server:
 storage:
   attempts: 3
   host: 0.0.0.0
-#  host: schd-db
+#  host: postgres
   port: 5432
   database: schedule
   username: postgres
@@ -19,6 +20,8 @@ storage:
 settings:
   teacher_code_size: 8
   time_zone: "Europe/Moscow"
+files:
+  teachers_list_file_id: 1Vpu7ej6EtTDTm_PFpgY2rQ7C0uVm-pzS
 scheduler:
   jobs:
     - "@every 05h00m15s"

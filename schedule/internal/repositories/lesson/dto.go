@@ -18,7 +18,7 @@ func NewGroupLessonDto(lesson *Lesson) GroupLessonDto {
 	return GroupLessonDto{
 		Start:       lesson.Start,
 		End:         lesson.End,
-		TeacherName: lesson.Teacher.Name,
+		TeacherName: lesson.Teacher.LastName,
 		SubjectName: lesson.Subject.Name,
 		Loc:         lesson.Loc,
 		Link:        lesson.Link,

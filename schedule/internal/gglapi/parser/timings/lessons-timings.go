@@ -1,4 +1,4 @@
-package parser
+package timings
 
 import (
 	"fmt"
@@ -11,14 +11,15 @@ import (
 type Filial int
 
 const (
-	ext Filial = iota
-	av
-	no
+	EXT Filial = iota
+	AV
+	NO
 )
 
 type LessonTimeByFilial struct {
 	RowId     int
 	RawString string
+	Even      bool
 	Av        LessonTime
 	No        LessonTime
 	Ext       LessonTime
@@ -40,26 +41,26 @@ type LessonTime struct {
 func (l *LessonTimeByFilial) String() string {
 	return fmt.Sprintf(
 		"Date %s AV #%d Start %s End %s NO #%d Start %s End %s\n EXT #%d Start %s End %s\n",
-		l.Av.Start.Format(layoutFullDate),
+		l.Av.Start.Format(LayoutFullDate),
 		l.Av.Num,
-		l.Av.Start.Format(layoutTime),
-		l.Av.End.Format(layoutTime),
+		l.Av.Start.Format(LayoutTime),
+		l.Av.End.Format(LayoutTime),
 		l.No.Num,
-		l.No.Start.Format(layoutTime),
-		l.No.End.Format(layoutTime),
+		l.No.Start.Format(LayoutTime),
+		l.No.End.Format(LayoutTime),
 		l.Ext.Num,
-		l.Ext.Start.Format(layoutTime),
-		l.Ext.End.Format(layoutTime),
+		l.Ext.Start.Format(LayoutTime),
+		l.Ext.End.Format(LayoutTime),
 	)
 }
 
 func (l *LessonTime) AddDate(date time.Time) (err error) {
-	layout := layoutFullDate + " " + layoutTime
-	l.Start, err = time.Parse(layout, date.Format(layoutFullDate)+" "+l.Start.Format(layoutTime))
+	layout := LayoutFullDate + " " + LayoutTime
+	l.Start, err = time.Parse(layout, date.Format(LayoutFullDate)+" "+l.Start.Format(LayoutTime))
 	if err != nil {
 		return err
 	}
-	l.End, err = time.Parse(layout, date.Format(layoutFullDate)+" "+l.End.Format(layoutTime))
+	l.End, err = time.Parse(layout, date.Format(LayoutFullDate)+" "+l.End.Format(LayoutTime))
 	if err != nil {
 		return err
 	}
@@ -101,11 +102,11 @@ func (l *LessonTimeByFilial) AddExternalDateFromString(s string, lessonNum int) 
 
 func (l *LessonTimeByFilial) GetTiming(filial Filial) LessonTime {
 	switch filial {
-	case ext:
+	case EXT:
 		return l.Ext
-	case av:
+	case AV:
 		return l.Av
-	case no:
+	case NO:
 		return l.No
 	default:
 		return l.Av
@@ -139,4 +140,30 @@ func (l *LessonTimeByFilial) ParseRawString(ext bool) (err error) {
 func (l *LessonTimeByFilial) SetLessonNum(num int) {
 	l.Av.Num = num
 	l.No.Num = num
+}
+
+func (l *LessonTimeByFilial) SetEvenOdd() error {
+	var year int
+	date := l.Av.Start
+
+	if date.Month() >= 9 {
+		year = date.Year()
+	} else {
+		year = date.Year() - 1
+	}
+
+	firstSeptember, err := time.Parse("2006-01-02", fmt.Sprintf("%d", year)+"-"+"09-01")
+	if err != nil {
+		return err
+	}
+
+	diff := date.Sub(firstSeptember)
+	diffDays := int(diff.Hours()) / 24
+
+	if (diffDays/7+1)%2 == 0 {
+		l.Even = true
+	} else {
+		l.Even = false
+	}
+	return nil
 }

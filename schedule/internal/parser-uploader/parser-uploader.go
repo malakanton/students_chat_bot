@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"schedule/internal/config"
 	"schedule/internal/excel-parser/excel"
+	teachers_parser "schedule/internal/excel-parser/teachers-parser"
 	"schedule/internal/gglapi"
 	"schedule/internal/gglapi/drive"
 	"schedule/internal/gglapi/parser"
@@ -15,7 +16,8 @@ import (
 )
 
 const (
-	scheduleFilePath = "./tmp/curr_schedule.xlsx"
+	scheduleFilePath     = "./tmp/curr_schedule.xlsx"
+	teachersListFilePath = "./tmp/teachers_list.xlsx"
 )
 
 func NewParserUploader(cfg *config.Config, logger *slog.Logger, rep *repositories.Repositories, dp *parser.DocumentParser, gs *gglapi.GoogleApi) *ParserUploader {
@@ -61,6 +63,11 @@ func (pu *ParserUploader) ParseAndUploadScheduleFromExcel(scheduled bool, id int
 	if err != nil {
 		pu.Logger.Error("failed to parse schedule data", slog.String("err", err.Error()))
 		return err
+	}
+
+	err = pu.Ed.ParseLessonsData(pu.Logger)
+	if err != nil {
+		pu.Logger.Error("failed to parse lessons form excel", slog.String("err", err.Error()))
 	}
 
 	return nil
@@ -115,6 +122,51 @@ func (pu *ParserUploader) ParseAndUploadSchedule(scheduled bool, id int) (err er
 
 	if scheduled {
 		pu.LastDate = &lastModifiedDate
+	}
+	return nil
+}
+
+func (pu *ParserUploader) ParseTeachersFromExcel(ctx context.Context, log *slog.Logger) (tp *teachers_parser.TeachersExcel, err error) {
+	pu.Logger.Info("start teachers parsing job")
+
+	err = drive.DownloadFile(pu.Gs.DriveService, pu.Cfg.Files.TeachersListFileId, teachersListFilePath)
+	if err != nil {
+		pu.Logger.Error(fmt.Sprintf("failed to download teachers file: %s", err.Error()))
+		return tp, err
+	}
+
+	tp = teachers_parser.NewTeachersExcel(teachersListFilePath)
+
+	err = tp.ReadExcelFile()
+	if err != nil {
+		pu.Logger.Error(fmt.Sprintf("failed to read teachers excel file: %s", err.Error()))
+		return tp, err
+	}
+
+	err = tp.GetTeachersList()
+	if err != nil {
+		pu.Logger.Error(fmt.Sprintf("failed to get teachers from excel: %s", err.Error()))
+		return tp, err
+	}
+
+	err = tp.ParseTeachersNames()
+	if err != nil {
+		pu.Logger.Error(fmt.Sprintf("failed to parse teachers name: %s", err.Error()))
+		return tp, err
+	}
+
+	return tp, nil
+}
+
+func (pu *ParserUploader) UploadTeachers(ctx context.Context, log *slog.Logger, tp *teachers_parser.TeachersExcel) (err error) {
+	teacherRep := pu.Rep.Teach
+
+	for _, t := range tp.ParsedTeachersList {
+		t.SetInitials()
+		err = teacherRep.Create(ctx, t)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

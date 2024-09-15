@@ -1,4 +1,4 @@
-package parser
+package timings
 
 import (
 	"errors"
@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	layoutDate     string = "02.01"
-	layoutFullDate        = "2006-01-02"
-	layoutTime            = "15:04"
+	LayoutDate     string = "02.01"
+	LayoutFullDate        = "2006-01-02"
+	LayoutTime            = "15:04"
 )
 
 type Day struct {
@@ -19,7 +19,7 @@ type Day struct {
 	Date    time.Time
 	Id      int
 	Even    bool
-	raw     string
+	Raw     string
 	Lessons []LessonTimeByFilial
 }
 
@@ -48,12 +48,12 @@ func (d *Day) GetLessonTimingsByIdx(idx int) *LessonTimeByFilial {
 func (d *Day) ParseDatesString() error {
 
 	re, _ := regexp.Compile(`\d{1,2}.\d{1,2}`)
-	found := re.FindAllString(d.raw, -1)
+	found := re.FindAllString(d.Raw, -1)
 	if len(found) != 1 {
 		return errors.New("didnt manage to find date in week day cell")
 	}
 
-	dateParsed, err := time.Parse(layoutDate, found[0])
+	dateParsed, err := time.Parse(LayoutDate, found[0])
 	if err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func (d *Day) SetDate(date time.Time) {
 }
 
 func (d *Day) SetYear(year string) (err error) {
-	d.Date, err = p.CombineYearAndDate(year, layoutDate, d.Date)
+	d.Date, err = p.CombineYearAndDate(year, LayoutDate, d.Date)
 	return err
 }
 

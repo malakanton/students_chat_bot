@@ -85,7 +85,7 @@ func start(r *chi.Mux, cfg *config.Config, logger *slog.Logger, rep repositories
 	server.SetUpMiddlewares(r)
 	server.SetHealthCheck(r)
 
-	r.Mount("/teachers", t.TeacherRoutes(context.Background(), logger, rep.Teach))
+	r.Mount("/teachers", t.TeacherRoutes(context.Background(), logger, rep.Teach, pu))
 	r.Mount("/lessons", l.LessonsRoutes(context.Background(), logger, rep.Les))
 	r.Mount("/schedule", schd.ScheduleRoutes(context.Background(), pu))
 	r.Mount("/groups", groups.GroupsRouter(context.Background(), logger, rep.Gr))
