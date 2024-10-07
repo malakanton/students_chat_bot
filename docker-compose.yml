@@ -14,6 +14,7 @@ services:
       - 8099
     depends_on:
       - bot_db
+      - schedule
     networks:
       - prod_network
     ports:
@@ -56,8 +57,7 @@ services:
     env_file:
       - .env
     depends_on:
-      - schedule_db
-      - bot_db
+      - db
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PG_ADMIN_LOGIN}
       - PGADMIN_DEFAULT_PASSWORD=${PG_ADMIN_PASS}
