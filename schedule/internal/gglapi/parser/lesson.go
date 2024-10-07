@@ -11,9 +11,10 @@ import (
 )
 
 const (
-	BS     string = "Классный час"
-	BsCode string = "BS"
-	NoCode string = "NO_CODE"
+	BS        string = "Классный час"
+	BsCode    string = "BS"
+	NoCode    string = "NO_CODE"
+	NoTeacher string = "NO_TEACHER"
 )
 
 type Lesson struct {
@@ -23,7 +24,7 @@ type Lesson struct {
 	Loc         string
 	WholeDay    bool
 	Filial      timings.Filial
-	Teacher     string
+	Teacher     string // here is the teacher last name with initials, just how it is in raw schedule
 	Subject     string
 	SubjectCode string
 	SpecialCase string
@@ -123,6 +124,7 @@ func (l *Lesson) SetSubjectCode(code string) {
 func (l *Lesson) ParseRawString() (subLesson Lesson, err error) {
 	fmt.Printf("cell:%s, raw string: %s\n", l.Cell, l.RawString)
 
+	emptyLesson := Lesson{}
 	re, _ := regexp.Compile(`\n`)
 	l.RawString = re.ReplaceAllLiteralString(l.RawString, "")
 
@@ -131,29 +133,27 @@ func (l *Lesson) ParseRawString() (subLesson Lesson, err error) {
 		l.Subject = BS
 		l.SubjectCode = BsCode
 		if err != nil {
-			return Lesson{}, nil
+			return emptyLesson, nil
 		}
-		return Lesson{}, nil
+		return emptyLesson, nil
 	}
 
 	subLesson, err = l.parseSubjectCode()
 	if err != nil {
 		if err.Error() == "two lessons" {
 			_, _ = subLesson.parseTeacher()
-			//if err != nil {
-			//	return Lesson{}, err
-			//}
+
 			err = subLesson.GetSubjectAndCancelled()
 			if err != nil {
-				return Lesson{}, err
+				return emptyLesson, err
 			}
 		} else {
-			return Lesson{}, err
+			return emptyLesson, err
 		}
 	}
 
 	swappedTeacherLesson, err := l.parseTeacher()
-	if err != nil {
+	if err != nil && l.Teacher != NoTeacher {
 		if err.Error() == "two teachers" {
 			err = swappedTeacherLesson.GetSubjectAndCancelled()
 			if err != nil {
@@ -161,18 +161,18 @@ func (l *Lesson) ParseRawString() (subLesson Lesson, err error) {
 			}
 			subLesson = swappedTeacherLesson
 		} else {
-			return Lesson{}, err
+			return emptyLesson, err
 		}
 	}
 
 	err = l.GetSubjectAndCancelled()
 	if err != nil {
-		return Lesson{}, err
+		return emptyLesson, err
 	}
 
 	err = l.parseSpecialCase()
 	if err != nil {
-		return Lesson{}, err
+		return emptyLesson, err
 	}
 
 	return subLesson, nil
@@ -211,6 +211,7 @@ func (l *Lesson) parseSubjectCode() (subLesson Lesson, err error) {
 func (l *Lesson) parseTeacher() (subLesson Lesson, err error) {
 	re := regexp.MustCompile(`([а-яА-Я]\.?-)?[А-Я][а-я]+ ( ?[А-Я]\.?){2}`)
 	foundTeachers := re.FindAllString(l.RawString, -1)
+	emptyLesson := Lesson{}
 
 	if foundTeachers == nil {
 
@@ -218,15 +219,16 @@ func (l *Lesson) parseTeacher() (subLesson Lesson, err error) {
 		teachersSurNames := reTeacherSurName.FindAllString(l.RawString, -1)
 		if len(teachersSurNames) > 1 {
 			l.Teacher = teachersSurNames[len(teachersSurNames)-1]
-			return Lesson{}, nil
+			return emptyLesson, nil
 		}
 		err = fmt.Errorf("no teachers names found in cell %s, string: %s", l.Cell, l.RawString)
-		return Lesson{}, err
+		l.Teacher = NoTeacher
+		return emptyLesson, err
 	}
 
 	if len(foundTeachers) == 1 {
 		l.Teacher = prepTeacherName(foundTeachers[0])
-		return Lesson{}, nil
+		return emptyLesson, nil
 	}
 
 	if len(foundTeachers) == 2 {
@@ -240,7 +242,7 @@ func (l *Lesson) parseTeacher() (subLesson Lesson, err error) {
 
 		return subLesson, errors.New("two teachers")
 	} else {
-		return Lesson{}, fmt.Errorf("more than 2 teachers in cell %s, string %s", l.Cell, l.RawString)
+		return emptyLesson, fmt.Errorf("more than 2 teachers in cell %s, string %s", l.Cell, l.RawString)
 	}
 }
 

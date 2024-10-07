@@ -1,7 +1,9 @@
 package teacher
 
 import (
+	"fmt"
 	"schedule/internal/lib/random"
+	"strings"
 )
 
 func NewTeacher(lastName, firstName, fathersName string) *Teacher {
@@ -10,6 +12,24 @@ func NewTeacher(lastName, firstName, fathersName string) *Teacher {
 		FirstName:   firstName,
 		FathersName: fathersName,
 	}
+}
+
+func NewTeacherFromParsed(name string) Teacher {
+	if strings.Contains(name, " ") {
+		splitted := strings.Split(name, " ")
+		switch len(splitted) {
+		case 1:
+			return Teacher{
+				LastName: name,
+			}
+		default:
+			return Teacher{
+				LastName: splitted[0],
+				Initials: splitted[1],
+			}
+		}
+	}
+	return Teacher{LastName: name}
 }
 
 type Teacher struct {
@@ -32,6 +52,10 @@ func (t *Teacher) SetId(id int) {
 
 func (t *Teacher) SetTgId(tgId int64) {
 	t.TgId = tgId
+}
+
+func (t *Teacher) LastNameAndInitials() string {
+	return fmt.Sprintf("%s %s", t.LastName, t.Initials)
 }
 
 func (t *Teacher) SetInitials() {

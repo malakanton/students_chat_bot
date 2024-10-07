@@ -22,13 +22,14 @@ func ParseSchedule(ctx context.Context, pu *pupl.ParserUploader) http.HandlerFun
 		var err error
 
 		id, err := strconv.Atoi(spreadSheetId)
-		if err != nil || id >= 0 {
+		if err != nil {
+			// TODO: make something to prevent panic when in this section
 			pu.Logger.Error("invalid spreadsheet_id", slog.String("error", err.Error()))
 			render.JSON(w, r, resp.Error("invalid spreadsheet_id"))
 			return
 		}
 
-		err = pu.ParseAndUploadScheduleFromExcel(false, id)
+		err = pu.ParseAndUploadScheduleFromExcel(ctx, false, id)
 		if err != nil {
 			render.JSON(w, r, resp.Error(err.Error()))
 			return

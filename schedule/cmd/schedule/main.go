@@ -57,17 +57,17 @@ func main() {
 	//repositories
 	rep := repositories.SetUpRepositories(db, context.Background(), logger, cfg)
 
+	pu := pupl.NewParserUploader(cfg, logger, &rep, &dp, gs)
+
 	sch, err := scheduler.NewScheduler(cfg.Settings.TimeZone)
 	if err != nil {
 		logger.Error("failed to init scheduler", err.Error())
 		return
 	}
 
-	pu := pupl.NewParserUploader(cfg, logger, &rep, &dp, gs)
-
 	defer sch.Stop()
 
-	err = scheduler.AddScheduledJobs(sch, pu)
+	err = scheduler.AddScheduledJobs(context.Background(), sch, pu)
 	if err != nil {
 		logger.Error("failed to set up scheduled jobs", slog.String("err", err.Error()))
 		return
@@ -145,9 +145,9 @@ func setupLogger(env string) *slog.Logger {
 
 func compareTwoStrings() bool {
 	//        *
-	s1 := "Абдулин Г.Р."
+	s1 := "Хомякова М.И."
 	//         *
-	s2 := "Абдуллина Г.Р."
+	s2 := "Хомякова М.Н."
 	const maxMistakes = 3
 
 	rune1 := []rune(s1)

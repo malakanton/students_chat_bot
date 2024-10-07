@@ -7,16 +7,16 @@ google_config:
   spreadsheets_id: 1S3kj0zo_QDERJu7O2QU1J4gMRx-K381m
 http_server:
   address: "0.0.0.0:8080"
-  timeout: 4s
+  timeout: 60s
   idle_timeout: 60s
 storage:
   attempts: 3
-  host: 0.0.0.0
+  host: 51.250.109.13
 #  host: postgres
-  port: 5432
+  port: 5433
   database: schedule
   username: postgres
-  password: postgres4344
+  password: Ma!azD9e
 settings:
   teacher_code_size: 8
   time_zone: "Europe/Moscow"

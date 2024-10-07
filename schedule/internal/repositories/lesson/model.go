@@ -62,7 +62,7 @@ func NewLessonFromParsed(lesson *parser.Lesson, gr *parser.Group, weekNum int) L
 		Loc:         lesson.Loc,
 		WholeDay:    lesson.WholeDay,
 		Filial:      lesson.Filial,
-		Teacher:     teacher.Teacher{LastName: lesson.Teacher},
+		Teacher:     teacher.NewTeacherFromParsed(lesson.Teacher),
 		Subject:     subject.Subject{Name: lesson.Subject, Code: lesson.SubjectCode},
 		Modified:    lesson.Modified,
 		SpecialCase: lesson.SpecialCase,
@@ -77,8 +77,9 @@ func (l *Lesson) SetTeacher(ctx context.Context, rep teacher.Repository, t *teac
 		existingTeacher *teacher.Teacher
 		found           bool
 	)
-	existingTeacher, err = rep.FindByLastName(ctx, t.LastName)
+	existingTeacher, err = rep.FindByLastNameAndInitials(ctx, t)
 	if err != nil {
+		// if there is no full match
 		if errors.Is(err, pgx.ErrNoRows) {
 
 			allTeachers, err := rep.FindAll(ctx)
@@ -152,8 +153,8 @@ func (l *Lesson) Equals(l2 *Lesson) bool {
 
 func findMistakenTeacher(t *teacher.Teacher, allTeachers []teacher.Teacher) (existingTeacher *teacher.Teacher, found bool, err error) {
 	for _, teacherCandidate := range allTeachers {
-		if same := compareTwoTeachers(t.LastName, teacherCandidate.LastName); same {
-			return t, true, nil
+		if same := compareTwoTeachers(t.LastNameAndInitials(), teacherCandidate.LastNameAndInitials()); same {
+			return &teacherCandidate, true, nil
 		}
 	}
 	return &teacher.Teacher{}, false, nil

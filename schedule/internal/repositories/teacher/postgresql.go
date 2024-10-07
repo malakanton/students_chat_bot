@@ -75,14 +75,15 @@ WHERE id = $1
 	return t, nil
 }
 
-func (r *repository) FindByLastName(ctx context.Context, name string) (*Teacher, error) {
+func (r *repository) FindByLastNameAndInitials(ctx context.Context, ti *Teacher) (*Teacher, error) {
 	q := `
 SELECT id, last_name, first_name, fathers_name, initials
 FROM teachers
 WHERE last_name = $1
+AND initials = $2
 `
 	var t Teacher
-	err := r.client.QueryRow(ctx, q, name).Scan(&t.Id, &t.LastName, &t.FirstName, &t.FathersName, &t.Initials)
+	err := r.client.QueryRow(ctx, q, ti.LastName, ti.Initials).Scan(&t.Id, &t.LastName, &t.FirstName, &t.FathersName, &t.Initials)
 	if err != nil {
 		return &Teacher{}, err
 	}

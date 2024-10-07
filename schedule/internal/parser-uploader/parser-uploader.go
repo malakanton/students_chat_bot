@@ -2,7 +2,9 @@ package parser_uploader
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 	"log/slog"
 	"schedule/internal/config"
 	"schedule/internal/excel-parser/excel"
@@ -10,7 +12,10 @@ import (
 	"schedule/internal/gglapi"
 	"schedule/internal/gglapi/drive"
 	"schedule/internal/gglapi/parser"
+	"schedule/internal/gglapi/parser/timings"
+	pt "schedule/internal/lib/parser-tools"
 	"schedule/internal/repositories"
+	"schedule/internal/repositories/lesson"
 	"schedule/internal/uploader"
 	"time"
 )
@@ -44,9 +49,16 @@ type ParserUploader struct {
 	LastDate *string
 }
 
-func (pu *ParserUploader) ParseAndUploadScheduleFromExcel(scheduled bool, id int) (err error) {
+func (pu *ParserUploader) DownloadExcelAndParseSheetsList(ctx context.Context, scheduled bool) (err error) {
+	if scheduled {
+		err = pu.CheckLastModificationDate()
+		if err != nil {
+			return err
+		}
+	}
 
 	pu.Logger.Info("start parsing job")
+
 	err = drive.DownloadFile(pu.Gs.DriveService, pu.Cfg.SpreadSheetId, scheduleFilePath)
 	if err != nil {
 		pu.Logger.Error(err.Error())
@@ -57,6 +69,20 @@ func (pu *ParserUploader) ParseAndUploadScheduleFromExcel(scheduled bool, id int
 	if err != nil {
 		pu.Logger.Error("failed to read excel file", slog.String("err", err.Error()))
 		return err
+	}
+
+	return
+}
+
+func (pu *ParserUploader) ParseAndUploadScheduleFromExcel(ctx context.Context, scheduled bool, id int) (err error) {
+
+	err = pu.DownloadExcelAndParseSheetsList(ctx, scheduled)
+	if err != nil {
+		return err
+	}
+
+	if id == 0 {
+		id, err = pu.CheckActiveSheet()
 	}
 
 	err = pu.Ed.ParseSheetData(id)
@@ -70,59 +96,99 @@ func (pu *ParserUploader) ParseAndUploadScheduleFromExcel(scheduled bool, id int
 		pu.Logger.Error("failed to parse lessons form excel", slog.String("err", err.Error()))
 	}
 
+	err = pu.UploadSchedule(ctx)
+
 	return nil
 
 }
 
-func (pu *ParserUploader) ParseAndUploadSchedule(scheduled bool, id int) (err error) {
-	var lastModifiedDate string
+// TODO: make this func return the array of struct with existing lessons and changed lessons
+// include cells names perhaps?
+func (pu *ParserUploader) UploadSchedule(ctx context.Context) (err error) {
+	for groupId, lessons := range pu.Ed.GroupsSchedule {
+		gr := pu.Ed.GroupsIdxMap[groupId]
 
-	if scheduled {
-		pu.Logger.Info("scheduled job started")
+		for _, parsedLesson := range lessons {
+			fmt.Println(parsedLesson.String())
 
-		lastModifiedDate, err := drive.GetLastModifiedDate(pu.Gs.DriveService, pu.Dp.Cfg.SpreadSheetId, pu.Dp.Cfg.Settings.TimeZone)
+			l := lesson.NewLessonFromParsed(&parsedLesson, &gr, pu.Ed.ScheduleDates.WeekNum)
 
+			err = l.SetTeacher(ctx, pu.Rep.Teach, &l.Teacher)
+			if err != nil {
+				return err
+			}
+
+			err = l.SetGroup(ctx, pu.Rep.Gr, &l.Group)
+			if err != nil {
+				return err
+			}
+
+			err = l.SetSubject(ctx, pu.Rep.Subj, &l.Subject)
+			if err != nil {
+				return err
+			}
+			// if lessons doesn't exist -> create a new lessons in db
+			existingLesson, err := pu.Rep.Les.FindOne(ctx, l.Group.Name, l.Start)
+			if err != nil {
+				if errors.Is(err, pgx.ErrNoRows) {
+					err := pu.Rep.Les.Create(ctx, &l)
+					if err != nil {
+						return err
+					}
+					pu.Logger.Info("new lesson uploaded", slog.String("lesson", l.String()))
+					continue
+				}
+				return err
+			}
+			// if new lessons equals to an existing lessons -> pass through
+			if l.Equals(&existingLesson) {
+				continue
+			}
+
+		}
+	}
+	return nil
+}
+
+func (pu *ParserUploader) CheckActiveSheet() (id int, err error) {
+	currDate := time.Now()
+	for idx, sheetName := range pu.Ed.SheetsMap {
+		if idx == 1 {
+			continue
+		}
+		startDate, endDate, err := pt.ExtractDatesFromSheetName(sheetName, timings.LayoutDate)
 		if err != nil {
-			pu.Logger.Error("failed to get last modified date", slog.String("err", err.Error()))
-			return fmt.Errorf("failed to get last modified date %s", err.Error())
+			return 0, err
 		}
-		if lastModifiedDate <= *pu.LastDate {
-			return fmt.Errorf("the spradsheet wasnt modified, last modification date is %s", lastModifiedDate)
-		}
+		// subtract 2 days so during the week and previous weekend we parse current week.
+		// we start to parse next week on Saturday
+		startDate = startDate.AddDate(0, 0, -2)
+		endDate = endDate.AddDate(0, 0, -2)
 
-		pu.Logger.Info("spreadsheet was modified", slog.String("at", lastModifiedDate))
+		if currDate.After(startDate) && currDate.Before(endDate) {
+			return idx, nil
+		}
+		pu.Logger.Info(fmt.Sprintf("sheet [%s] is not suitable because of dates"))
+
 	}
+	return
+}
 
-	parsedSchedule, err := pu.Dp.ParseDocument(id)
-	//teachersCounter := make(map[string]int)
-	//for _, groupLessons := range parsedSchedule.GroupsSchedule {
-	//	for _, lesson := range groupLessons {
-	//
-	//		teachersCounter[lesson.Teacher]++
-	//	}
-	//}
-	//for teacher, count := range teachersCounter {
-	//	fmt.Println(teacher, count)
-	//}
-	//
-	//return nil
+func (pu *ParserUploader) CheckLastModificationDate() (err error) {
+	pu.Logger.Info("scheduled job started")
+
+	lastModifiedDate, err := drive.GetLastModifiedDate(pu.Gs.DriveService, pu.Dp.Cfg.SpreadSheetId, pu.Dp.Cfg.Settings.TimeZone)
 
 	if err != nil {
-		pu.Logger.Error("error occured while parsing document", slog.String("err", err.Error()))
-		return fmt.Errorf("error occured while parsing document: %s", err.Error())
+		pu.Logger.Error("failed to get last modified date", slog.String("err", err.Error()))
+		return fmt.Errorf("failed to get last modified date %s", err.Error())
+	}
+	if lastModifiedDate <= *pu.LastDate {
+		return fmt.Errorf("the spreadsheet wasnt modified, last modification date is %s", lastModifiedDate)
 	}
 
-	sup := uploader.NewScheduleUploader(parsedSchedule, *pu.Rep, pu.Logger)
+	pu.Logger.Info("spreadsheet was modified", slog.String("at", lastModifiedDate))
 
-	err = sup.UploadSchedule(context.Background())
-	if err != nil {
-		pu.Logger.Error("failed to upload schedule:", err.Error())
-		return fmt.Errorf("failed to upload schedule: %s", err.Error())
-	}
-
-	if scheduled {
-		pu.LastDate = &lastModifiedDate
-	}
 	return nil
 }
 
@@ -167,6 +233,50 @@ func (pu *ParserUploader) UploadTeachers(ctx context.Context, log *slog.Logger, 
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+// old stuff to parse from google sheets document via api
+func (pu *ParserUploader) ParseAndUploadSchedule(scheduled bool, id int) (err error) {
+	var lastModifiedDate string
+
+	if scheduled {
+		err = pu.CheckLastModificationDate()
+		if err != nil {
+			return err
+		}
+	}
+
+	parsedSchedule, err := pu.Dp.ParseDocument(id)
+	//teachersCounter := make(map[string]int)
+	//for _, groupLessons := range parsedSchedule.GroupsSchedule {
+	//	for _, lesson := range groupLessons {
+	//
+	//		teachersCounter[lesson.Teacher]++
+	//	}
+	//}
+	//for teacher, count := range teachersCounter {
+	//	fmt.Println(teacher, count)
+	//}
+	//
+	//return nil
+
+	if err != nil {
+		pu.Logger.Error("error occured while parsing document", slog.String("err", err.Error()))
+		return fmt.Errorf("error occured while parsing document: %s", err.Error())
+	}
+
+	sup := uploader.NewScheduleUploader(parsedSchedule, *pu.Rep, pu.Logger)
+
+	err = sup.UploadSchedule(context.Background())
+	if err != nil {
+		pu.Logger.Error("failed to upload schedule:", err.Error())
+		return fmt.Errorf("failed to upload schedule: %s", err.Error())
+	}
+
+	if scheduled {
+		pu.LastDate = &lastModifiedDate
 	}
 	return nil
 }

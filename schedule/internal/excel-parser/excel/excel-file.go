@@ -29,7 +29,7 @@ func NewExcelDocument(filePath string) *ExcelDocument {
 		LessonTimings:  make(map[int]*timings.LessonTimeByFilial),
 		GroupsIdxMap:   make(map[int]parser.Group),
 		MegresMapping:  make(map[string]string),
-		GroupsSchedule: make(map[string][]parser.Lesson),
+		GroupsSchedule: make(map[int][]parser.Lesson),
 	}
 }
 
@@ -45,7 +45,7 @@ type ExcelDocument struct {
 	GroupsIdxMap          map[int]parser.Group
 	MegresMapping         map[string]string
 	ExternalLessonsColIdx int
-	GroupsSchedule        map[string][]parser.Lesson
+	GroupsSchedule        map[int][]parser.Lesson
 }
 
 func (ed *ExcelDocument) ReadExcelFile() error {
@@ -61,6 +61,8 @@ func (ed *ExcelDocument) ReadExcelFile() error {
 	}()
 
 	ed.file = f
+
+	ed.GetSheetsMap()
 
 	return nil
 }
@@ -122,19 +124,15 @@ func (ed *ExcelDocument) ParseLessonsData(logger *slog.Logger) (err error) {
 			continue
 		}
 
-		if i == 20 {
-			break
-		}
-
 		for j, cell := range row {
 			cellName := pt.CellName(j, i)
 			if cell == "" {
-				print()
+				// TODO: add empty lesson
 				continue
 			}
 
-			group, ok := ed.GroupsIdxMap[j]
-			if !ok {
+			groupId := j
+			if _, ok := ed.GroupsIdxMap[groupId]; !ok {
 				continue
 			}
 
@@ -146,7 +144,7 @@ func (ed *ExcelDocument) ParseLessonsData(logger *slog.Logger) (err error) {
 			if fullDay {
 				l := parser.NewFullDayLesson(lessonTimings.Av.Start, lessonRawString, cellName)
 				fmt.Println(l.String())
-				ed.AddNewLesson(group.Name, l)
+				ed.AddNewLesson(groupId, l)
 				continue
 			}
 
@@ -161,16 +159,14 @@ func (ed *ExcelDocument) ParseLessonsData(logger *slog.Logger) (err error) {
 			}
 			if subLesson != (parser.Lesson{}) {
 				fmt.Println(subLesson.String())
-				ed.AddNewLesson(group.Name, subLesson)
+				ed.AddNewLesson(groupId, subLesson)
 			}
 
 			fmt.Println(l.String())
 
-			ed.AddNewLesson(group.Name, l)
+			ed.AddNewLesson(groupId, l)
 
-			//TODO: stop trying extract teachers name from full day lesson
-			//TODO: if full day lesson not covering all cells - stil skip
-			// if no teacher found - fill wuth NO_TEACHER value
+			//TODO: if full day lesson not covering all cells - still skip
 
 		}
 	}
@@ -181,6 +177,9 @@ func (ed *ExcelDocument) CheckCellMergesAndGetCellVal(i, j int, row []string, ce
 	onelessonMergeCell := pt.CellName(j+1, i)
 	nextDayIdx := ed.NextDayIdx(i) - 1
 	fullDayMergeCell := pt.CellName(j+1, nextDayIdx)
+	if strings.Contains(cellName, "CP") {
+		even = false
+	}
 
 	if foundMerge, ok := ed.MegresMapping[cellName]; ok {
 
@@ -200,14 +199,14 @@ func (ed *ExcelDocument) CheckCellMergesAndGetCellVal(i, j int, row []string, ce
 	return
 }
 
-func (ed *ExcelDocument) AddNewLesson(groupName string, lesson parser.Lesson) {
-	ed.GroupsSchedule[groupName] = append(ed.GroupsSchedule[groupName], lesson)
+func (ed *ExcelDocument) AddNewLesson(groupId int, lesson parser.Lesson) {
+	ed.GroupsSchedule[groupId] = append(ed.GroupsSchedule[groupId], lesson)
 }
 
 func (ed *ExcelDocument) GetLocAndFilial(colIdx int, row []string, even bool) (loc string, filial timings.Filial) {
 
 	locIdx := colIdx + 2
-	if pt.GetExcelColumnName(colIdx) == "CP" {
+	if pt.GetExcelColumnName(colIdx+1) == "CP" {
 		locIdx = colIdx + 1
 	}
 
@@ -270,7 +269,6 @@ func (ed *ExcelDocument) GetSheetsMap() {
 }
 
 func (ed *ExcelDocument) GetSheetNameByIdx(idx int) (sheetName string, err error) {
-	ed.GetSheetsMap()
 
 	if idx >= 0 {
 		if sheetName, ok := ed.SheetsMap[idx]; ok {
