@@ -108,7 +108,7 @@ async def register_teacher_user(message: Message, state: FSMContext, teacher: Te
     db.add_user(u)
 
     await bot.send_message(
-        cfg.secrets.ADMIN_ID,
+        cfg.secrets.ADMIN_CHAT,
         text=f"New user added: @{login} {name} {message.chat.id} - teacher: {teacher.name}",
         parse_mode="HTML",
     )
@@ -200,7 +200,7 @@ async def confirmed(callback: CallbackQuery, state: FSMContext):
         )
 
         await bot.send_message(
-            cfg.secrets.ADMIN_ID,
+            cfg.secrets.ADMIN_CHAT,
             text=f"New user added: @{login} {name} {callback.message.chat.id} - group: {group_name}",
             parse_mode="HTML",
         )
