@@ -17,7 +17,7 @@ class Users:
 class User:
     id: int
     name: str
-    tg_login: str
+    tg_login: Optional[str]
     role: str
     notifications: Optional[int] = Field(default=None)
     group_id: Optional[int] = Field(default=None)

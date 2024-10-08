@@ -142,25 +142,3 @@ func setupLogger(env string) *slog.Logger {
 
 	return log
 }
-
-func compareTwoStrings() bool {
-	//        *
-	s1 := "Хомякова М.И."
-	//         *
-	s2 := "Хомякова М.Н."
-	const maxMistakes = 3
-
-	rune1 := []rune(s1)
-	correct := []rune(s2)
-
-	var mistakes int
-	for i, j := 0, 0; i < len(rune1) && j < len(correct); j++ {
-		if rune1[i] == correct[j] {
-			i++
-			continue
-		}
-
-		mistakes++
-	}
-	return mistakes <= maxMistakes
-}

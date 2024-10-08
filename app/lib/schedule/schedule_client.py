@@ -1,4 +1,3 @@
-import requests
 import datetime as dt
 from urllib.parse import urljoin
 from loguru import logger
@@ -8,7 +7,6 @@ from typing import Optional, Dict, List, Union
 from lib.models.users import Teacher
 from lib.models.group import Group, Groups
 from lib.models.lessons import Lesson, Week
-import pydantic_core
 
 GET = "GET"
 POST = "POST"
@@ -89,8 +87,12 @@ class ScheduleClient:
                 return None
         return resp
 
-    def get_group_daily_lessons(self, group_id: int, date: str) -> Dict:
+    def get_group_daily_lessons(self, group_id: int, date: str) -> list[Lesson]:
         resp = self.request(GET, f'lessons/group/{group_id}/daily/{date}')
+        if resp.get('status') == OK:
+            lessons = resp.get('lessons', [])
+            formatted_lessons = self._prep_lesson_timings(lessons)
+            return formatted_lessons
         return resp
 
     def get_group_weekly_lessons(self, group_id: int, week_num: int) -> Optional[Week]:
@@ -117,7 +119,6 @@ class ScheduleClient:
             out.append(Lesson(**lesson))
         return out
 
-
     def get_groups(self) -> Union[Groups, str]:
         resp = self.request(GET, f'groups/0')
         status = resp.get('status', '')
@@ -131,15 +132,14 @@ class ScheduleClient:
         return resp
 
 
-
 # client = ScheduleClient('0.0.0.0', '8080')
-#
+
 # print(client.get_groups())
 #
 # print(client.get_teachers(3))
-#
-# # print(client.register_teacher('DpNzKnio', 12345))
-#
+
+# print(client.register_teacher('DpNzKnio', 12345))
+
 # print(client.get_teacher_daily_lessons(17, '2024-06-04'))
-#
-# print(client.get_group_daily_lessons(6, '2024-06-04'))
+
+# print(client.get_group_daily_lessons(1058, '2024-10-09'))

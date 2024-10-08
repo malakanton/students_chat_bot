@@ -306,36 +306,19 @@ class DB:
         """
         self._execute_query(query, (link, date, time, subj_id))
 
-    def get_users_lessons_notif(self, date: str, time: str, advance: int) -> dict:
-        """Get a dictionary with keys - user ids and values - lessons
-        which should be mentioned in notification"""
+    def get_users_with_advance_notif(self, advance: int) -> list[User]:
+        """Get list of user ids to notify at a particular moment"""
         query = """
-        select 
-            u.user_id,
-            s.name as subject,
-            l.start as start,
-            l.end_t as end,
-            t.name as teacher_name,
-            l.loc as loc,
-            l.link
-        from lessons l
-            left join users u
-                on u.group_id = l.group_id
-            left join subjects s
-                on l.subj_id = s.id
-            left join teachers t
-                on t.id = l.teacher_id
+        select user_id, name, tg_login, user_type, notifications, group_id, teacher_id
+        from users
         where 
-            date = %s
-            and start = %s
-            and (u.notifications = %s)
+            notifications = %s
         """
-        self.cur.execute(query, (date, time, advance))
+        self.cur.execute(query, (advance,))
         res = self.cur.fetchall()
-        users_to_notify = {}
-        for row in res:
-            users_to_notify[row[0]] = Lesson(*row[1:])
-        return users_to_notify
+        if res:
+            return [User(*row) for row in res]
+        return []
 
     def check_notification_flag(self, user_id: int) -> tuple:
         """Get notifications flag for user by id"""
