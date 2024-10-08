@@ -63,7 +63,7 @@ async def notify_users(time: str, advance: int):
         lessons = schd.get_group_daily_lessons(user.group_id, date)
 
         for lesson in lessons:
-            if lesson.start.strftime('%h:%m') == time:
+            if lesson.start.strftime('%H:%M') == time:
                 await notify_user(user, lesson, advance)
 
     logger.info(f"users notified: {len(users_to_notify)}")
