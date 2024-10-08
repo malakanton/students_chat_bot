@@ -7,16 +7,16 @@ from lib.dicts import NotificationsAdvance
 from lib.logs_report import add_logs_scheduler, send_report
 from lib.misc import get_today, prep_markdown
 from lib.models.lessons import Lesson
-from loader import bot, db, lx
+from loader import bot, db, lx, schd
 from lib.config.config import cfg
 from loguru import logger
 
 
 def set_scheduler(scheduler: AsyncIOScheduler):
-    # add_scheduled_jobs(scheduler, cfg.LESSONS_TIMINGS)
+    add_scheduled_jobs(scheduler, cfg.LESSONS_TIMINGS)
     add_report_scheduler(scheduler)
     add_logs_scheduler(scheduler)
-    # add_daily_push_notification_jobs(scheduler)
+    add_daily_push_notification_jobs(scheduler)
 
 
 def cron_trigger(time: str, advance: int) -> tuple:
@@ -56,10 +56,16 @@ def add_report_scheduler(
 
 
 async def notify_users(time: str, advance: int):
-    date = dt.datetime.now().date()
-    users_to_notify = db.get_users_lessons_notif(date, time, advance)
-    for user, lesson in users_to_notify.items():
-        await notify_user(user, lesson, advance)
+    date = str(dt.datetime.now().date())
+    users_to_notify = db.get_users_with_advance_notif(advance)
+
+    for user in users_to_notify:
+        lessons = schd.get_group_daily_lessons(user.group_id, date)
+
+        for lesson in lessons:
+            if lesson.start.strftime('%h:%m') == time:
+                await notify_user(user, lesson, advance)
+
     logger.info(f"users notified: {len(users_to_notify)}")
 
 
@@ -81,7 +87,8 @@ async def notify_user(user_id: int, lesson: Lesson, advance: int) -> None:
 async def form_schedule_text(user_id: int) -> str:
     text = ""
     today = get_today()
-    week = db.get_schedule(user_id, today.week)
+    user = db.get_user(user_id)
+    week = schd.get_group_weekly_lessons(user.group_id, today.week)
 
     if week:
         schedule_text = await form_day_schedule_text(week.get_day(today.day_of_week))

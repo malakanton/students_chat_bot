@@ -89,8 +89,12 @@ class ScheduleClient:
                 return None
         return resp
 
-    def get_group_daily_lessons(self, group_id: int, date: str) -> Dict:
+    def get_group_daily_lessons(self, group_id: int, date: str) -> list[Lesson]:
         resp = self.request(GET, f'lessons/group/{group_id}/daily/{date}')
+        if resp.get('status') == OK:
+            lessons = resp.get('lessons', [])
+            formatted_lessons = self._prep_lesson_timings(lessons)
+            return formatted_lessons
         return resp
 
     def get_group_weekly_lessons(self, group_id: int, week_num: int) -> Optional[Week]:
@@ -116,7 +120,6 @@ class ScheduleClient:
                 lesson[time] = dt.datetime.strptime(lesson[time], self.time_format)
             out.append(Lesson(**lesson))
         return out
-
 
     def get_groups(self) -> Union[Groups, str]:
         resp = self.request(GET, f'groups/0')
