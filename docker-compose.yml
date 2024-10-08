@@ -19,6 +19,8 @@ services:
       - prod_network
     ports:
       - "8099:8099"
+    environment:
+      - TZ=Europe/Moscow
 
   db:
     container_name: pg_db_cont
@@ -50,6 +52,8 @@ services:
       - 8090
     ports:
       - "8090:8090"
+    environment:
+      - TZ=Europe/Moscow
 
   pgadmin:
     container_name: pg_admin_container
