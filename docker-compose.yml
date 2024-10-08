@@ -13,13 +13,13 @@ services:
     expose:
       - 8099
     depends_on:
-      - bot_db
+      - db
     networks:
       - prod_network
     ports:
       - "8099:8099"
 
-  bot_db:
+  db:
     container_name: pg_db_cont
     image: pgvector/pgvector:pg16
     volumes:
@@ -44,7 +44,7 @@ services:
     networks:
       - prod_network
     depends_on:
-      - schedule_db
+      - db
     expose:
       - 8090
     ports:
