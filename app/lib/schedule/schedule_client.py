@@ -107,15 +107,17 @@ class ScheduleClient:
 
     def make_week(self, week_num: int, lessons: List[Dict[str, str]]) -> Week:
         week = Week(week_num)
-        formatted_lessons = self._prep_lesson_timings(lessons)
+        formatted_lessons = self._prep_lesson_timings_and_teacher(lessons)
         week.map_lessons(formatted_lessons)
         return week
 
-    def _prep_lesson_timings(self, lessons: List[Dict[str, str]]) -> List[Lesson]:
+    def _prep_lesson_timings_and_teacher(self, lessons: List[Dict[str, str]]) -> List[Lesson]:
         out = []
         for lesson in lessons:
             for time in ['start', 'end']:
                 lesson[time] = dt.datetime.strptime(lesson[time], self.time_format)
+            teacher = lesson.get('teacher', {})
+            lesson['teacher'] = teacher.get('last_name', '') + ' ' + teacher.get('initials', '')
             out.append(Lesson(**lesson))
         return out
 

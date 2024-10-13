@@ -27,7 +27,8 @@ async def schedule_commands(message: Message):
     day_of_week = today.day_of_week
 
     week = schd.get_group_weekly_lessons(user.group_id, week_num)
-
+    from pprint import pprint
+    pprint(week)
     if not week:
         await message.answer(prep_markdown(lx.NO_SCHEDULE))
     else:
