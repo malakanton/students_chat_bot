@@ -11,14 +11,14 @@ from lib.dicts import LESSONS_DICT, MONTHS
 from lib.logs import logging_msg
 from lib.misc import chat_msg_ids, get_today, prep_markdown
 from lib.models.lessons import DayOfWeek, Week
-from loader import bot, db, logger, lx, schd, users
+from loader import bot, db, logger, lx, schd
 from lib.config.config import cfg
 from handlers.filters import IsTeacher
 
 
 @users_router.message(Command("schedule"), ~IsTeacher())
 async def schedule_commands(message: Message):
-    print(users)
+
     logger.info(logging_msg(message, "schedule command in private chat"))
     user = db.get_user(message.from_user.id)
     today = get_today()
@@ -27,8 +27,7 @@ async def schedule_commands(message: Message):
     day_of_week = today.day_of_week
 
     week = schd.get_group_weekly_lessons(user.group_id, week_num)
-    from pprint import pprint
-    pprint(week)
+
     if not week:
         await message.answer(prep_markdown(lx.NO_SCHEDULE))
     else:
