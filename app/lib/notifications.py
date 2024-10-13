@@ -64,7 +64,7 @@ async def notify_users(time: str, advance: int):
 
         for lesson in lessons:
             if lesson.start.strftime('%H:%M') == time:
-                await notify_user(user, lesson, advance)
+                await notify_user(user.id, lesson, advance)
 
     logger.info(f"users notified: {len(users_to_notify)}")
 
