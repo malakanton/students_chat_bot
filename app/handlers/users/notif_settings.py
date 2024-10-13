@@ -8,6 +8,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from handlers.routers import users_router
 from handlers.states import PushNotoficationsState
+from handlers.filters import IsTeacher
 from keyboards.buttons import NotifMenuBut, SwitchNotif
 from keyboards.callbacks import NotificationMenu
 from keyboards.notifications import daily_kb, notif_kb, notif_menu_kb
@@ -16,6 +17,13 @@ from lib.logs import logging_msg
 from lib.misc import prep_markdown
 from loader import db, scheduler, lx
 from loguru import logger
+
+
+@users_router.message(Command("notifications"), IsTeacher())
+async def notifications_for_teachers(message: Message):
+
+    await message.answer(text=prep_markdown(lx.NOTIFICATIONS_FOR_TEACHERS))
+    await message.delete()
 
 
 @users_router.message(Command("notifications"))

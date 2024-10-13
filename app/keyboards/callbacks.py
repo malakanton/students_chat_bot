@@ -49,3 +49,4 @@ class TeachersCallback(CallbackData, prefix="teacher"):
     id: int
     paginate: Optional[str]
     index: int
+    confirm: Optional[str]

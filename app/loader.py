@@ -7,7 +7,6 @@ from google_api.google_drive import GoogleDriver
 from langchain.vectorstores.pgvector import PGVector
 from langchain_openai import OpenAIEmbeddings
 from lib.misc import Lexicon
-from lib.models.group import Groups
 from lib.models.users import Users
 from lib.schedule.schedule_client import ScheduleClient
 from lib.s3 import S3Client
@@ -58,14 +57,9 @@ gpt_client = OpenAI(api_key=cfg.secrets.OPEN_AI_API_KEY, base_url=cfg.OPEN_AI_UR
 logger.success("OpenAI stuff initialized successfully")
 
 scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
-users = Users(
-    admins=db.get_users_ids("admin"),
-    heads=db.get_users_ids("head"),
-    regular=db.get_users_ids("regular"),
-    unreg=db.get_users_ids("unreg"),
-    teachers=db.get_users_ids("teacher"),
-    allowed=db.get_users_ids("allowed"),
-)
+
+users = Users()
+users.update(db)
 
 gc = GoogleCalendar(cfg.SCOPES, cfg.CREDS_PATH)
 logger.success("Google Calendar initialized successfully")

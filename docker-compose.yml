@@ -7,7 +7,7 @@ services:
     container_name: bot_cont
     command: python bot.py
     env_file:
-      - .env
+      - ./app/.env
     volumes:
       - ./app:/app
     expose:
@@ -16,8 +16,6 @@ services:
       - db
     networks:
       - prod_network
-    ports:
-      - "8099:8099"
     environment:
       - TZ=Europe/Moscow
 
@@ -49,8 +47,6 @@ services:
       - db
     expose:
       - 8090
-    ports:
-      - "8090:8090"
     environment:
       - TZ=Europe/Moscow
 

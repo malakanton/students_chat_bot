@@ -10,6 +10,7 @@ class StudyForm(Enum):
     INT = 1
     EXT = 0
 
+
 @dataclass
 class Group:
     id: int

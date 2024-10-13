@@ -231,7 +231,7 @@ class DB:
                     day.free = False
         return week
 
-    def get_users_ids(self, user_type="unreg") -> set:
+    def get_users_ids(self, user_type="unreg") -> set[int]:
         """Get set of users telegram ids by type(or types).
         Type may be plural presented as list"""
         if isinstance(user_type, list):
@@ -241,7 +241,7 @@ class DB:
             if user_type == "all":
                 query = """select user_id from users"""
             elif user_type == "allowed":
-                query = """select * from users 
+                query = """select user_id from users 
                     where added_at < '2024-05-18' or user_id in (133051024, 436166667)
                     order by added_at
                     """
@@ -249,6 +249,7 @@ class DB:
                 query = """select user_id from users where user_type= %s"""
         self.cur.execute(query, (user_type,))
         ids = [id[0] for id in self.cur.fetchall()]
+
         return set(ids)
 
     def get_subjects_for_user_or_group(self, chat_id: int, inverted=False) -> dict:

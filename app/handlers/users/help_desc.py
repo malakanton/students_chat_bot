@@ -1,6 +1,7 @@
 from aiogram.filters import Command
 from aiogram.types import Message
 from handlers.routers import users_router
+from handlers.filters import IsTeacher
 from lib.logs import logging_msg
 from lib.misc import prep_markdown
 from loader import db, lx
@@ -12,6 +13,14 @@ async def help_cmd(message: Message):
     logger.info(logging_msg(message, "help command in private chat"))
     help_msg = prep_markdown(lx.HELP_MSG)
     await message.answer(text=help_msg)
+    await message.delete()
+
+
+@users_router.message(Command("description"), IsTeacher())
+async def desc_cmd(message: Message):
+    logger.info(logging_msg(message, "teacher description command in private chat"))
+    desc_msg = prep_markdown(lx.DESCRIPTION_FOR_TEACHERS)
+    await message.answer(text=desc_msg)
     await message.delete()
 
 

@@ -1,4 +1,5 @@
 import asyncio
+from typing import List
 
 from aiogram import F
 from aiogram.filters import Command
@@ -10,16 +11,15 @@ from keyboards.schedule import schedule_kb
 from lib.dicts import LESSONS_DICT, MONTHS
 from lib.logs import logging_msg
 from lib.misc import chat_msg_ids, get_today, prep_markdown
-from lib.models.lessons import DayOfWeek, Week
-from loader import bot, db, logger, lx, schd, users
+from lib.models.lessons import DayOfWeek, Week, Lesson
+from loader import bot, db, logger, lx, schd
 from lib.config.config import cfg
 from handlers.filters import IsTeacher
 
-from pprint import pprint
 
-
-@users_router.message(Command("schedule"), IsTeacher(users.teachers))
+@users_router.message(Command("schedule"), IsTeacher())
 async def schedule_commands(message: Message):
+
     logger.info(logging_msg(message, "teacher schedule command in private chat"))
     user = db.get_user(message.from_user.id)
     today = get_today()
@@ -52,16 +52,19 @@ async def schedule_commands(message: Message):
 # если выбрал день
 @users_router.callback_query(
     ScheduleCallback.filter(~F.command.in_(ScheduleButt._member_names_)),
-    IsTeacher(users.teachers)
+    IsTeacher()
 )
 async def day_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     await call.answer()
+
     logger.info(logging_msg(call))
     user_id, msg_id = chat_msg_ids(call)
     user = db.get_user(user_id)
+
     week = schd.get_teacher_weekly_lessons(user.teacher_id, callback_data.week)
     day_num = int(callback_data.command)
     text = await form_day_schedule_text(week.get_day(day_num))
+
     await call.message.edit_text(
         text=text,
         reply_markup=await schedule_kb(week, day_num),
@@ -72,7 +75,7 @@ async def day_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
 # если выбрал всю неделю
 @users_router.callback_query(
     ScheduleCallback.filter(F.command == ScheduleButt.WEEK.name),
-    IsTeacher(users.teachers)
+    IsTeacher()
 )
 async def week_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     await call.answer()
@@ -93,7 +96,7 @@ async def week_chosen(call: CallbackQuery, callback_data: ScheduleCallback):
     ScheduleCallback.filter(
         F.command.in_({ScheduleButt.BACK.name, ScheduleButt.FORW.name})
     ),
-    IsTeacher(users.teachers)
+    IsTeacher()
 )
 async def change_week(call: CallbackQuery, callback_data: ScheduleCallback):
     user_id, msg_id = chat_msg_ids(call)
@@ -144,22 +147,43 @@ async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
     if day.free:
         text += lx.FREE_DAY
     else:
-        lessons_num = len(day.schedule)
+        lessons = group_by_lesson_time(day.schedule)
         if single:
-            text += LESSONS_DICT[lessons_num] + "\n\n"
-        for lesson in sorted(day.schedule, key=lambda lesson: lesson.start):
+            text += LESSONS_DICT.get(len(lessons), '') + "\n\n"
+
+        for lesson in lessons:
             start_time = lesson.start.strftime("%H:%M")
             end_time = lesson.end.strftime("%H:%M")
             if lesson.comment:
                 text += f"❗️**{lesson.comment.upper()}**❗️\n"
-            text += f"*{start_time}*-*{end_time}* **{lesson.subj}**, {lesson.group_name} "
+            lesson_text = f"*{start_time}*-*{end_time}* \n{lesson.subj}, _{lesson.group_name}_ "
             if lesson.loc:
-                text += f"({lesson.loc})"
-            text += '\n'
+                lesson_text += f"({lesson.loc})"
+            if lesson.cancelled:
+                lesson_text = f"~{lesson_text}~"
+
+            text += lesson_text + '\n\n'
 
     if single:
         text = prep_markdown(text)
     return text
+
+
+def group_by_lesson_time(lessons: List[Lesson]) -> List[Lesson]:
+    lessons = sorted(lessons, key=lambda lesson: lesson.start)
+    grouped_lessons = []
+
+    for i, lesson in enumerate(lessons):
+        if i == 0:
+            grouped_lessons.append(lesson)
+            continue
+
+        if lesson.start == grouped_lessons[-1].start and lesson.subj == grouped_lessons[-1].subj:
+            grouped_lessons[-1].group_name += ', ' + lesson.group_name
+        else:
+            grouped_lessons.append(lesson)
+
+    return grouped_lessons
 
 
 async def hide_keyboard(chat_id, message_id):

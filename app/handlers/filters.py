@@ -4,7 +4,7 @@ import re
 from aiogram import F
 from aiogram.filters import BaseFilter
 from aiogram.types import Message
-from loader import db
+from loader import db, users
 
 GroupFilter = F.chat.type.in_({"group", "supergroup"})
 
@@ -54,11 +54,8 @@ class IsAdmin(BaseFilter):
 
 
 class IsTeacher(BaseFilter):
-    def __init__(self, teachers_ids: list[str]) -> None:
-        self.teachers_ids = list(map(int, teachers_ids))
-
     async def __call__(self, message: Message) -> bool:
-        return message.from_user.id in self.teachers_ids
+        return message.from_user.id in users.teachers
 
 
 class UnRegisteredUser(BaseFilter):

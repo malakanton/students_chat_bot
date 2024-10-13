@@ -17,6 +17,7 @@ const numberOfAllowedMistakes = 3
 
 type Lesson struct {
 	Id          int             `json:"id"`
+	Num         int             `json:"num"`
 	WeekNum     int             `json:"week_num"`
 	Start       time.Time       `json:"start,omitempty"`
 	End         time.Time       `json:"end,omitempty"`
@@ -56,6 +57,7 @@ func (l *Lesson) String() string {
 func NewLessonFromParsed(lesson *parser.Lesson, gr *parser.Group, weekNum int) Lesson {
 	return Lesson{
 		WeekNum:     weekNum,
+		Num:         lesson.DateTime.Num,
 		Start:       lesson.DateTime.Start,
 		End:         lesson.DateTime.End,
 		Group:       group.Group{Name: gr.Name, StudyForm: gr.StudyForm},

@@ -10,10 +10,12 @@ from lib.dicts import RU_DAYS, RU_DAYS_INV
 
 @dataclass
 class Lesson:
+    num: int
     subj: str
     start: dt.datetime
     end: dt.datetime
     loc: str
+    cancelled: bool
     teacher: str = Field(default='')
     group_name: Optional[str] = Field(default=None)
     link: Optional[str] = Field(default=None)
@@ -55,9 +57,9 @@ class Week:
     def map_lessons(self, lessons: List[Lesson]):
         lessons_map = {}
 
-        for l in lessons:
-            day_num = l.start.isocalendar()[2]
-            lessons_map[day_num] = lessons_map.get(day_num, []) + [l]
+        for lesson in lessons:
+            day_num = lesson.start.isocalendar()[2]
+            lessons_map[day_num] = lessons_map.get(day_num, []) + [lesson]
 
         for day in self.days:
             day_lessons = lessons_map.get(day.id, [])

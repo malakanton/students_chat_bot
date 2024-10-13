@@ -1,10 +1,12 @@
+from aiogram import F
 from aiogram.filters import CommandStart, StateFilter
 from aiogram.types import CallbackQuery, Message, ChatMemberUpdated
 from handlers.filters import UnRegisteredUser
 from handlers.routers import users_router
-from keyboards.buttons import Confirm, Start, StudyFormKb
-from keyboards.callbacks import StartCallback
+from keyboards.buttons import Confirm, Start, StudyFormKb, TeachersButt
+from keyboards.callbacks import StartCallback, TeachersCallback
 from keyboards.start import confirm_kb, course_kb, groups_kb, role_selector_kb, choose_study_form
+from keyboards.teachers import teachers_list_kb, TEACHERS_PER_PAGE, teacher_confirm_kb
 from lib.logs import logging_msg
 from handlers.states import StartUser
 from aiogram.fsm.context import FSMContext
@@ -33,7 +35,7 @@ async def start(message: Message, state: FSMContext):
     existing_user = db.get_user(message.chat.id)
 
     if not existing_user:
-        hello_msg = prep_markdown(lx.HELLO.format(message.from_user.first_name) + lx.ROLE_CHOICE)
+        hello_msg = prep_markdown(lx.HELLO.format(message.chat.first_name))
         await message.answer(text=hello_msg, reply_markup=await role_selector_kb())
 
         await state.set_state(StartUser.choose_role)
@@ -57,47 +59,79 @@ async def choose_role(callback: CallbackQuery, state: FSMContext):
         await state.set_state(StartUser.choose_study_form)
 
     elif callback.data == Start.TEACHER.name:
+        teachers = sorted(schd.get_teachers(), key=lambda teacher: teacher.last_name)
+
         await callback.message.edit_text(
             text=lx.TEACHER_CHOOSEN,
+            reply_markup=await teachers_list_kb(teachers, 0),
         )
-        await state.set_state(StartUser.input_teachers_code)
+        await state.set_state(StartUser.choose_teacher)
 
 
 ############### for teachers ###############
-@users_router.message(StateFilter(StartUser.input_teachers_code))
-async def check_code(message: Message, state: FSMContext):
-    resp = schd.register_teacher(message.text, message.chat.id)
 
-    if resp == 'invalid code':
-        await message.reply(prep_markdown(lx.INCORRECT_CODE))
-        await state.set_state(StartUser.input_teachers_code_attempt_2)
+@users_router.callback_query(TeachersCallback.filter(F.id < 0))
+async def paginate(callback: CallbackQuery, callback_data: TeachersCallback):
+    await callback.answer()
 
-    elif isinstance(resp, Teacher):
-        await register_teacher_user(message, state, resp)
+    teachers = sorted(schd.get_teachers(), key=lambda teacher: teacher.last_name)
+    index = callback_data.index
+    if callback_data.paginate == TeachersButt.RIGHT.name:
+        if index + TEACHERS_PER_PAGE < len(teachers):
+            index += TEACHERS_PER_PAGE
 
+    if callback_data.paginate == TeachersButt.LEFT.name:
+        if index - TEACHERS_PER_PAGE >= 0:
+            index -= TEACHERS_PER_PAGE
+
+    markup = await teachers_list_kb(teachers, index)
+
+    await callback.message.edit_reply_markup(
+        reply_markup=markup
+    )
+
+
+@users_router.callback_query(StateFilter(StartUser.teacher_confirm))
+async def teacher_choosen(callback: CallbackQuery, state: FSMContext):
+    callback_data = TeachersCallback.unpack(callback.data)
+
+    await callback.answer()
+    if callback_data.confirm == Confirm.CANCEL.name:
+        await start(callback.message, state)
+        return
+
+    resp = schd.register_teacher(callback_data.id, callback.message.chat.id)
+
+    if isinstance(resp, Teacher):
+        await register_teacher_user(callback.message, state, resp)
     else:
-        logger.error(f'failed teachers code validation attempt 1, service responce: {resp}')
+        await callback.message.edit_text(
+            text=prep_markdown(lx.TEACHER_EXIST),
+            reply_markup=None
+        )
 
 
-@users_router.message(StateFilter(StartUser.input_teachers_code_attempt_2))
-async def check_code_second_attempt(message: Message, state: FSMContext):
-    resp = schd.register_teacher(message.text, message.chat.id)
+@users_router.callback_query(TeachersCallback.filter(F.id > 0))
+async def confirm_teacher(callback: CallbackQuery, state: FSMContext):
+    teacher_id = TeachersCallback.unpack(callback.data).id
 
-    if resp == 'invalid code':
-        await message.reply(prep_markdown(lx.INCORRECT_CODE_FINAL))
-        await state.clear()
+    markup = await teacher_confirm_kb(teacher_id)
+    teacher = schd.get_teachers(teacher_id)
 
-    elif isinstance(resp, Teacher):
-        await register_teacher_user(message, state, resp)
-
-    else:
-        logger.error(f'failed teachers code validation attempt 2, service responce: {resp}')
+    await callback.message.edit_text(
+        text=prep_markdown(lx.TEACHER_CONFIRM.format(teacher.last_name + ' ' + teacher.initials)),
+        reply_markup=markup
+    )
+    await state.set_state(StartUser.teacher_confirm)
 
 
 async def register_teacher_user(message: Message, state: FSMContext, teacher: Teacher) -> None:
-    name, login = get_name_login(message)
+    tg_name, login = get_name_login(message)
+    name = tg_name
+    if teacher.first_name and teacher.fathers_name:
+        name = teacher.first_name + ' ' + teacher.fathers_name
 
-    text = lx.CORRECT_CODE.format(name)
+    text = lx.TEACHER_REGISTERED.format(name) + '\n\n' + lx.DESCRIPTION_FOR_TEACHERS
     u = User(
         id=message.chat.id,
         name=name,
@@ -109,13 +143,14 @@ async def register_teacher_user(message: Message, state: FSMContext, teacher: Te
 
     await bot.send_message(
         cfg.secrets.ADMIN_CHAT,
-        text=f"New user added: @{login} {name} {message.chat.id} - teacher: {teacher.name}",
+        text=f"New teacher user added: @{login} {tg_name} {message.chat.id} - teacher: {teacher.last_name} {teacher.initials} ",
         parse_mode="HTML",
     )
-    users.teachers.add(message.chat.id)
 
-    await message.reply(prep_markdown(text))
+    users.update(db)
     await message.delete()
+    await message.answer(prep_markdown(text))
+
     await state.clear()
 
 ############### for students ###############
@@ -194,6 +229,7 @@ async def confirmed(callback: CallbackQuery, state: FSMContext):
         )
 
         db.add_user(u)
+        users.update(db)
         logger.info(f"New user added: {callback.message.chat.id} - {group_name}")
         await callback.message.edit_text(
             text=prep_markdown(lx.ADDED_TO_GROUP.format(u.name, group_name))

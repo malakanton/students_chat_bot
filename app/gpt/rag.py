@@ -1,6 +1,6 @@
 import datetime as dt
 
-from gpt.prompts import HELPER, RAG_HELPER
+from gpt.prompts import HELPER, RAG_HELPER, TEACHERS_HELPER
 from gpt.vector_db import IntentClassifier
 from loader import embeddings, gpt_client, subjects_vector_db, vector_db, cfg
 from loguru import logger
@@ -31,6 +31,20 @@ def gpt_respond(query: str, chunks: int = 3, th=cfg.SUBJ_CLF_TH) -> str:
             {"role": "user", "content": query},
         ]
         temp = 0.8
+    completion = gpt_client.chat.completions.create(
+        model=cfg.BLABLA_MODEL, messages=messages, temperature=temp, max_tokens=4096
+    )
+    respond = completion.choices[0].message.content
+    return respond
+
+
+def gpt_teacher_respond(query: str, chunks: int = 3, th=cfg.SUBJ_CLF_TH) -> str:
+    date = dt.datetime.now().date().ctime()
+    messages = [
+        {"role": "system", "content": TEACHERS_HELPER.format(date)},
+        {"role": "user", "content": query},
+    ]
+    temp = 0.8
     completion = gpt_client.chat.completions.create(
         model=cfg.BLABLA_MODEL, messages=messages, temperature=temp, max_tokens=4096
     )

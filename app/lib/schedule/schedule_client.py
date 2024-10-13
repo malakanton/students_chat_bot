@@ -52,16 +52,16 @@ class ScheduleClient:
         resp = self.request(GET, f'teachers/{id}')
         if resp.get('status', '') == OK:
             if id == 'all':
-                return [Teacher(**item) for item in resp.get('teachers')]
+                return [Teacher(**item) for item in resp.get('teachers') if item['last_name'] != 'NO_TEACHER']
             return Teacher(**resp.get('teacher'))
         return resp
 
-    def register_teacher(self, code: str, tg_id: int):
+    def register_teacher(self, teacher_id: int, tg_id: int):
         body = {
             'tg_id': tg_id,
-            'code': code,
+            'teacher_id': teacher_id,
         }
-        resp = self.request(POST, f'teachers/register', body=body)
+        resp = self.request(POST, 'teachers/register', body=body)
         status = resp.get('status', '')
 
         if status == OK:
@@ -120,7 +120,7 @@ class ScheduleClient:
         return out
 
     def get_groups(self) -> Union[Groups, str]:
-        resp = self.request(GET, f'groups/0')
+        resp = self.request(GET, 'groups/0')
         status = resp.get('status', '')
 
         if status == OK:

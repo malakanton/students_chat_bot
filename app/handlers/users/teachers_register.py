@@ -2,13 +2,9 @@ from aiogram import F
 from aiogram.filters import Command
 from aiogram.types import Message
 from handlers.routers import users_router
-from lib.misc import prep_markdown
-from loader import bot, lx, schd
+from loader import lx, schd
 from lib.config.config import cfg
-from keyboards.teachers import teachers_list_kb, TEACHERS_PER_PAGE
-from keyboards.callbacks import TeachersCallback
-from keyboards.buttons import TeachersButt
-from aiogram.types import CallbackQuery
+from keyboards.teachers import teachers_list_kb
 
 
 @users_router.message(
@@ -24,33 +20,33 @@ async def get_teachers_list(message: Message):
     await message.delete()
 
 
-@users_router.callback_query(TeachersCallback.filter(F.id < 0))
-async def paginate(callback: CallbackQuery, callback_data: TeachersCallback):
-    await callback.answer()
-    teachers = sorted(schd.get_teachers(), key=lambda teacher: teacher.name)
-    index = callback_data.index
-    if callback_data.paginate == TeachersButt.RIGHT.name:
-        if index + TEACHERS_PER_PAGE < len(teachers):
-            index += TEACHERS_PER_PAGE
+# @users_router.callback_query(TeachersCallback.filter(F.id < 0))
+# async def paginate(callback: CallbackQuery, callback_data: TeachersCallback):
+#     await callback.answer()
+#     teachers = sorted(schd.get_teachers(), key=lambda teacher: teacher.name)
+#     index = callback_data.index
+#     if callback_data.paginate == TeachersButt.RIGHT.name:
+#         if index + TEACHERS_PER_PAGE < len(teachers):
+#             index += TEACHERS_PER_PAGE
+#
+#     if callback_data.paginate == TeachersButt.LEFT.name:
+#         if index - TEACHERS_PER_PAGE >= 0:
+#             index -= TEACHERS_PER_PAGE
+#
+#     markup = await teachers_list_kb(teachers, index)
+#
+#     await callback.message.edit_reply_markup(
+#         reply_markup=markup
+#     )
 
-    if callback_data.paginate == TeachersButt.LEFT.name:
-        if index - TEACHERS_PER_PAGE >= 0:
-            index -= TEACHERS_PER_PAGE
 
-    markup = await teachers_list_kb(teachers, index)
-
-    await callback.message.edit_reply_markup(
-        reply_markup=markup
-    )
-
-
-@users_router.callback_query(TeachersCallback.filter(F.id > 0))
-async def teacher_choosen(call: CallbackQuery, callback_data: TeachersCallback):
-    await call.answer()
-
-    teacher = schd.get_teachers(int(callback_data.id))
-
-    await bot.send_message(
-        chat_id=call.message.chat.id,
-        text=prep_markdown(lx.CODE_SENT.format(teacher.name, teacher.code))
-    )
+# @users_router.callback_query(TeachersCallback.filter(F.id > 0))
+# async def teacher_choosen(call: CallbackQuery, callback_data: TeachersCallback):
+#     await call.answer()
+#
+#     teacher = schd.get_teachers(int(callback_data.id))
+#
+#     await bot.send_message(
+#         chat_id=call.message.chat.id,
+#         text=prep_markdown(lx.CODE_SENT.format(teacher.name, teacher.code))
+#     )

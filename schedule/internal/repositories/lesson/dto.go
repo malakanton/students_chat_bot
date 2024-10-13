@@ -1,24 +1,29 @@
 package lesson
 
-import "time"
+import (
+	"schedule/internal/repositories/teacher"
+	"time"
+)
 
 type GroupLessonDto struct {
-	Start       time.Time `json:"start"`
-	End         time.Time `json:"end"`
-	TeacherName string    `json:"teacher"`
-	SubjectName string    `json:"subj"`
-	Loc         string    `json:"loc"`
-	Link        string    `json:"link,omitempty"`
-	WholeDay    bool      `json:"whole_day"`
-	SpecialCase string    `json:"special_case,omitempty"`
-	Cancelled   bool      `json:"cancelled"`
+	Num         int                `json:"num"`
+	Start       time.Time          `json:"start"`
+	End         time.Time          `json:"end"`
+	Teacher     teacher.TeacherDTO `json:"teacher"`
+	SubjectName string             `json:"subj"`
+	Loc         string             `json:"loc"`
+	Link        string             `json:"link,omitempty"`
+	WholeDay    bool               `json:"whole_day"`
+	SpecialCase string             `json:"special_case,omitempty"`
+	Cancelled   bool               `json:"cancelled"`
 }
 
 func NewGroupLessonDto(lesson *Lesson) GroupLessonDto {
 	return GroupLessonDto{
+		Num:         lesson.Num,
 		Start:       lesson.Start,
 		End:         lesson.End,
-		TeacherName: lesson.Teacher.LastName,
+		Teacher:     teacher.NewTeacherDto(&lesson.Teacher),
 		SubjectName: lesson.Subject.Name,
 		Loc:         lesson.Loc,
 		Link:        lesson.Link,
@@ -29,6 +34,7 @@ func NewGroupLessonDto(lesson *Lesson) GroupLessonDto {
 }
 
 type TeacherLessonDto struct {
+	Num         int       `json:"num"`
 	Start       time.Time `json:"start"`
 	End         time.Time `json:"end"`
 	GroupName   string    `json:"group_name"`
@@ -41,6 +47,7 @@ type TeacherLessonDto struct {
 
 func NewTeacherLessonDto(lesson *Lesson) TeacherLessonDto {
 	return TeacherLessonDto{
+		Num:         lesson.Num,
 		Start:       lesson.Start,
 		End:         lesson.End,
 		GroupName:   lesson.Group.Name,

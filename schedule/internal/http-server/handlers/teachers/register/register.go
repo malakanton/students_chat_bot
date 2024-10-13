@@ -13,12 +13,12 @@ import (
 )
 
 type Request struct {
-	TgId int64  `json:"tg_id"`
-	Code string `json:"code"`
+	TgId int64 `json:"tg_id"`
+	Id   int   `json:"teacher_id"`
 }
 
 type Register interface {
-	FindByCode(ctx context.Context, code string) (teacher.Teacher, error)
+	FindById(ctx context.Context, id int) (teacher.Teacher, error)
 	UpdateTgId(ctx context.Context, t teacher.Teacher) error
 }
 
@@ -48,12 +48,12 @@ func RegTeacher(ctx context.Context, log *slog.Logger, reg Register) http.Handle
 
 		log.Info("request body decoded", slog.Any("request", req))
 
-		t, err := reg.FindByCode(ctx, req.Code)
+		t, err := reg.FindById(ctx, req.Id)
 		if err != nil {
-			render.JSON(w, r, resp.Error("invalid code"))
-
+			render.JSON(w, r, resp.Error("invalid teacher id"))
 			return
 		}
+
 		t.SetTgId(req.TgId)
 
 		err = reg.UpdateTgId(ctx, t)

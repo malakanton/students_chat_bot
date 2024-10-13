@@ -34,7 +34,7 @@ func NewTeacherFromParsed(name string) Teacher {
 
 type Teacher struct {
 	Id          int    `json:"id"`
-	LastName    string `json:"second_name"`
+	LastName    string `json:"last_name"`
 	FirstName   string `json:"first_name"`
 	FathersName string `json:"fathers_name"`
 	Initials    string `json:"initials"`

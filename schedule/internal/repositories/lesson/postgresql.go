@@ -79,6 +79,7 @@ FROM lessons l
 	LEFT JOIN subjects s ON s.id = l.subject_id
 WHERE l.teacher_id = $1
 AND l.week_num = $2
+ORDER BY l.start_time, l.subject_id
 `
 	rows, err := r.client.Query(ctx, q, id, weekNum)
 	if err != nil {
@@ -118,6 +119,7 @@ FROM lessons l
 	LEFT JOIN subjects s ON s.id = l.subject_id
 WHERE l.teacher_id = $1
 AND to_char(start_time, 'yyyy-mm-dd') = $2
+ORDER BY l.start_time, l.subject_id
 `
 	rows, err := r.client.Query(ctx, q, id, date)
 	if err != nil {

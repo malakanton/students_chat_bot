@@ -5,6 +5,7 @@ from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from aiogram.types.input_file import FSInputFile
 from handlers.routers import users_router
+from handlers.filters import IsTeacher
 from keyboards.buttons import CancelButt
 from keyboards.callbacks import LibCallback
 from keyboards.library import choose_file_kb, lib_type_kb, subjects_kb
@@ -14,6 +15,13 @@ from lib.models.files import File
 from loader import bot, db, s3, users, lx
 from lib.config.config import cfg
 from loguru import logger
+
+
+@users_router.message(Command("library"), IsTeacher())
+async def library_for_teachers(message: Message):
+
+    await message.answer(text=prep_markdown(lx.LIB_FOR_TEACHERS))
+    await message.delete()
 
 
 @users_router.message(Command("library"))

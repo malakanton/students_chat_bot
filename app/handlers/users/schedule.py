@@ -9,15 +9,16 @@ from keyboards.callbacks import ScheduleCallback
 from keyboards.schedule import schedule_kb
 from lib.dicts import LESSONS_DICT, MONTHS
 from lib.logs import logging_msg
-from lib.misc import chat_msg_ids, get_today, prep_markdown, test_users_dates
+from lib.misc import chat_msg_ids, get_today, prep_markdown
 from lib.models.lessons import DayOfWeek, Week
 from loader import bot, db, logger, lx, schd, users
 from lib.config.config import cfg
-from handlers.filters import UserFilter
+from handlers.filters import IsTeacher
 
 
-@users_router.message(Command("schedule"), ~UserFilter(users.teachers))
+@users_router.message(Command("schedule"), ~IsTeacher())
 async def schedule_commands(message: Message):
+    print(users)
     logger.info(logging_msg(message, "schedule command in private chat"))
     user = db.get_user(message.from_user.id)
     today = get_today()
@@ -142,7 +143,7 @@ async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
     else:
         lessons_num = len(day.schedule)
         if single:
-            text += LESSONS_DICT[lessons_num] + "\n\n"
+            text += LESSONS_DICT.get(lessons_num, '') + "\n\n"
         for lesson in sorted(day.schedule, key=lambda lesson: lesson.start):
             start_time = lesson.start.strftime("%H:%M")
             end_time = lesson.end.strftime("%H:%M")

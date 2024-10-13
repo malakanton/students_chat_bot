@@ -67,7 +67,3 @@ gf = GoogleForms(
     creds_path="./studentsbot-414221-88a1d65d3976.json",
     form_id=cfg.FORM_ID,
 )
-
-from pprint import pprint
-
-pprint(gf.get_responces())
