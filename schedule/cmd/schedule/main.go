@@ -10,18 +10,17 @@ import (
 	"schedule/internal/config"
 	"schedule/internal/gglapi"
 	"schedule/internal/gglapi/parser"
-	"schedule/internal/http-server/server"
-	"schedule/internal/repositories"
-	"schedule/internal/scheduler"
-	"time"
-
 	"schedule/internal/http-server/handlers/groups"
 	l "schedule/internal/http-server/handlers/lessons"
 	schd "schedule/internal/http-server/handlers/schedule"
 	t "schedule/internal/http-server/handlers/teachers"
+	"schedule/internal/http-server/server"
 	pupl "schedule/internal/parser-uploader"
+	"schedule/internal/repositories"
+	"schedule/internal/scheduler"
 	"schedule/internal/storage"
 	"syscall"
+	"time"
 )
 
 const (
@@ -30,9 +29,7 @@ const (
 )
 
 func main() {
-	//same := compareTwoStrings()
-	//fmt.Println(same)
-	//return
+
 	cfg := config.MustConfig()
 	logger := setupLogger(cfg.Env)
 

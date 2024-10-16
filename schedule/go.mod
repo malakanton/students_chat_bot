@@ -7,6 +7,7 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.3 // indirect
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	github.com/BurntSushi/toml v1.2.1 // indirect
+	github.com/agnivade/levenshtein v1.2.0 // indirect
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-chi/chi/v5 v5.1.0 // indirect

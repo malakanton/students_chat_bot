@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/agnivade/levenshtein"
 	"github.com/jackc/pgx/v5"
 	"schedule/internal/gglapi/parser"
 	"schedule/internal/gglapi/parser/timings"
@@ -13,7 +14,7 @@ import (
 	"time"
 )
 
-const numberOfAllowedMistakes = 3
+const numberOfAllowedMistakes = 4
 
 type Lesson struct {
 	Id          int             `json:"id"`
@@ -79,7 +80,9 @@ func (l *Lesson) SetTeacher(ctx context.Context, rep teacher.Repository, t *teac
 		existingTeacher *teacher.Teacher
 		found           bool
 	)
+	fmt.Printf("teacher: %s %s (%s %s)\n", t.LastName, t.Initials, t.FirstName, t.FathersName)
 	existingTeacher, err = rep.FindByLastNameAndInitials(ctx, t)
+	fmt.Printf("existing teacher: %s %s (%s %s)\n", existingTeacher.LastName, existingTeacher.Initials, existingTeacher.FirstName, existingTeacher.FathersName)
 	if err != nil {
 		// if there is no full match
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -90,6 +93,7 @@ func (l *Lesson) SetTeacher(ctx context.Context, rep teacher.Repository, t *teac
 			}
 
 			existingTeacher, found, err = findMistakenTeacher(t, allTeachers)
+			fmt.Printf("found %v: %s %s\n", found, existingTeacher.LastName, existingTeacher.Initials)
 			if err != nil || !found {
 				err = rep.Create(ctx, t)
 				if err != nil {
@@ -163,17 +167,23 @@ func findMistakenTeacher(t *teacher.Teacher, allTeachers []teacher.Teacher) (exi
 }
 
 func compareTwoTeachers(t1, t2 string) bool {
-	rune1 := []rune(t1)
-	rune2 := []rune(t2)
+	//rune1 := []rune(t1)
+	//rune2 := []rune(t2)
+	//
+	//var mistakes int
+	//for i, j := 0, 0; i < len(rune1) && j < len(rune2); j++ {
+	//	if rune1[i] == rune2[j] {
+	//		i++
+	//		continue
+	//	}
+	//
+	//	mistakes++
+	//}
+	//if mistakes < 6 {
+	//	fmt.Printf("comparing teachers: %s == %s, mistakes: %d\n", t1, t2, mistakes)
+	//}
 
-	var mistakes int
-	for i, j := 0, 0; i < len(rune1) && j < len(rune2); j++ {
-		if rune1[i] == rune2[j] {
-			i++
-			continue
-		}
+	mistakes := levenshtein.ComputeDistance(t1, t2)
 
-		mistakes++
-	}
 	return mistakes <= numberOfAllowedMistakes
 }
