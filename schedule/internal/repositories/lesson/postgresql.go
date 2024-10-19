@@ -17,11 +17,11 @@ type repository struct {
 func (r *repository) Update(ctx context.Context, l, el Lesson) error {
 	q := `
 	UPDATE lessons
-	set subject_id = $1, teacher_id = $2, loc = $3, modified = $4
-	where group_id = $5
-	and start_time = $6
+	set subject_id = $1, teacher_id = $2, loc = $3, modified = $4, cancelled = $5
+	where group_id = $6
+	and start_time = $7
 `
-	_, err := r.client.Exec(ctx, q, l.Subject.Id, l.Teacher.Id, l.Loc, l.Modified, el.Group.Id, el.Start)
+	_, err := r.client.Exec(ctx, q, l.Subject.Id, l.Teacher.Id, l.Loc, l.Modified, l.Cancelled, el.Group.Id, el.Start)
 	if err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok {
 			sqlError := fmt.Errorf("SQL error occurred: %s, Where: %s, details: %s, constraint %s", pgErr.Message, pgErr.Where, pgErr.Detail, pgErr.ConstraintName)
