@@ -10,7 +10,7 @@ class Start(Enum):
 
 class StudyFormKb(Enum):
     INTRAMURAL = "Очная"
-    EXTRAMURAL = "Заочная"
+    EXTRAMURAL = "Очно-заочная"
 
 
 class Confirm(Enum):
