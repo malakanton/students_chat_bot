@@ -24,4 +24,4 @@ files:
   teachers_list_file_id: 1Vpu7ej6EtTDTm_PFpgY2rQ7C0uVm-pzS
 scheduler:
   jobs:
-    - "@every 04h00m00s"
+    - "@every 24h00m00s"

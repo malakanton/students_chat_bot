@@ -53,6 +53,7 @@ func (pu *ParserUploader) DownloadExcelAndParseSheetsList(ctx context.Context, s
 	if scheduled {
 		err = pu.CheckLastModificationDate()
 		if err != nil {
+			pu.Logger.Info(err.Error())
 			return err
 		}
 	}
@@ -183,11 +184,13 @@ func (pu *ParserUploader) CheckLastModificationDate() (err error) {
 		pu.Logger.Error("failed to get last modified date", slog.String("err", err.Error()))
 		return fmt.Errorf("failed to get last modified date %s", err.Error())
 	}
+
 	if lastModifiedDate <= *pu.LastDate {
 		return fmt.Errorf("the spreadsheet wasnt modified, last modification date is %s", lastModifiedDate)
 	}
 
 	pu.Logger.Info("spreadsheet was modified", slog.String("at", lastModifiedDate))
+	pu.LastDate = &lastModifiedDate
 
 	return nil
 }

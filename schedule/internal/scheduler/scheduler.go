@@ -20,7 +20,7 @@ func NewScheduler(timeZone string) (*cron.Cron, error) {
 
 func AddScheduledJobs(ctx context.Context, s *cron.Cron, pu *pupl.ParserUploader) error {
 	for _, job := range pu.Cfg.Scheduler.Jobs {
-		_, err := s.AddFunc(job, func() { _ = pu.ParseAndUploadScheduleFromExcel(ctx, false, 0) })
+		_, err := s.AddFunc(job, func() { _ = pu.ParseAndUploadScheduleFromExcel(ctx, true, 0) })
 		if err != nil {
 			return err
 		}
