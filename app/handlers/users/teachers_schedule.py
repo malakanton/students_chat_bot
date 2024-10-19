@@ -154,11 +154,15 @@ async def form_day_schedule_text(day: DayOfWeek, single=True) -> str:
         for lesson in lessons:
             start_time = lesson.start.strftime("%H:%M")
             end_time = lesson.end.strftime("%H:%M")
+            num = f'*№{lesson.num}* ' if lesson.num else ''
+
             if lesson.comment:
                 text += f"❗️**{lesson.comment.upper()}**❗️\n"
-            lesson_text = f"*{start_time}*-*{end_time}* \n{lesson.subj}, _{lesson.group_name}_ "
+            lesson_text = f"{num}*{start_time}*-*{end_time}* \n{lesson.subj}, _{lesson.group_name}_ "
+
             if lesson.loc:
                 lesson_text += f"({lesson.loc})"
+
             if lesson.cancelled:
                 lesson_text = f"~{lesson_text}~"
 

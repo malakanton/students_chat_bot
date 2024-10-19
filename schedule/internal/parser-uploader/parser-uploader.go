@@ -49,6 +49,10 @@ type ParserUploader struct {
 	LastDate *string
 }
 
+func (pu *ParserUploader) ResetExcelData() {
+	pu.Ed = excel.NewExcelDocument(scheduleFilePath)
+}
+
 func (pu *ParserUploader) DownloadExcelAndParseSheetsList(ctx context.Context, scheduled bool) (err error) {
 	if scheduled {
 		err = pu.CheckLastModificationDate()
@@ -99,6 +103,8 @@ func (pu *ParserUploader) ParseAndUploadScheduleFromExcel(ctx context.Context, s
 
 	err = pu.UploadSchedule(ctx)
 
+	pu.ResetExcelData()
+
 	return nil
 
 }
@@ -128,7 +134,7 @@ func (pu *ParserUploader) UploadSchedule(ctx context.Context) (err error) {
 			if err != nil {
 				return err
 			}
-			// if lessons doesn't exist -> create a new lessons in db
+			// if lesson doesn't exist -> create a new lessons in db
 			existingLesson, err := pu.Rep.Les.FindOne(ctx, l.Group.Name, l.Start)
 			if err != nil {
 				if errors.Is(err, pgx.ErrNoRows) {
@@ -142,10 +148,14 @@ func (pu *ParserUploader) UploadSchedule(ctx context.Context) (err error) {
 				return err
 			}
 			// if new lessons equals to an existing lessons -> pass through
-			if l.Equals(&existingLesson) {
-				continue
+			// TODO: if not equals - adjust
+			if !l.Equals(&existingLesson) {
+				err = pu.Rep.Les.Update(ctx, l, existingLesson)
+				if err != nil {
+					return err
+				}
+				pu.Logger.Info("existing lesson updated", slog.String("lesson", l.String()))
 			}
-
 		}
 	}
 	return nil

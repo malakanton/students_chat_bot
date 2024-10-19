@@ -153,8 +153,7 @@ func (l *Lesson) SetSubject(ctx context.Context, rep subject.Repository, subject
 func (l *Lesson) Equals(l2 *Lesson) bool {
 	return l.Teacher.Id == l2.Teacher.Id &&
 		l.Subject.Id == l2.Subject.Id &&
-		l.Loc == l2.Loc &&
-		l.Modified == l2.Modified
+		l.Loc == l2.Loc
 }
 
 func findMistakenTeacher(t *teacher.Teacher, allTeachers []teacher.Teacher) (existingTeacher *teacher.Teacher, found bool, err error) {

@@ -14,9 +14,23 @@ type repository struct {
 	logger *slog.Logger
 }
 
-func (r *repository) Update(ctx context.Context, lesson Lesson) error {
-	//TODO implement me
-	panic("implement me")
+func (r *repository) Update(ctx context.Context, l, el Lesson) error {
+	q := `
+	UPDATE lessons
+	set subject_id = $1, teacher_id = $2, loc = $3, modified = $4
+	where group_id = $5
+	and start_time = $6
+`
+	_, err := r.client.Exec(ctx, q, l.Subject.Id, l.Teacher.Id, l.Loc, l.Modified, el.Group.Id, el.Start)
+	if err != nil {
+		if pgErr, ok := err.(*pgconn.PgError); ok {
+			sqlError := fmt.Errorf("SQL error occurred: %s, Where: %s, details: %s, constraint %s", pgErr.Message, pgErr.Where, pgErr.Detail, pgErr.ConstraintName)
+			r.logger.Error(sqlError.Error())
+			return sqlError
+		}
+		return err
+	}
+	return nil
 }
 
 func (r *repository) Delete(ctx context.Context, id string) error {
@@ -26,11 +40,11 @@ func (r *repository) Delete(ctx context.Context, id string) error {
 
 func (r *repository) Create(ctx context.Context, lesson *Lesson) error {
 	q := `
-INSERT INTO lessons (week_num, start_time, end_time, group_id, subject_id, teacher_id, whole_day, loc, filial, modified, link, special_case) 
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+INSERT INTO lessons (week_num, start_time, end_time, group_id, subject_id, teacher_id, whole_day, loc, filial, modified, link, special_case, lesson_num) 
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 RETURNING id;
 `
-	if _, err := r.client.Exec(ctx, q, lesson.WeekNum, lesson.Start, lesson.End, lesson.Group.Id, lesson.Subject.Id, lesson.Teacher.Id, lesson.WholeDay, lesson.Loc, lesson.Filial, lesson.Modified, lesson.Link, lesson.SpecialCase); err != nil {
+	if _, err := r.client.Exec(ctx, q, lesson.WeekNum, lesson.Start, lesson.End, lesson.Group.Id, lesson.Subject.Id, lesson.Teacher.Id, lesson.WholeDay, lesson.Loc, lesson.Filial, lesson.Modified, lesson.Link, lesson.SpecialCase, lesson.Num); err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok {
 			sqlError := fmt.Errorf("SQL error occurred: %s, Where: %s, details: %s", pgErr.Message, pgErr.Where, pgErr.Detail)
 			r.logger.Error(sqlError.Error())
@@ -49,7 +63,7 @@ func (r *repository) FindAll(ctx context.Context) (l []Lesson, err error) {
 
 func (r *repository) FindOne(ctx context.Context, groupName string, startTime time.Time) (Lesson, error) {
 	q := `
-SELECT l.id, l.start_time, l.end_time, l.group_id, l.teacher_id, l.modified
+SELECT l.id, l.start_time, l.end_time, l.group_id, l.teacher_id, l.modified, l.loc
 FROM lessons l
 	LEFT JOIN groups g
 		on l.group_id = g.id
@@ -57,7 +71,7 @@ WHERE g.name = $1
 AND l.start_time = $2
 `
 	var l Lesson
-	if err := r.client.QueryRow(ctx, q, groupName, startTime).Scan(&l.Id, &l.Start, &l.End, &l.Group.Id, &l.Teacher.Id, &l.Modified); err != nil {
+	if err := r.client.QueryRow(ctx, q, groupName, startTime).Scan(&l.Id, &l.Start, &l.End, &l.Group.Id, &l.Teacher.Id, &l.Modified, &l.Loc); err != nil {
 		return Lesson{}, err
 	}
 	return l, nil
@@ -66,6 +80,7 @@ AND l.start_time = $2
 func (r *repository) FindWeeklyForTeacher(ctx context.Context, id, weekNum int) (lessons []TeacherLessonDto, err error) {
 	q := `
 SELECT 
+    l.lesson_num,
     l.start_time, 
     l.end_time,
     l.loc,
@@ -90,7 +105,7 @@ ORDER BY l.start_time, l.subject_id
 	for rows.Next() {
 		var l Lesson
 
-		err = rows.Scan(&l.Start, &l.End, &l.Loc, &l.Group.Name, &l.Subject.Name, &l.Filial, &l.Cancelled, &l.SpecialCase)
+		err = rows.Scan(&l.Num, &l.Start, &l.End, &l.Loc, &l.Group.Name, &l.Subject.Name, &l.Filial, &l.Cancelled, &l.SpecialCase)
 		if err != nil {
 			return nil, err
 		}
@@ -106,6 +121,7 @@ ORDER BY l.start_time, l.subject_id
 func (r *repository) FindDailyForTeacher(ctx context.Context, id int, date string) (lessons []TeacherLessonDto, err error) {
 	q := `
 SELECT 
+    l.lesson_num,
     l.start_time, 
     l.end_time,
     l.loc,
@@ -130,7 +146,7 @@ ORDER BY l.start_time, l.subject_id
 	for rows.Next() {
 		var l Lesson
 
-		err = rows.Scan(&l.Start, &l.End, &l.Loc, &l.Group.Name, &l.Subject.Name, &l.Filial, &l.Cancelled, &l.SpecialCase)
+		err = rows.Scan(&l.Num, &l.Start, &l.End, &l.Loc, &l.Group.Name, &l.Subject.Name, &l.Filial, &l.Cancelled, &l.SpecialCase)
 		if err != nil {
 			return nil, err
 		}
