@@ -1,7 +1,7 @@
 from aiogram import F
 from aiogram.filters import CommandStart, StateFilter
 from aiogram.types import CallbackQuery, Message, ChatMemberUpdated
-from handlers.filters import UnRegisteredUser
+from handlers.filters import UnRegisteredUser, UserFilter
 from handlers.routers import users_router
 from keyboards.buttons import Confirm, Start, StudyFormKb, TeachersButt
 from keyboards.callbacks import StartCallback, TeachersCallback
@@ -70,7 +70,9 @@ async def choose_role(callback: CallbackQuery, state: FSMContext):
 
 ############### for teachers ###############
 
-@users_router.callback_query(TeachersCallback.filter(F.id < 0))
+@users_router.callback_query(TeachersCallback.filter(F.id < 0),
+UserFilter()
+                             )
 async def paginate(callback: CallbackQuery, callback_data: TeachersCallback):
     await callback.answer()
 
@@ -91,7 +93,8 @@ async def paginate(callback: CallbackQuery, callback_data: TeachersCallback):
     )
 
 
-@users_router.callback_query(StateFilter(StartUser.teacher_confirm))
+@users_router.callback_query(StateFilter(StartUser.teacher_confirm),
+                             UserFilter())
 async def teacher_choosen(callback: CallbackQuery, state: FSMContext):
     callback_data = TeachersCallback.unpack(callback.data)
 
@@ -111,7 +114,9 @@ async def teacher_choosen(callback: CallbackQuery, state: FSMContext):
         )
 
 
-@users_router.callback_query(TeachersCallback.filter(F.id > 0))
+@users_router.callback_query(TeachersCallback.filter(F.id > 0),
+UserFilter()
+                             )
 async def confirm_teacher(callback: CallbackQuery, state: FSMContext):
     teacher_id = TeachersCallback.unpack(callback.data).id
 

@@ -19,8 +19,11 @@ class UserFilter(BaseFilter):
                 message.chat.type == "private"
                 and message.from_user.id in self.users_ids
             )
-        else:
+        elif isinstance(message, Message):
             return message.chat.type == "private"
+
+        else:
+            return message.message.chat.type == "private"
 
 
 class SupportFilter(BaseFilter):
