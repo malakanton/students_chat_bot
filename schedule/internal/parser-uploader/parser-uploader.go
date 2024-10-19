@@ -153,7 +153,7 @@ func (pu *ParserUploader) UploadSchedule(ctx context.Context) (err error) {
 func (pu *ParserUploader) CheckActiveSheet() (id int, err error) {
 	currDate := time.Now()
 	for idx, sheetName := range pu.Ed.SheetsMap {
-		if idx == 1 {
+		if idx <= 1 {
 			continue
 		}
 		startDate, endDate, err := pt.ExtractDatesFromSheetName(sheetName, timings.LayoutDate)
@@ -162,13 +162,13 @@ func (pu *ParserUploader) CheckActiveSheet() (id int, err error) {
 		}
 		// subtract 2 days so during the week and previous weekend we parse current week.
 		// we start to parse next week on Saturday
-		startDate = startDate.AddDate(0, 0, -2)
-		endDate = endDate.AddDate(0, 0, -2)
+		startDate = startDate.AddDate(currDate.Year(), 0, -2)
+		endDate = endDate.AddDate(currDate.Year(), 0, -2)
 
 		if currDate.After(startDate) && currDate.Before(endDate) {
 			return idx, nil
 		}
-		pu.Logger.Info(fmt.Sprintf("sheet [%s] is not suitable because of dates"))
+		pu.Logger.Info(fmt.Sprintf("sheet [%s] is not suitable because of dates", sheetName))
 
 	}
 	return
