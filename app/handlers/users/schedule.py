@@ -120,11 +120,11 @@ async def change_week(call: CallbackQuery, callback_data: ScheduleCallback):
 async def form_week_schedule_text(week: Week):
     from_day = week.days[0].date
     to_day = week.days[-1].date
-    text = lx.WEEK_SCHEDULE
+    text = lx.WEEK_SCHEDULE + '\n'
     if from_day.month == to_day.month:
-        text += f" *{from_day.day}* по *{to_day.day} {MONTHS[to_day.month]}*\n"
+        text += f"с *{from_day.day}* по *{to_day.day} {MONTHS[to_day.month]}*\n"
     else:
-        text += f" *{from_day.day} {MONTHS[from_day.month]}* по *{to_day.day} {MONTHS[to_day.month]}*\n"
+        text += f"с *{from_day.day} {MONTHS[from_day.month]}* по *{to_day.day} {MONTHS[to_day.month]}*\n"
     days = week.get_all_active()
     for day in days:
         text += await form_day_schedule_text(day, single=False)
